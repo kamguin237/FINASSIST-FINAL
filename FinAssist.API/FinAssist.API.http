@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:5041
+@contentType = application/json
+
+### 1. Login — doit retourner accessToken + refreshToken
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@finassist.com",
+  "motDePasse": "Admin@123"
+}
+
+### 2. Login — mauvais mot de passe (doit retourner 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@finassist.com",
+  "motDePasse": "mauvais"
+}
+
+### 3. Refresh Token — colle les valeurs retournées par le login
+POST {{baseUrl}}/api/auth/refresh-token
+Content-Type: {{contentType}}
+
+{
+  "accessToken": "COLLE_TON_ACCESS_TOKEN_ICI",
+  "refreshToken": "COLLE_TON_REFRESH_TOKEN_ICI"
+}
+
+### 4. Logout — nécessite le Bearer token du login
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer COLLE_TON_ACCESS_TOKEN_ICI
+
+### 5. Logout sans token — doit retourner 401
+POST {{baseUrl}}/api/auth/logout

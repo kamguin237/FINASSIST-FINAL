@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FinAssist.API/FinAssist.API.csproj" />
+  <Project Path="FinAssist.Application/FinAssist.Application.csproj" />
+  <Project Path="FinAssist.Core/FinAssist.Core.csproj" />
+  <Project Path="FinAssist.Infrastructure/FinAssist.Infrastructure.csproj" />
+</Solution>
