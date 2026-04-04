@@ -16,5 +16,6 @@ public class BesoinRecent
     public int Id { get; set; }
     public string Titre { get; set; } = string.Empty;
     public string Statut { get; set; } = string.Empty;
+    public DateTime DateCreation { get; set; }
     public DateTime DateModification { get; set; }
 }

@@ -4,8 +4,8 @@ namespace FinAssist.Core.Interfaces;
 
 public interface IWorkflowService
 {
-    Task<ValidationDTO> ValiderAsync(int besoinId, ValiderBesoinDTO dto, int validateurId, string roleCode);
-    Task<ValidationDTO> TransmettreAsync(int besoinId, int validateurId);
+    Task<ValidationDTO> ValiderAsync(int besoinId, ValiderBesoinDTO dto, int validateurId, string roleCode, string nomValidateur);
+    Task<ValidationDTO> TransmettreAsync(int besoinId, int validateurId, string nomTransmetteur);
 
     Task<WorkflowCircuitDTO> GetCircuitByIdAsync(int id);
     Task<IEnumerable<WorkflowCircuitDTO>> GetAllCircuitsAsync();

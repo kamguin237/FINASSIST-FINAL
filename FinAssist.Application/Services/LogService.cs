@@ -12,8 +12,7 @@ public class LogService(ILogRepository logRepo) : ILogService
         int? entiteId = null,
         string? ancienneValeur = null,
         string? nouvelleValeur = null,
-        int? utilisateurId = null,
-        string? adresseIp = null)
+        int? utilisateurId = null)
     {
         var log = new LogActivite
         {
@@ -23,7 +22,6 @@ public class LogService(ILogRepository logRepo) : ILogService
             AncienneValeur = ancienneValeur,
             NouvelleValeur = nouvelleValeur,
             UtilisateurId = utilisateurId,
-            AdresseIp = adresseIp,
             Date = DateTime.UtcNow
         };
 
@@ -46,7 +44,6 @@ public class LogService(ILogRepository logRepo) : ILogService
             NomUtilisateur = l.Utilisateur is not null
                 ? $"{l.Utilisateur.Prenom} {l.Utilisateur.Nom}"
                 : null,
-            AdresseIp = l.AdresseIp,
             Date = l.Date
         });
 

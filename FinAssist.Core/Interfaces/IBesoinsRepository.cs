@@ -7,6 +7,7 @@ public interface IBesoinsRepository
     Task<IEnumerable<Besoin>> GetAllAsync();
     Task<Besoin?> GetByIdAsync(int id);
     Task<IEnumerable<Besoin>> GetByUtilisateurAsync(int utilisateurId);
+    Task<IEnumerable<int>> GetBesoinIdsValidesParUtilisateurAsync(int utilisateurId);
     Task<Besoin> CreateAsync(Besoin besoin);
     Task<Besoin> UpdateAsync(Besoin besoin);
     Task AddHistoriqueAsync(Historique historique);
@@ -14,6 +15,9 @@ public interface IBesoinsRepository
     Task AddDocumentAsync(Document document);
     Task<IEnumerable<Document>> GetDocumentsAsync(int besoinId);
     Task<Document?> GetDocumentByIdAsync(int documentId);
+    Task DeleteDocumentAsync(int documentId);
+    Task<IEnumerable<Validation>> GetValidationsParUtilisateurAsync(int utilisateurId);
+    Task<IEnumerable<string>> GetCodesPermissionsUtilisateurAsync(int utilisateurId);
 
     // Catégories
     Task<IEnumerable<Categorie>> GetAllCategoriesAsync();

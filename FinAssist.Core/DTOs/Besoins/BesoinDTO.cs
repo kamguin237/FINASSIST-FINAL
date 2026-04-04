@@ -13,5 +13,8 @@ public class BesoinDTO
     public string UtilisateurNom { get; set; } = string.Empty;
     public int CategorieId { get; set; }
     public string CategorieNom { get; set; } = string.Empty;
-
+    /// <summary>
+    /// Vrai si le besoin a atteint la dernière étape du circuit (statut TERMINE).
+    /// </summary>
+    public bool EstTermine { get; set; }
 }

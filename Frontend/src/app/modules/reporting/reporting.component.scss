@@ -1,0 +1,72 @@
+@use '../../../styles/dark' as d;
+
+$card-bg:    #1e1e30;
+
+h2 { font-size: 1.3rem; font-weight: 700; color: d.$text; margin-bottom: 1.5rem; }
+
+.loading-text { color: d.$muted; }
+
+.stats-grid {
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem; 
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  // @include d.card;
+  // text-align: center; display: flex; flex-direction: column; gap: .25rem;
+  // .value { font-size: 2rem; font-weight: 800; color: d.$accent; }
+  // .label { font-size: .78rem; color: d.$muted; }
+  background: $card-bg;
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  transition: transform .15s;
+  &:hover { transform: translateY(-2px); }
+}
+
+.search-section { @include d.card; margin-bottom: 1.5rem;
+  h3 { font-size: .95rem; font-weight: 600; color: d.$text; margin-bottom: 1rem; } }
+
+.filtre-form { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.field {
+  display: flex; flex-direction: column; gap: .3rem;
+  label { font-size: .78rem; color: d.$muted; }
+  input, select {
+    padding: .55rem .75rem; background: rgba(255,255,255,.06);
+    border: 1px solid d.$border; border-radius: 8px; color: d.$text; font-size: .88rem;
+    height: 38px;
+    &:focus { outline: none; border-color: d.$accent; }
+    option { background: d.$card-bg; }
+  }
+}
+
+.btn-search {
+  @include d.btn-primary;
+  height: 38px; white-space: nowrap;
+}
+
+.export-btns { display: flex; gap: 1rem; padding-top: .75rem; border-top: 1px solid d.$border; }
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary{ @include d.btn-secondary; }
+
+.loading-results { display: flex; align-items: center; gap: 1rem; padding: 2rem; color: d.$muted; }
+.spinner { width: 24px; height: 24px; border: 3px solid d.$border; border-top-color: d.$accent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state { @include d.card; text-align: center; color: d.$muted; padding: 2rem; }
+
+.results-header { font-size: .82rem; color: d.$muted; margin-bottom: .75rem; }
+
+.table-card { @include d.card; }
+.table { @include d.dark-table; }
+
+.error-dates { color: #e74c3c; font-size: .82rem; margin-bottom: .75rem; }
+
+@include d.badge-statut;

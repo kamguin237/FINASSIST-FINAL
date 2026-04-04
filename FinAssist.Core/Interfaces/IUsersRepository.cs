@@ -9,6 +9,8 @@ public interface IUsersRepository
     Task<Utilisateur?> GetByEmailAsync(string email);
     Task<Utilisateur> CreateAsync(Utilisateur utilisateur);
     Task<Utilisateur> UpdateAsync(Utilisateur utilisateur);
+    Task DeleteAsync(int id);
+    Task DeleteCascadeAsync(int id);
     Task<IEnumerable<LogUtilisateur>> GetLogsAsync(int utilisateurId);
     Task AddLogAsync(LogUtilisateur log);
 }

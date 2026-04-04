@@ -46,11 +46,12 @@ public class NotificationRepository(AppDbContext db) : INotificationRepository
         await db.SaveChangesAsync();
     }
 
-    public Task<IEnumerable<int>> GetUtilisateurIdsByRoleAsync(string roleCode)
-        => Task.FromResult<IEnumerable<int>>(
-            db.Utilisateurs
-              .Include(u => u.Role)
-              .Where(u => u.Role.Code == roleCode && u.Actif)
-              .Select(u => u.Id)
-              .AsEnumerable());
+    public async Task<IEnumerable<int>> GetUtilisateurIdsByRoleAsync(string roleCode)
+    {
+        return await db.Utilisateurs
+            .Include(u => u.Role)
+            .Where(u => u.Role.Code == roleCode && u.Actif)
+            .Select(u => u.Id)
+            .ToListAsync();
+    }
 }

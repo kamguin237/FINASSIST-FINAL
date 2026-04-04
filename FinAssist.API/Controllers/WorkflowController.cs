@@ -25,7 +25,7 @@ public class WorkflowController(IWorkflowService workflowService) : ControllerBa
     [RequirePermission("BESOIN_VALIDER")]
     public async Task<IActionResult> Valider(int id, [FromBody] ValiderBesoinDTO dto)
     {
-        try { return Ok(await workflowService.ValiderAsync(id, dto, CurrentUserId, CurrentUserRole)); }
+        try { return Ok(await workflowService.ValiderAsync(id, dto, CurrentUserId, CurrentUserRole, CurrentUserNom)); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
         catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
         catch (UnauthorizedAccessException) { return Forbid(); }
@@ -36,7 +36,7 @@ public class WorkflowController(IWorkflowService workflowService) : ControllerBa
     [RequirePermission("BESOIN_VALIDER")]
     public async Task<IActionResult> Transmettre(int id)
     {
-        try { return Ok(await workflowService.TransmettreAsync(id, CurrentUserId)); }
+        try { return Ok(await workflowService.TransmettreAsync(id, CurrentUserId, CurrentUserNom)); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
         catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
         catch (UnauthorizedAccessException) { return Forbid(); }

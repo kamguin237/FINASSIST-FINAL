@@ -1,0 +1,174 @@
+@use '../../../../styles/dark' as d;
+
+.page-header { @include d.page-header; }
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary{ @include d.btn-secondary; }
+
+.table-card { @include d.card; }
+.table { @include d.dark-table; }
+
+.badge {
+  padding: .25rem .7rem; border-radius: 20px; font-size: .72rem; font-weight: 700;
+  &.active   { background: rgba(39,174,96,.15); color: #27ae60; }
+  &.inactive { background: rgba(231,76,60,.15); color: #e74c3c; }
+}
+
+.actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+.btn-sm {
+  padding: .25rem .65rem; border-radius: 6px; font-size: .78rem;
+  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer;
+  white-space: nowrap; transition: background .15s;
+  &:hover { background: rgba(124,58,237,.3); }
+  &.danger  { background: rgba(231,76,60,.15); color: #e74c3c;
+    &:hover { background: rgba(231,76,60,.3); } }
+  &.perm    { background: rgba(241,196,15,.1); color: #f1c40f;
+    &:hover { background: rgba(241,196,15,.2); } }
+  &.activate{ background: rgba(39,174,96,.15); color: #27ae60;
+    &:hover { background: rgba(39,174,96,.3); } }
+  &.delete  { background: rgba(192,57,43,.15); color: #c0392b;
+    &:hover { background: rgba(192,57,43,.3); } }
+}
+
+.form-error { color: #e74c3c; font-size: .82rem; margin-bottom: .75rem; }
+
+// ── Modales ───────────────────────────────────────────────────────────────────
+@include d.dark-modal;
+@include d.field-label;
+
+// Modale large pour les permissions
+.modal-lg {
+  width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-sub {
+  font-size: .78rem;
+  color: d.$muted;
+  margin-top: .2rem;
+  strong { color: #a78bfa; }
+}
+
+.perm-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.25rem;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(124,58,237,.3); border-radius: 2px; }
+}
+
+// Légende
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding: .6rem .85rem;
+  background: rgba(255,255,255,.04);
+  border-radius: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .78rem;
+  color: d.$muted;
+}
+
+.dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  &.role   { background: rgba(52,152,219,.6); }
+  &.direct { background: rgba(124,58,237,.8); }
+}
+
+// Groupes par module
+.perm-group { margin-bottom: 1.25rem; }
+
+.perm-group-title {
+  font-size: .72rem;
+  font-weight: 700;
+  color: d.$muted;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: .6rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid d.$border;
+}
+
+.perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: .4rem;
+}
+
+.perm-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .45rem .65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s;
+  border: 1px solid transparent;
+
+  &:hover { background: rgba(255,255,255,.04); }
+
+  &.from-role {
+    border-color: rgba(52,152,219,.2);
+    background: rgba(52,152,219,.05);
+    cursor: default;
+  }
+
+  &.is-direct {
+    border-color: rgba(124,58,237,.3);
+    background: rgba(124,58,237,.08);
+  }
+
+  input[type=checkbox] {
+    accent-color: d.$accent;
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+    &:disabled { cursor: default; opacity: .6; }
+  }
+}
+
+.perm-info {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-width: 0;
+}
+
+.perm-code {
+  font-size: .78rem;
+  color: d.$text;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.perm-tag {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  &.role   { background: rgba(52,152,219,.2); color: #3498db; }
+  &.direct { background: rgba(124,58,237,.2); color: #a78bfa; }
+}
+
+// Footer modale
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid d.$border;
+  flex-shrink: 0;
+}

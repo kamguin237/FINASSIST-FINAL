@@ -9,7 +9,7 @@ public class SignatureRepository(AppDbContext db) : ISignatureRepository
 {
     public Task<SignatureElectronique?> GetByIdAsync(int id)
         => db.Signatures
-             .Include(s => s.Utilisateur)
+             .Include(s => s.Utilisateur).ThenInclude(u => u.Role)
              .Include(s => s.Document)
              .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -24,6 +24,14 @@ public class SignatureRepository(AppDbContext db) : ISignatureRepository
              .Include(s => s.Utilisateur)
              .Include(s => s.Document)
              .FirstOrDefaultAsync(s => s.DocumentId == documentId && s.UtilisateurId == utilisateurId);
+
+    public Task<SignatureElectronique?> GetByBesoinIdAsync(int besoinId)
+        => db.Signatures
+             .Include(s => s.Utilisateur).ThenInclude(u => u.Role)
+             .Include(s => s.Document)
+             .Where(s => s.Document.BesoinId == besoinId && s.Valide)
+             .OrderByDescending(s => s.Horodatage)
+             .FirstOrDefaultAsync();
 
     public async Task<SignatureElectronique> AddAsync(SignatureElectronique signature)
     {

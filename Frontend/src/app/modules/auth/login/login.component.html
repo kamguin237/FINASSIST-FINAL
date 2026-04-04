@@ -1,0 +1,57 @@
+<div class="login-page">
+
+  <!-- Panneau gauche — branding -->
+  <div class="login-left">
+    <div class="brand-block">
+      <div class="brand-logo">F</div>
+      <h1><span class="mot">Fin</span>Assist</h1>
+      <p>Plateforme de gestion des besoins et circuits de validation</p>
+    </div>
+    <div class="decorative-circles">
+      <div class="circle c1"></div>
+      <div class="circle c2"></div>
+      <div class="circle c3"></div>
+    </div>
+  </div>
+
+  <!-- Panneau droit — formulaire -->
+  <div class="login-right">
+    <div class="login-card">
+      <div class="card-header">
+        <h2>Connexion</h2>
+        <p>Entrez vos identifiants pour accéder à votre espace</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <label>Adresse email</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" formControlName="email" placeholder="admin@finassist.com" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Mot de passe</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" formControlName="motDePasse" placeholder="••••••••" />
+          </div>
+        </div>
+
+        @if (error) {
+          <div class="error-box">⚠ {{ error }}</div>
+        }
+
+        <button type="submit" class="btn-submit" [disabled]="loading || form.invalid">
+          @if (loading) {
+            <span class="spinner"></span> Connexion...
+          } @else {
+            Se connecter →
+          }
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>

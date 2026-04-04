@@ -50,16 +50,15 @@ public class NotificationService(
         };
     }
 
-    // Soumission → notifier tous les Responsables
-    public async Task NotifierSoumissionAsync(int besoinId, int soumetteurId)
+    // Soumission -> notifier les utilisateurs du role de la premiere etape
+    public async Task NotifierSoumissionAsync(int besoinId, string titreBesoin, int soumetteurId, string roleEtape1, string nomSoumetteur)
     {
-        var responsables = await notifRepo.GetUtilisateurIdsByRoleAsync("Responsable");
-        var ids = responsables.ToList();
+        var ids = (await notifRepo.GetUtilisateurIdsByRoleAsync(roleEtape1)).ToList();
         if (ids.Count == 0) return;
 
         var notif = new Notification
         {
-            Message = $"Nouvelle demande #{besoinId} soumise et en attente de validation N1.",
+            Message = $"La demande \u00ab {titreBesoin} \u00bb a \u00e9t\u00e9 soumise par \u00ab {nomSoumetteur} \u00bb et attend votre validation.",
             Type = TypeNotification.ACCUSE_RECEPTION,
             DateEnvoi = DateTime.UtcNow
         };
@@ -67,62 +66,45 @@ public class NotificationService(
         await firebase.SendAsync(ids, "Nouvelle demande", notif.Message);
     }
 
-    // Validation N1 → APPROUVE : notifier Direction | REJETE : notifier l'agent
-    public async Task NotifierValidationN1Async(int besoinId, DecisionValidation decision, int agentId)
+    // Transmission -> notifier les utilisateurs du role de la prochaine etape
+    public async Task NotifierTransmissionAsync(int besoinId, string titreBesoin, string roleProchaineEtape, string nomTransmetteur)
     {
-        if (decision == DecisionValidation.APPROUVE)
-        {
-            var direction = await notifRepo.GetUtilisateurIdsByRoleAsync("Direction");
-            var ids = direction.ToList();
-            if (ids.Count == 0) return;
+        var ids = (await notifRepo.GetUtilisateurIdsByRoleAsync(roleProchaineEtape)).ToList();
+        if (ids.Count == 0) return;
 
-            var notif = new Notification
-            {
-                Message = $"Demande #{besoinId} validée N1 — en attente de votre approbation (N2).",
-                Type = TypeNotification.VALIDATION,
-                DateEnvoi = DateTime.UtcNow
-            };
-            await notifRepo.CreateAsync(notif, ids);
-            await firebase.SendAsync(ids, "Validation N1 approuvée", notif.Message);
-        }
-        else if (decision == DecisionValidation.REJETE)
+        var notif = new Notification
         {
-            var notif = new Notification
-            {
-                Message = $"Votre demande #{besoinId} a été rejetée au niveau N1.",
-                Type = TypeNotification.REJET,
-                DateEnvoi = DateTime.UtcNow
-            };
-            await notifRepo.CreateAsync(notif, [agentId]);
-            await firebase.SendAsync([agentId], "Demande rejetée", notif.Message);
-        }
+            Message = $"La demande \u00ab {titreBesoin} \u00bb vous a \u00e9t\u00e9 transmise par \u00ab {nomTransmetteur} \u00bb et attend votre validation.",
+            Type = TypeNotification.VALIDATION,
+            DateEnvoi = DateTime.UtcNow
+        };
+        await notifRepo.CreateAsync(notif, ids);
+        await firebase.SendAsync(ids, "Demande transmise", notif.Message);
     }
 
-    // Validation N2 → notifier l'agent + les Responsables
-    public async Task NotifierValidationN2Async(int besoinId, DecisionValidation decision, int agentId)
-    {
-        var responsables = await notifRepo.GetUtilisateurIdsByRoleAsync("Responsable");
-        var destinataires = responsables.Append(agentId).Distinct().ToList();
-
-        var (message, type) = decision == DecisionValidation.APPROUVE
-            ? ($"Demande #{besoinId} approuvée — signature électronique requise.", TypeNotification.SIGNATURE_REQUISE)
-            : ($"Demande #{besoinId} rejetée au niveau N2.", TypeNotification.REJET);
-
-        var notif = new Notification { Message = message, Type = type, DateEnvoi = DateTime.UtcNow };
-        await notifRepo.CreateAsync(notif, destinataires);
-        await firebase.SendAsync(destinataires, decision == DecisionValidation.APPROUVE ? "Demande approuvée" : "Demande rejetée", message);
-    }
-
-    // Signature apposée → notifier l'agent initiateur
-    public async Task NotifierSignatureAsync(int besoinId, int agentId)
+    // Rejet -> notifier le createur du besoin
+    public async Task NotifierRejetAsync(int besoinId, string titreBesoin, int createurId, string roleEtape)
     {
         var notif = new Notification
         {
-            Message = $"La demande #{besoinId} a été signée électroniquement.",
+            Message = $"Votre demande \u00ab {titreBesoin} \u00bb a \u00e9t\u00e9 rejet\u00e9e par le r\u00f4le \u00ab {roleEtape} \u00bb.",
+            Type = TypeNotification.REJET,
+            DateEnvoi = DateTime.UtcNow
+        };
+        await notifRepo.CreateAsync(notif, [createurId]);
+        await firebase.SendAsync([createurId], "Demande rejet\u00e9e", notif.Message);
+    }
+
+    // Signature apposee -> notifier le createur du besoin
+    public async Task NotifierSignatureAsync(int besoinId, string titreBesoin, int agentId, string roleSignataire)
+    {
+        var notif = new Notification
+        {
+            Message = $"La demande \u00ab {titreBesoin} \u00bb a \u00e9t\u00e9 sign\u00e9e \u00e9lectroniquement par le \u00ab {roleSignataire} \u00bb.",
             Type = TypeNotification.SIGNATURE_REQUISE,
             DateEnvoi = DateTime.UtcNow
         };
         await notifRepo.CreateAsync(notif, [agentId]);
-        await firebase.SendAsync([agentId], "Signature apposée", notif.Message);
+        await firebase.SendAsync([agentId], "Signature appos\u00e9e", notif.Message);
     }
 }

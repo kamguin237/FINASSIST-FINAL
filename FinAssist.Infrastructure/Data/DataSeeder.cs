@@ -36,7 +36,6 @@ public static class DataSeeder
         ("WORKFLOW_MODIFIER",   "Modifier un circuit",      "Modification d'un circuit",    "Workflow"),
         ("WORKFLOW_SUPPRIMER",  "Supprimer un circuit",     "Suppression d'un circuit",     "Workflow"),
         ("WORKFLOW_CONSULTER",  "Consulter les circuits",   "Consultation des circuits",    "Workflow"),
-        ("WORKFLOW_CONFIGURER", "Configurer un circuit",    "Configuration d'un circuit",   "Workflow"),
         // Catégories
         ("CATEGORIE_CREER",     "Créer une catégorie",      "Création d'une catégorie",     "Catégories"),
         ("CATEGORIE_MODIFIER",  "Modifier une catégorie",   "Modification d'une catégorie", "Catégories"),

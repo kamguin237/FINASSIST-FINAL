@@ -1,0 +1,290 @@
+@if (loading) {
+  <p>Chargement...</p>
+} @else if (besoin) {
+  <div class="detail-header">
+    <h2>{{ besoin.titre }}</h2>
+    <span class="badge">{{ besoin.statut }}</span>
+    <a routerLink="/besoins" class="back-link">← Retour</a>
+  </div>
+
+  <div class="detail-grid">
+    <div class="info-card">
+      <h3>Informations</h3>
+      <p><strong>Description :</strong> {{ besoin.description }}</p>
+      <p><strong>Catégorie :</strong> {{ besoin.categorieNom }}</p>
+      <p><strong>Importance :</strong> {{ besoin.niveauImportance }}</p>
+      <p><strong>Créé par :</strong> {{ besoin.utilisateurNom }}</p>
+      <p><strong>Date :</strong> {{ besoin.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p>
+    </div>
+
+    <div class="actions-card">
+      <h3>Actions</h3>
+      @if (besoin.statut === 'BROUILLON' && auth.hasPermission('BESOIN_MODIFIER')) {
+        <button (click)="enregistrer()" class="btn">Enregistrer</button>
+      }
+      @if (besoin.statut === 'ENREGISTRE' && auth.hasPermission('BESOIN_MODIFIER')) {
+        <button (click)="soumettre()" class="btn">Soumettre</button>
+      }
+      @if (auth.hasPermission('BESOIN_VALIDER') && (besoin.statut ?? '').startsWith('EN_ATTENTE_ROLE')) {
+        <div class="valider-form">
+          <h4>Décision de validation</h4>
+          <form [formGroup]="validerForm" (ngSubmit)="valider()">
+            <app-custom-select
+              [options]="[{value:'APPROUVE',label:'Approuver'},{value:'REJETE',label:'Rejeter'}]"
+              [selected]="validerForm.controls['decision'].value"
+              (selectedChange)="validerForm.controls['decision'].setValue($any($event))">
+            </app-custom-select>
+            <input formControlName="motif" placeholder="Motif (optionnel)" />
+            <input formControlName="commentaire" placeholder="Commentaire (optionnel)" />
+            <button type="submit" class="btn"
+              [disabled]="validerForm.invalid || validerLoading || validerDone">
+              @if (validerLoading) { En cours... }
+              @else if (validerDone) { ✓ Validé }
+              @else { Valider }
+            </button>
+          </form>
+        </div>
+      }
+      @if (auth.hasPermission('BESOIN_VALIDER') &&
+           (besoin.statut ?? '').startsWith('SIGNE_ROLE')) {
+        <button (click)="transmettre()" class="btn secondary">
+          Transmettre au niveau supérieur
+        </button>
+      }
+      @if (auth.hasPermission('BESOIN_SIGNER') && (besoin.statut ?? '').startsWith('APPROUVE_ROLE')) {
+        <button (click)="ouvrirSignature()" class="btn sign">✍ Signer électroniquement</button>
+      }
+      @if (estSigne && signatureId) {
+      }
+    </div>
+  </div>
+
+  @if (signatureResult) {
+    <div class="sign-confirm-card">
+      <div class="sign-confirm-header"><span class="badge-signed">✅ Document signé</span></div>
+      <div class="sign-confirm-body">
+        <div class="sign-row"><span class="sign-label">Signataire</span><span>{{ signatureResult.signataireNom }}</span></div>
+        <div class="sign-row"><span class="sign-label">Date</span><span>{{ signatureResult.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
+        <div class="sign-row"><span class="sign-label">Empreinte</span><code>{{ signatureResult.empreinte.slice(0, 8) }}...</code></div>
+      </div>
+      <div class="sign-confirm-actions">
+        <button class="btn apercu" (click)="ouvrirApercu()">👁 Voir le document signé</button>
+      </div>
+    </div>
+  }
+
+  @if (!signatureResult && documents.length > 0) {
+    <div class="apercu-btn-wrap">
+      <button class="btn apercu" (click)="ouvrirApercu()">👁 Voir un aperçu du document</button>
+    </div>
+  }
+
+  <!-- Pièces jointes -->
+  @if (auth.hasPermission('BESOIN_MODIFIER')) {
+    <div class="pj-card">
+      <h3>Pièces jointes</h3>
+      <label class="upload-zone">
+        <input type="file" (change)="onFichierChange($event)" [disabled]="uploading" #fileInput />
+        @if (uploading) { <span>Envoi en cours...</span> }
+        @else { <span>📎 Cliquer pour joindre un fichier</span> }
+      </label>
+      @if (documents.length > 0) {
+        <ul class="doc-list">
+          @for (d of documents; track d.id) {
+            <li>
+              <span class="doc-icon">📄</span>
+              <span class="doc-nom">{{ d.nom }}</span>
+              <span class="doc-type">{{ d.type }}</span>
+              <span class="doc-date">{{ d.dateCreation | date:'dd/MM/yyyy' }}</span>
+              <button class="doc-del-btn" (click)="supprimerDocument(d.id)" title="Supprimer">✕</button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <div class="historique-card">
+    <h3>Historique</h3>
+    <ul>
+      @for (h of historique; track h.id) {
+        <li>
+          <strong>{{ h.action }}</strong> — {{ h.description }}
+          <span class="date">{{ h.dateAction | date:'dd/MM/yyyy HH:mm' }}</span>
+        </li>
+      }
+      @if (historique.length === 0) {
+        <li style="color:#a0a0b0;font-size:.85rem">Aucune action enregistrée.</li>
+      }
+    </ul>
+  </div>
+}
+
+<!-- ── Modale signature manuscrite ── -->
+@if (showSignModal) {
+  <div class="sign-overlay" (click)="fermerSignModal()">
+    <div class="sign-modal" (click)="$event.stopPropagation()">
+      <div class="sign-modal-header">
+        <h3>{{ signEtape === 1 ? 'Placement de la signature' : 'Dessinez votre signature' }}</h3>
+        <button class="close-btn" (click)="fermerSignModal()">✕</button>
+      </div>
+      @if (signErreur) { <div class="sign-error">⚠ {{ signErreur }}</div> }
+
+      @if (signEtape === 1) {
+        <div class="sign-modal-body">
+          <p class="sign-instruction">Cliquez sur l'endroit du document où vous souhaitez apposer votre signature</p>
+          <div class="doc-zoom-bar">
+            <button class="zoom-btn" (click)="zoomOut()">－</button>
+            <span>{{ (docZoom * 100).toFixed(0) }}%</span>
+            <button class="zoom-btn" (click)="zoomIn()">＋</button>
+          </div>
+          <div class="doc-zone" (click)="onDocClick($event)">
+            @if (pdfLoading) {
+              <div class="pdf-loading"><span class="spinner-sm"></span> Chargement...</div>
+            } @else if (pdfError) {
+              <div class="pdf-error">⚠ Impossible de charger le document.</div>
+            } @else if (pdfSrc) {
+               <div class="pdf-content-wrapper">
+              <pdf-viewer 
+                [src]="pdfSrc"
+                [zoom]="docZoom"
+                [render-text]="true"
+                [show-all]="true"
+                [fit-to-page]="true"
+                [original-size]="false"
+                [autoresize]="false"
+                (after-load-complete)="onPdfLoaded($event)"
+                (error)="onPdfError($event)"
+                style="display:block; width:100%; height: 100%;">
+              </pdf-viewer>
+
+                   <!-- ✅ Cadre positionné dans le contenu scrollable -->
+              @if (signPosPreview) {
+                <div class="sign-zone-preview"
+                  [style.left.%]="signPosPreview.x"
+                  [style.top.%]="signPosPreview.y">
+                  <span>Signature</span>
+                </div>
+              }
+            </div>
+            } @else if (isImage && imageUrl) {
+              <img [src]="imageUrl" style="width:100%;display:block;" alt="Document" />
+            } @else {
+              <div class="doc-placeholder">
+                <span>📄 {{ documents[0]?.nom ?? 'Aucun document' }}</span>
+                <small>Cliquez pour placer la signature</small>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="sign-modal-footer">
+          <button class="btn-secondary" (click)="fermerSignModal()">Annuler</button>
+          <button class="btn-primary" [disabled]="!signPos" (click)="confirmerPlacement()">Confirmer le placement →</button>
+        </div>
+      }
+
+      @if (signEtape === 2) {
+        <div class="sign-modal-body canvas-body">
+          <p class="sign-instruction">Dessinez votre signature ci-dessous</p>
+          <div class="canvas-wrap">
+            <canvas #signCanvas width="600" height="200" class="sign-canvas"
+              (mousedown)="onCanvasMouseDown($event)"
+              (mousemove)="onCanvasMouseMove($event)"
+              (mouseup)="onCanvasMouseUp()"
+              (mouseleave)="onCanvasMouseUp()"
+              (touchstart)="onCanvasTouchStart($event)"
+              (touchmove)="onCanvasTouchMove($event)"
+              (touchend)="onCanvasMouseUp()">
+            </canvas>
+            <div class="canvas-baseline"></div>
+          </div>
+        </div>
+        <div class="sign-modal-footer">
+          <button class="btn-secondary" (click)="retourEtape1()">← Retour</button>
+          <button class="btn-secondary" (click)="effacerCanvas()">Effacer</button>
+          <button class="btn-primary" [disabled]="signLoading" (click)="validerSignature()">
+            @if (signLoading) { <span class="spinner-sm"></span> Envoi... }
+            @else { ✅ Valider la signature }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- ── Modale aperçu ── -->
+@if (showApercuModal) {
+  <div class="sign-overlay" (click)="fermerApercu()">
+    <div class="sign-modal" (click)="$event.stopPropagation()">
+      <div class="sign-modal-header">
+        <h3>{{ apercuData ? 'Document signé' : 'Aperçu du document' }}</h3>
+        <button class="close-btn" (click)="fermerApercu()">✕</button>
+      </div>
+      <div class="sign-modal-body apercu-body">
+
+        @if (apercuLoading || apercuDocLoading || pdfLoading) {
+          <div class="apercu-loading"><span class="spinner-sm"></span> Chargement du document...</div>
+        } @else if (pdfError) {
+          <div class="pdf-error">
+            ⚠ Impossible d'afficher le document.
+          </div>
+        } @else {
+          <div class="apercu-doc-zone">
+            @if (apercuPdfViewerSrc) {
+              <pdf-viewer 
+                [src]="apercuPdfViewerSrc"
+                [zoom]="1"
+                [render-text]="true"
+                [show-all]="true"
+                [fit-to-page]="false"
+                [original-size]="false"
+                [autoresize]="false"
+                (after-load-complete)="onPdfLoaded($event)"
+                (error)="onPdfError($event)"
+                style="display:block;width:100%;min-height:500px;">
+              </pdf-viewer>
+            } @else if (isImage && imageUrl) {
+              <img [src]="imageUrl" style="width:100%;display:block;" alt="Document" />
+            } @else {
+              <div class="apercu-doc-placeholder">
+                <span>📄 {{ documents[0]?.nom ?? 'Aucun document joint' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="sign-modal-footer">
+        <button class="btn-secondary" (click)="fermerApercu()">Fermer</button>
+        @if (apercuData) {
+          <button class="btn-primary" (click)="telecharger()">⬇ Télécharger le document signé</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modale vérification signature -->
+@if (showVerifModal) {
+  <div class="modal-overlay" (click)="fermerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Vérification de signature</h3>
+        <button class="close-btn" (click)="fermerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (verifLoading) {
+          <p>Vérification en cours...</p>
+        } @else if (verifResult) {
+          <div class="verif-row"><span class="verif-label">Signataire</span><span>{{ verifResult.signataireNom }}</span></div>
+          <div class="verif-row"><span class="verif-label">Date</span><span>{{ verifResult.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
+          <div class="verif-row">
+            <span class="verif-label">Résultat</span>
+            @if (verifResult.authentique) { <span class="badge-valid">✓ Signature valide</span> }
+            @else { <span class="badge-invalid">✗ Signature invalide</span> }
+          </div>
+          <p class="verif-message">{{ verifResult.message }}</p>
+        }
+      </div>
+    </div>
+  </div>
+}

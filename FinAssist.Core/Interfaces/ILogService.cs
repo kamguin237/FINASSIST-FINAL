@@ -11,8 +11,7 @@ public interface ILogService
         int? entiteId = null,
         string? ancienneValeur = null,
         string? nouvelleValeur = null,
-        int? utilisateurId = null,
-        string? adresseIp = null);
+        int? utilisateurId = null);
 
     Task<(IEnumerable<LogActiviteDTO> items, int total)> GetLogsAsync(FiltreLogsDTO filtres);
 }

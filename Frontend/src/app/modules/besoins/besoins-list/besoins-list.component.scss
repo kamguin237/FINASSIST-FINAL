@@ -1,0 +1,116 @@
+@use '../../../../styles/dark' as d;
+
+.page-header { @include d.page-header; }
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary{ @include d.btn-secondary; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtre-statut {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+
+  app-custom-select {
+    min-width: 220px;
+  }
+}
+
+.table-card { @include d.card; }
+.table { @include d.dark-table; }
+
+@include d.badge-statut;
+
+.btn-sm {
+  padding: .25rem .65rem; border-radius: 6px; font-size: .78rem;
+  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: background .15s;
+  &:hover { background: rgba(124,58,237,.3); }
+  &.danger { background: rgba(231,76,60,.15); color: #e74c3c;
+    &:hover { background: rgba(231,76,60,.3); } }
+}
+
+.actions { display: flex; gap: .5rem; }
+
+@include d.dark-modal;
+@include d.field-label;
+
+.modal-body textarea { resize: vertical; }
+
+// ── Bouton catégorie cliquable ────────────────────────────────────────────────
+.btn-categorie {
+  background: none; border: none; cursor: pointer; padding: 0;
+  color: d.$accent; font-size: .85rem; font-weight: 500;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+  transition: color .15s;
+  &:hover { color: lighten(#7c3aed, 15%); }
+}
+
+body.light-mode .btn-categorie { color: #7c3aed; }
+
+// ── Modale circuit ────────────────────────────────────────────────────────────
+.circuit-modal { max-width: 560px !important; }
+
+.circuit-info {
+  display: flex; flex-direction: column; gap: .2rem;
+  margin-bottom: 1rem;
+  .circuit-nom { font-weight: 700; font-size: 1rem; color: d.$text; }
+  .circuit-desc { font-size: .82rem; color: d.$muted; }
+}
+
+.statut-actuel {
+  display: flex; align-items: center; gap: .6rem;
+  margin-bottom: 1.2rem;
+  .statut-label { font-size: .82rem; color: d.$muted; }
+}
+
+.etapes-list { display: flex; flex-direction: column; gap: .6rem; }
+
+.etape-item {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 1rem; border-radius: 10px;
+  border: 1px solid d.$border; background: rgba(255,255,255,.03);
+  transition: border-color .15s;
+
+  &.active  { border-color: d.$accent; background: rgba(124,58,237,.08); }
+  &.done    { border-color: #22c55e;   background: rgba(34,197,94,.06); opacity: .85; }
+  &.pending { opacity: .55; }
+}
+
+.etape-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 700; flex-shrink: 0;
+  background: d.$accent-dim; color: #a78bfa;
+  .active  & { background: d.$accent; color: #fff; }
+  .done    & { background: #22c55e;   color: #fff; }
+}
+
+.etape-body { flex: 1; }
+.etape-role { font-weight: 600; font-size: .88rem; color: d.$text; margin-bottom: .25rem; }
+.etape-flags { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+.flag {
+  font-size: .72rem; padding: .1rem .45rem; border-radius: 8px;
+  background: d.$accent-dim; color: #a78bfa;
+  &.last { background: rgba(250,204,21,.12); color: #facc15; }
+}
+
+.etape-statut-icon .icon {
+  font-size: 1.1rem; font-weight: 700;
+  &.done    { color: #22c55e; }
+  &.active  { color: d.$accent; }
+  &.pending { color: d.$muted; }
+}
+
+.loading-text, .no-circuit { color: d.$muted; font-size: .88rem; text-align: center; padding: 1rem 0; }
+
+.modal-footer {
+  display: flex; justify-content: flex-end;
+  padding: 1rem 1.5rem; border-top: 1px solid d.$border;
+}

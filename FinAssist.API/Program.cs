@@ -42,6 +42,7 @@ builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<ISignatureRepository, SignatureRepository>();
 builder.Services.AddScoped<IHashingService, HashingService>();
 builder.Services.AddScoped<ISignatureConfig, SignatureConfig>();
+builder.Services.AddScoped<IPdfSignatureService, PdfSignatureService>();
 builder.Services.AddScoped<ISignatureService, SignatureService>();
 
 // ── Injection de dépendances — Module Notifications ───────────────────────────
@@ -124,8 +125,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinAssist API v1"));
 }
 
-app.UseHttpsRedirection();
+// CORS doit être avant HttpsRedirection pour que les preflight OPTIONS reçoivent les headers CORS
 app.UseCors("FinAssistPolicy");
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -11,6 +11,9 @@ public interface IBesoinsService
     Task<BesoinDTO> EnregistrerAsync(int id, int utilisateurId);
     Task<BesoinDTO> SoumettreAsync(int id, int utilisateurId);
     Task<DocumentDTO> AjouterPieceJointeAsync(int id, string nom, string type, byte[] contenu);
+    Task<IEnumerable<DocumentDTO>> GetDocumentsAsync(int id);
+    Task<(byte[] contenu, string nom, string type)> GetDocumentContenuAsync(int besoinId, int documentId);
+    Task SupprimerDocumentAsync(int besoinId, int documentId);
     Task<IEnumerable<HistoriqueDTO>> GetHistoriqueAsync(int id);
     Task<IEnumerable<CategorieDTO>> GetAllCategoriesAsync();
     Task<CategorieDetailDTO> GetCategorieByIdAsync(int id);

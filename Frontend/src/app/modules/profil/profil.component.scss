@@ -1,0 +1,126 @@
+@use '../../../styles/dark' as d;
+
+.profil-loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 200px; color: d.$muted; font-size: .9rem;
+}
+
+.profil-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  min-height: calc(100vh - 56px); // 56px = hauteur topbar
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+// ── Carte profil ──────────────────────────────────────────────────────────────
+.profil-card {
+  @include d.card;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
+  gap: 1.25rem; 
+  padding: 2rem 1.5rem;
+}
+
+.profil-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, d.$accent, #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: 700; color: white;
+  box-shadow: 0 4px 20px rgba(124,58,237,.4);
+  flex-shrink: 0;
+}
+
+.profil-header {
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+}
+
+.profil-nom {
+  font-size: 1.3rem; font-weight: 700; color: d.$text; margin: 0; text-align: center;
+}
+
+.profil-infos {
+  width: 100%; border: 1px solid d.$border; border-radius: 10px; overflow: hidden;
+}
+
+.info-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 1rem; border-bottom: 1px solid d.$border; font-size: .88rem;
+  gap: .5rem;
+  &:last-child { border-bottom: none; }
+
+  @media (max-width: 400px) {
+    flex-direction: column; align-items: flex-start; gap: .25rem;
+  }
+}
+
+.info-label { color: d.$muted; font-size: .82rem; }
+.info-value  { color: d.$text; font-weight: 500; }
+
+.role-badge {
+  background: d.$accent-dim; color: #a78bfa;
+  padding: .2rem .65rem; border-radius: 12px; font-size: .78rem; font-weight: 600;
+}
+
+.badge-actif {
+  background: rgba(39,174,96,.15); color: #27ae60;
+  padding: .25rem .7rem; border-radius: 12px; font-size: .78rem; font-weight: 700;
+}
+
+.badge-inactif {
+  background: rgba(231,76,60,.15); color: #e74c3c;
+  padding: .25rem .7rem; border-radius: 12px; font-size: .78rem; font-weight: 700;
+}
+
+// ── Carte mot de passe ────────────────────────────────────────────────────────
+.pwd-card {
+  @include d.card;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 1.5rem;
+}
+
+.pwd-title {
+  font-size: 1rem; font-weight: 600; color: d.$text; margin-bottom: 1.25rem;
+}
+
+.pwd-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.field {
+  display: flex; flex-direction: column; gap: .35rem;
+  label { font-size: .82rem; color: d.$muted; }
+  input {
+    padding: .6rem .85rem;
+    background: rgba(255,255,255,.06); border: 1px solid d.$border;
+    border-radius: 8px; color: d.$text; font-size: .88rem;
+    transition: border-color .15s;
+    &:focus { outline: none; border-color: d.$accent; }
+  }
+}
+
+.field-error { font-size: .78rem; color: #e74c3c; }
+
+.btn-pwd {
+  margin-top: .25rem; padding: .65rem;
+  background: d.$accent; color: white; border: none; border-radius: 8px;
+  cursor: pointer; font-size: .88rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  transition: opacity .15s;
+  &:hover:not(:disabled) { opacity: .85; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.spinner-sm {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.3); border-top-color: white;
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -12,8 +12,8 @@ public interface INotificationService
     Task<NotificationDTO> CreerEtEnvoyerAsync(CreateNotificationDTO dto);
 
     // Déclencheurs automatiques
-    Task NotifierSoumissionAsync(int besoinId, int soumetteurId);
-    Task NotifierValidationN1Async(int besoinId, DecisionValidation decision, int agentId);
-    Task NotifierValidationN2Async(int besoinId, DecisionValidation decision, int agentId);
-    Task NotifierSignatureAsync(int besoinId, int agentId);
+    Task NotifierSoumissionAsync(int besoinId, string titreBesoin, int soumetteurId, string roleEtape1, string nomSoumetteur);
+    Task NotifierTransmissionAsync(int besoinId, string titreBesoin, string roleProchaineEtape, string nomTransmetteur);
+    Task NotifierRejetAsync(int besoinId, string titreBesoin, int createurId, string roleEtape);
+    Task NotifierSignatureAsync(int besoinId, string titreBesoin, int agentId, string roleSignataire);
 }

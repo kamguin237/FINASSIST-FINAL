@@ -1,0 +1,40 @@
+@use '../../../../styles/dark' as d;
+
+.page-header { @include d.page-header; }
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary{ @include d.btn-secondary; }
+
+.roles-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.role-card { @include d.card; padding: 0; overflow: hidden; }
+
+.role-header {
+  display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
+  cursor: pointer; transition: background .15s;
+  &:hover { background: rgba(255,255,255,.04); }
+  strong { color: d.$text; }
+  .desc { color: d.$muted; font-size: .82rem; flex: 1; }
+}
+
+.permissions-panel { padding: 1rem 1.25rem; border-top: 1px solid d.$border;
+  h4 { font-size: .85rem; color: d.$muted; margin-bottom: .75rem; } }
+
+.perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .5rem; }
+
+.perm-item {
+  display: flex; align-items: center; gap: .5rem; font-size: .82rem; cursor: pointer;
+  color: d.$muted;
+  input[type=checkbox] { accent-color: d.$accent; }
+  small { color: rgba(160,160,176,.6); font-size: .72rem; }
+}
+
+.btn-sm {
+  padding: .25rem .65rem; border-radius: 6px; font-size: .78rem;
+  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer; white-space: nowrap;
+  &.danger { background: rgba(231,76,60,.15); color: #e74c3c; }
+}
+
+.form-error { color: #e74c3c; font-size: .82rem; margin-bottom: .75rem; }
+
+@include d.dark-modal;
+@include d.field-label;

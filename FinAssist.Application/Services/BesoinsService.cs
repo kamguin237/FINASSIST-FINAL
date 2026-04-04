@@ -13,14 +13,71 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
     // - Autres (Agent créateur) → uniquement ses propres besoins
     public async Task<IEnumerable<BesoinDTO>> GetAllAsync(int utilisateurId, string roleCode)
     {
-        IEnumerable<Besoin> besoins;
+        if (roleCode is Roles.Administrateur)
+        {
+            var all = (await besoinsRepo.GetAllAsync()).ToList();
+            Console.WriteLine($"[BESOINS][Admin] Total: {all.Count}");
+            return all.Select(ToDTO);
+        }
 
-        if (roleCode is Roles.Administrateur or Roles.Direction or Roles.Responsable)
-            besoins = await besoinsRepo.GetAllAsync();
-        else
-            besoins = await besoinsRepo.GetByUtilisateurAsync(utilisateurId);
+        // 1. Besoins créés par l'utilisateur
+        var mesBesoins = (await besoinsRepo.GetByUtilisateurAsync(utilisateurId)).ToList();
+        Console.WriteLine($"[BESOINS][userId={utilisateurId}][role={roleCode}] mesBesoins: {mesBesoins.Count}");
+        foreach (var b in mesBesoins)
+            Console.WriteLine($"  → MES: id={b.Id} titre='{b.Titre}' statut={b.Statut}");
 
-        return besoins.Select(ToDTO);
+        // 2. Besoins soumis pour validation (EN_ATTENTE/TRANSMIS dont l'étape requiert son rôle)
+        //    + besoins qu'il a approuvés/signés en attente de transmission (APPROUVE_ROLE/SIGNE_ROLE)
+        var tousBesoins = await besoinsRepo.GetAllAsync();
+        var besoinsAValider = tousBesoins
+            .Where(b =>
+            {
+                if (WorkflowEngine.EstEnAttente(b.Statut))
+                {
+                    var etape = b.Categorie?.WorkflowCircuit?.Etapes is not null
+                        ? WorkflowEngine.ResoudreEtapeCourante(b.Statut, b.Categorie.WorkflowCircuit.Etapes, b.EtapeCouranteOrdre)
+                        : null;
+                    return etape?.RoleRequis?.Equals(roleCode, StringComparison.OrdinalIgnoreCase) == true;
+                }
+                if (b.Categorie?.WorkflowCircuit?.Etapes is not null)
+                {
+                    foreach (var etape in b.Categorie.WorkflowCircuit.Etapes)
+                    {
+                        if ((b.Statut == WorkflowEngine.StatutApprouve(etape.Ordre) ||
+                             b.Statut == WorkflowEngine.StatutSigne(etape.Ordre)) &&
+                            etape.RoleRequis?.Equals(roleCode, StringComparison.OrdinalIgnoreCase) == true)
+                            return true;
+                    }
+                }
+                return false;
+            })
+            .ToList();
+
+        Console.WriteLine($"[BESOINS][userId={utilisateurId}][role={roleCode}] besoinsAValider: {besoinsAValider.Count}");
+        foreach (var b in besoinsAValider)
+            Console.WriteLine($"  → VALIDER: id={b.Id} titre='{b.Titre}' statut={b.Statut}");
+
+        // 3. Besoins sur lesquels l'utilisateur a déjà validé (approuvé/rejeté/signé)
+        //    → il doit continuer à les voir même après transmission à l'étape suivante
+        var besoinIdsValides = (await besoinsRepo.GetBesoinIdsValidesParUtilisateurAsync(utilisateurId)).ToHashSet();
+        var besoinsDejaValides = tousBesoins
+            .Where(b => besoinIdsValides.Contains(b.Id))
+            .ToList();
+
+        Console.WriteLine($"[BESOINS][userId={utilisateurId}][role={roleCode}] besoinsDejaValides: {besoinsDejaValides.Count}");
+        foreach (var b in besoinsDejaValides)
+            Console.WriteLine($"  → DEJA_VALIDE: id={b.Id} titre='{b.Titre}' statut={b.Statut}");
+
+        // Union des trois ensembles sans doublons
+        var tous = mesBesoins
+            .Union(besoinsAValider, BesoinIdComparer.Instance)
+            .Union(besoinsDejaValides, BesoinIdComparer.Instance)
+            .OrderByDescending(b => b.DateModification)
+            .ToList();
+
+        Console.WriteLine($"[BESOINS][userId={utilisateurId}][role={roleCode}] TOTAL union: {tous.Count}");
+
+        return tous.Select(ToDTO);
     }
 
     public async Task<BesoinDTO> GetByIdAsync(int id, int utilisateurId, string roleCode)
@@ -28,14 +85,36 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
         var besoin = await besoinsRepo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException($"Besoin {id} introuvable.");
 
-        // Un utilisateur sans rôle élevé ne peut voir que ses propres besoins
-        if (roleCode is not (Roles.Administrateur or Roles.Direction or Roles.Responsable or Roles.Agent))
+        // L'administrateur peut accéder à n'importe quel besoin
+        if (roleCode is Roles.Administrateur)
+            return ToDTO(besoin);
+
+        // Le créateur peut accéder à son propre besoin
+        if (besoin.UtilisateurId == utilisateurId)
+            return ToDTO(besoin);
+
+        // Un validateur peut accéder aux besoins soumis pour validation selon son rôle
+        if (WorkflowEngine.EstEnAttente(besoin.Statut) ||
+            besoin.Statut.StartsWith("APPROUVE_ROLE") ||
+            besoin.Statut.StartsWith("SIGNE_ROLE"))
         {
-            if (besoin.UtilisateurId != utilisateurId)
-                throw new UnauthorizedAccessException("Accès refusé.");
+            var etapeCourante = besoin.Categorie?.WorkflowCircuit?.Etapes is not null
+                ? WorkflowEngine.ResoudreEtapeCourante(
+                    besoin.Statut,
+                    besoin.Categorie.WorkflowCircuit.Etapes,
+                    besoin.EtapeCouranteOrdre)
+                : null;
+
+            if (etapeCourante?.RoleRequis?.Equals(roleCode, StringComparison.OrdinalIgnoreCase) == true)
+                return ToDTO(besoin);
         }
 
-        return ToDTO(besoin);
+        // Un validateur peut aussi accéder aux besoins qu'il a déjà validés
+        var besoinIdsValides = (await besoinsRepo.GetBesoinIdsValidesParUtilisateurAsync(utilisateurId)).ToHashSet();
+        if (besoinIdsValides.Contains(id))
+            return ToDTO(besoin);
+
+        throw new UnauthorizedAccessException("Accès refusé.");
     }
 
     public async Task<BesoinDTO> CreateAsync(CreateBesoinDTO dto, int utilisateurId)
@@ -80,7 +159,10 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
             throw new UnauthorizedAccessException("Vous ne pouvez modifier que vos propres besoins.");
 
         var changes = new List<string>();
-        if (dto.Titre is not null && dto.Titre != besoin.Titre) { changes.Add($"Titre: {besoin.Titre} → {dto.Titre}"); besoin.Titre = dto.Titre; }
+        if (dto.Titre is not null && dto.Titre != besoin.Titre)
+        {
+            changes.Add($"Titre: {besoin.Titre} → {dto.Titre}"); besoin.Titre = dto.Titre;
+        }
         if (dto.Description is not null && dto.Description != besoin.Description) { changes.Add("Description modifiée"); besoin.Description = dto.Description; }
         if (dto.NiveauImportance is not null && dto.NiveauImportance != besoin.NiveauImportance) { changes.Add($"Importance: {besoin.NiveauImportance} → {dto.NiveauImportance}"); besoin.NiveauImportance = dto.NiveauImportance; }
         if (dto.CategorieId.HasValue && dto.CategorieId.Value != besoin.CategorieId) { changes.Add($"CategorieId: {besoin.CategorieId} → {dto.CategorieId.Value}"); besoin.CategorieId = dto.CategorieId.Value; }
@@ -139,7 +221,8 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
         if (besoin.Statut != WorkflowEngine.ENREGISTRE)
             throw new InvalidOperationException($"Le besoin doit être enregistré avant d'être soumis. Statut actuel : {besoin.Statut}.");
 
-        besoin.Statut = WorkflowEngine.EN_ATTENTE;
+        besoin.Statut = WorkflowEngine.StatutEnAttente(1); // EN_ATTENTE_ROLE1 — première étape
+        besoin.EtapeCouranteOrdre = 1;
         besoin.DateModification = DateTime.UtcNow;
         await besoinsRepo.UpdateAsync(besoin);
 
@@ -151,9 +234,53 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
             DateAction = DateTime.UtcNow
         });
 
-        await notificationService.NotifierSoumissionAsync(id, utilisateurId);
+        // Récupérer le rôle de la première étape du circuit pour notifier les bons utilisateurs
+        var roleEtape1 = besoin.Categorie?.WorkflowCircuit?.Etapes
+            ?.OrderBy(e => e.Ordre)
+            .FirstOrDefault()?.RoleRequis ?? "Responsable";
 
+        var nomSoumetteur = besoin.Utilisateur is not null
+            ? $"{besoin.Utilisateur.Prenom} {besoin.Utilisateur.Nom}"
+            : "Utilisateur";
+
+        await notificationService.NotifierSoumissionAsync(id, besoin.Titre, utilisateurId, roleEtape1, nomSoumetteur);
         return ToDTO(await besoinsRepo.GetByIdAsync(id) ?? besoin);
+    }
+
+    public async Task SupprimerDocumentAsync(int besoinId, int documentId)
+    {
+        var doc = await besoinsRepo.GetDocumentByIdAsync(documentId)
+            ?? throw new KeyNotFoundException($"Document {documentId} introuvable.");
+        if (doc.BesoinId != besoinId)
+            throw new KeyNotFoundException("Document non associé à ce besoin.");
+        await besoinsRepo.DeleteDocumentAsync(documentId);
+        await besoinsRepo.AddHistoriqueAsync(new Historique
+        {
+            BesoinId = besoinId,
+            Action = "SUPPRESSION_DOCUMENT",
+            Description = $"Document '{doc.Nom}' supprimé.",
+            DateAction = DateTime.UtcNow
+        });
+    }
+
+    public async Task<IEnumerable<DocumentDTO>> GetDocumentsAsync(int id)
+    {
+        _ = await besoinsRepo.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"Besoin {id} introuvable.");
+        var docs = await besoinsRepo.GetDocumentsAsync(id);
+        return docs.Select(d => new DocumentDTO
+        {
+            Id = d.Id, Nom = d.Nom, Type = d.Type, Checksum = d.Checksum, DateCreation = d.DateCreation
+        });
+    }
+
+    public async Task<(byte[] contenu, string nom, string type)> GetDocumentContenuAsync(int besoinId, int documentId)
+    {
+        var doc = await besoinsRepo.GetDocumentByIdAsync(documentId)
+            ?? throw new KeyNotFoundException($"Document {documentId} introuvable.");
+        if (doc.BesoinId != besoinId)
+            throw new KeyNotFoundException("Document non associé à ce besoin.");
+        return (doc.Contenu, doc.Nom, doc.Type);
     }
 
     public async Task<DocumentDTO> AjouterPieceJointeAsync(int id, string nom, string type, byte[] contenu)
@@ -339,13 +466,14 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
         var besoin = await besoinsRepo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException($"Besoin {id} introuvable.");
 
-        var statutsInterdits = new[] { WorkflowEngine.EN_ATTENTE, WorkflowEngine.TRANSMIS };
-        if (statutsInterdits.Contains(besoin.Statut) ||
+        // Bloquer la suppression si le besoin est en cours de validation
+        if (WorkflowEngine.EstEnAttente(besoin.Statut) ||
             besoin.Statut.StartsWith("APPROUVE_ROLE") ||
             besoin.Statut.StartsWith("SIGNE_ROLE"))
             throw new InvalidOperationException(
                 $"Impossible de supprimer un besoin en cours de validation (statut : {besoin.Statut}).");
 
+        // Autoriser : BROUILLON, ENREGISTRE, TERMINE, REJETE_ROLE{N}
         await besoinsRepo.DeleteBesoinAsync(besoin);
     }
 
@@ -361,7 +489,13 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
         UtilisateurId = b.UtilisateurId,
         UtilisateurNom = b.Utilisateur is not null ? $"{b.Utilisateur.Prenom} {b.Utilisateur.Nom}" : string.Empty,
         CategorieId = b.CategorieId,
-        CategorieNom = b.Categorie?.Nom ?? string.Empty
+        CategorieNom = b.Categorie?.Nom ?? string.Empty,
+        // TERMINE explicite OU SIGNE_ROLE{N} sur la dernière étape (besoins existants avant le fix)
+        EstTermine = b.Statut == WorkflowEngine.TERMINE ||
+                     (b.Statut.StartsWith("SIGNE_ROLE") &&
+                      b.Categorie?.WorkflowCircuit?.Etapes is not null &&
+                      b.Categorie.WorkflowCircuit.Etapes
+                          .Any(e => b.Statut == WorkflowEngine.StatutSigne(e.Ordre) && e.EstDerniereEtape))
     };
 
     private static CategorieDTO ToCategorieDTO(Categorie c) => new()
@@ -382,4 +516,11 @@ file static class Roles
     public const string Direction = "Direction";
     public const string Responsable = "Responsable";
     public const string Agent = "Agent";
+}
+
+file class BesoinIdComparer : IEqualityComparer<Besoin>
+{
+    public static readonly BesoinIdComparer Instance = new();
+    public bool Equals(Besoin? x, Besoin? y) => x?.Id == y?.Id;
+    public int GetHashCode(Besoin obj) => obj.Id.GetHashCode();
 }

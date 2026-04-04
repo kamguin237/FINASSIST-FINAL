@@ -5,6 +5,7 @@ using FinAssist.Core.DTOs.Users;
 using FinAssist.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FinAssist.API.Controllers;
 
@@ -17,6 +18,31 @@ public class UsersController(IUsersService usersService, IPermissionsRepository 
     [RequirePermission("USER_CONSULTER")]
     public async Task<IActionResult> GetAll()
         => Ok(await usersService.GetAllAsync());
+
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe()
+    {
+        var idClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (!int.TryParse(idClaim, out var id)) return Unauthorized();
+        try { return Ok(await usersService.GetByIdAsync(id)); }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+    }
+
+    [HttpPut("me/password")]
+    public async Task<IActionResult> ChangePassword([FromBody] FinAssist.Core.DTOs.Users.ChangePasswordDTO dto)
+    {
+        var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(idClaim, out var id)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(dto.NouveauMotDePasse) || dto.NouveauMotDePasse.Length < 8)
+            return BadRequest(new { message = "Le nouveau mot de passe doit contenir au moins 8 caractères." });
+        try
+        {
+            await usersService.ChangePasswordAsync(id, dto.AncienMotDePasse, dto.NouveauMotDePasse);
+            return Ok(new { message = "Mot de passe modifié avec succès." });
+        }
+        catch (UnauthorizedAccessException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+    }
 
     [HttpGet("{id:int}")]
     [RequirePermission("USER_CONSULTER")]
@@ -53,6 +79,23 @@ public class UsersController(IUsersService usersService, IPermissionsRepository 
         try { await usersService.DeactivateAsync(id); return NoContent(); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
         catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+    }
+
+    [HttpPatch("{id:int}/activer")]
+    [RequirePermission("USER_MODIFIER")]
+    public async Task<IActionResult> Activate(int id)
+    {
+        try { await usersService.ActivateAsync(id); return NoContent(); }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+    }
+
+    [HttpDelete("{id:int}/supprimer")]
+    [RequirePermission("USER_SUPPRIMER")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try { await usersService.DeleteAsync(id); return NoContent(); }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
     [HttpPut("{id:int}/role")]

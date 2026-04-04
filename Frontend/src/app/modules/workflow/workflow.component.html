@@ -1,0 +1,85 @@
+<div class="page-header">
+  <h2>Circuits de validation</h2>
+  @if (auth.hasPermission('WORKFLOW_CREER')) {
+    <button class="btn-primary" (click)="openCreate()">+ Nouveau circuit</button>
+  }
+</div>
+
+@if (showForm) {
+  <div class="modal-overlay" (click)="showForm = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editId ? 'Modifier' : 'Créer' }} un circuit</h3>
+        <button class="close-btn" (click)="showForm = false">✕</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="modal-body">
+        <div class="field">
+          <label>Nom *</label>
+          <input formControlName="nom" type="text" />
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <input formControlName="description" type="text" />
+        </div>
+
+        <h4>Étapes</h4>
+        <div formArrayName="etapes">
+          @for (etape of etapes.controls; track $index) {
+            <div [formGroupName]="$index" class="etape-row">
+              <span class="ordre">{{ $index + 1 }}</span>
+              <app-custom-select
+                [options]="roleOptions"
+                [selected]="etape.get('roleRequis')?.value"
+                placeholder="Rôle requis"
+                (selectedChange)="etape.get('roleRequis')?.setValue($any($event))"
+                class="role-select">
+              </app-custom-select>
+              <label><input type="checkbox" formControlName="approbationRequise" /> Approbation</label>
+              <label><input type="checkbox" formControlName="signatureRequise" /> Signature</label>
+              <input formControlName="delaiMaxJours" type="number" placeholder="Délai" class="delai-input" />
+              <label><input type="checkbox" formControlName="estDerniereEtape" /> Dernière</label>
+              <button type="button" (click)="removeEtape($index)" class="btn-sm danger">✕</button>
+            </div>
+          }
+        </div>
+        <button type="button" (click)="addEtape()" class="btn-secondary">+ Étape</button>
+
+        <div class="modal-footer">
+          <button type="button" (click)="showForm = false" class="btn-secondary">Annuler</button>
+          <button type="submit" [disabled]="form.invalid" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<div class="circuits-list">
+  @for (c of circuits; track c.id) {
+    <div class="circuit-card">
+      <div class="circuit-header" (click)="select(c)">
+        <strong>{{ c.nom }}</strong>
+        <span class="etapes-count">{{ c.etapes.length }} étape(s)</span>
+        @if (auth.hasPermission('WORKFLOW_MODIFIER')) {
+          <button class="btn-sm" (click)="openEdit(c); $event.stopPropagation()">Modifier</button>
+        }
+        @if (auth.hasPermission('WORKFLOW_SUPPRIMER')) {
+          <button class="btn-sm danger" (click)="delete(c.id); $event.stopPropagation()">Supprimer</button>
+        }
+      </div>
+      @if (selected?.id === c.id) {
+        <div class="etapes-detail">
+          @for (e of c.etapes; track e.id) {
+            <div class="etape">
+              <span class="ordre">{{ e.ordre }}</span>
+              <span>{{ e.roleRequis }}</span>
+              @if (e.approbationRequise) { <span class="tag">Approbation</span> }
+              @if (e.signatureRequise) { <span class="tag">Signature</span> }
+              <span class="tag muted">{{ e.delaiMaxJours }}j</span>
+              @if (e.estDerniereEtape) { <span class="tag last">Dernière</span> }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

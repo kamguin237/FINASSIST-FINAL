@@ -29,7 +29,6 @@ public class AuditMiddleware(RequestDelegate next)
             var utilisateurId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) is { } uid
                 && int.TryParse(uid, out var id) ? (int?)id : null;
 
-            var adresseIp = context.Connection.RemoteIpAddress?.ToString();
             var path = context.Request.Path.Value ?? string.Empty;
             var methode = context.Request.Method.ToUpperInvariant();
 
@@ -42,8 +41,7 @@ public class AuditMiddleware(RequestDelegate next)
                 action: action,
                 entiteType: entiteType,
                 entiteId: entiteId,
-                utilisateurId: utilisateurId,
-                adresseIp: adresseIp);
+                utilisateurId: utilisateurId);
         }
     }
 

@@ -1,0 +1,36 @@
+<h2>{{ editId ? 'Modifier le besoin' : 'Nouveau besoin' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="form-card">
+  <div class="field">
+    <label>Titre *</label>
+    <input formControlName="titre" type="text" />
+  </div>
+  <div class="field">
+    <label>Description *</label>
+    <textarea formControlName="description" rows="4"></textarea>
+  </div>
+  <div class="field">
+    <label>Niveau d'importance *</label>
+    <app-custom-select
+      [options]="niveaux | niveauOptions"
+      [selected]="form.controls['niveauImportance'].value"
+      placeholder="-- Choisir --"
+      (selectedChange)="form.controls['niveauImportance'].setValue($any($event))">
+    </app-custom-select>
+  </div>
+  <div class="field">
+    <label>Catégorie *</label>
+    <app-custom-select
+      [options]="categories | categorieOptions"
+      [selected]="form.controls['categorieId'].value"
+      placeholder="-- Choisir --"
+      (selectedChange)="form.controls['categorieId'].setValue($any($event))">
+    </app-custom-select>
+  </div>
+  <div class="actions">
+    <button type="button" routerLink="/besoins" class="btn-secondary">Annuler</button>
+    <button type="submit" [disabled]="loading || form.invalid" class="btn-primary">
+      {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+    </button>
+  </div>
+</form>

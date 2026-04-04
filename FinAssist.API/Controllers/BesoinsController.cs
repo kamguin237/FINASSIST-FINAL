@@ -42,6 +42,8 @@ public class BesoinsController(IBesoinsService besoinsService) : ControllerBase
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        catch (Exception ex) { return StatusCode(500, new { message = ex.Message, detail = ex.InnerException?.Message }); }
     }
 
     [HttpPut("{id:int}")]
@@ -72,6 +74,41 @@ public class BesoinsController(IBesoinsService besoinsService) : ControllerBase
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
         catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
         catch (UnauthorizedAccessException) { return Forbid(); }
+    }
+
+    [HttpGet("{id:int}/pieces-jointes")]
+    [RequirePermission("BESOIN_CONSULTER")]
+    public async Task<IActionResult> GetDocuments(int id)
+    {
+        try { return Ok(await besoinsService.GetDocumentsAsync(id)); }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+    }
+
+    [HttpDelete("{id:int}/pieces-jointes/{documentId:int}")]
+    [RequirePermission("BESOIN_MODIFIER")]
+    public async Task<IActionResult> SupprimerDocument(int id, int documentId)
+    {
+        try
+        {
+            await besoinsService.SupprimerDocumentAsync(id, documentId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+    }
+
+    [HttpGet("{id:int}/pieces-jointes/{documentId:int}")]
+    [RequirePermission("BESOIN_CONSULTER")]
+    public async Task<IActionResult> GetDocumentContenu(int id, int documentId)
+    {
+        try
+        {
+            var (contenu, nom, type) = await besoinsService.GetDocumentContenuAsync(id, documentId);
+            var mimeType = string.IsNullOrEmpty(type) ? "application/pdf" : type;
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{Uri.EscapeDataString(nom)}\"");
+            return File(contenu, mimeType);
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
     }
 
     [HttpPost("{id:int}/pieces-jointes")]

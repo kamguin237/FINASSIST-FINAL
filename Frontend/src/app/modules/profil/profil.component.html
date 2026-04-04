@@ -1,0 +1,76 @@
+@if (loading) {
+  <div class="profil-loading">Chargement...</div>
+} @else if (profil) {
+  <div class="profil-page">
+
+    <!-- Carte profil -->
+    <div class="profil-card">
+      <div class="profil-avatar">{{ initiales }}</div>
+      <div class="profil-header">
+        <h2 class="profil-nom">{{ profil.prenom }} {{ profil.nom }}</h2>
+        @if (profil.actif) {
+          <span class="badge-actif">✓ Actif</span>
+        } @else {
+          <span class="badge-inactif">✕ Inactif</span>
+        }
+      </div>
+      <div class="profil-infos">
+        <div class="info-row">
+          <span class="info-label">📧 Email</span>
+          <span class="info-value">{{ profil.email }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">🛡️ Rôle</span>
+          <span class="info-value role-badge">{{ profil.role }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">📅 Membre depuis</span>
+          <span class="info-value">{{ profil.dateCreation | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">🔒 Statut</span>
+          @if (profil.actif) {
+            <span class="badge-actif">Actif</span>
+          } @else {
+            <span class="badge-inactif">Inactif</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Carte changement de mot de passe -->
+    <div class="pwd-card">
+      <h3 class="pwd-title">🔑 Modifier le mot de passe</h3>
+      <form [formGroup]="pwdForm" (ngSubmit)="changerMotDePasse()" class="pwd-form">
+
+        <div class="field">
+          <label>Mot de passe actuel</label>
+          <input type="password" formControlName="ancienMotDePasse" placeholder="••••••••" />
+        </div>
+
+        <div class="field">
+          <label>Nouveau mot de passe</label>
+          <input type="password" formControlName="nouveauMotDePasse" placeholder="Min. 8 caractères" />
+          @if (pwdForm.get('nouveauMotDePasse')?.touched && pwdForm.get('nouveauMotDePasse')?.hasError('minlength')) {
+            <span class="field-error">Minimum 8 caractères requis.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label>Confirmer le nouveau mot de passe</label>
+          <input type="password" formControlName="confirmerMotDePasse" placeholder="••••••••" />
+          @if (pwdForm.touched && pwdForm.hasError('mismatch')) {
+            <span class="field-error">Les mots de passe ne correspondent pas.</span>
+          }
+        </div>
+
+        <button type="submit" class="btn-pwd" [disabled]="pwdForm.invalid || pwdLoading">
+          @if (pwdLoading) { <span class="spinner-sm"></span> Modification... }
+          @else { Modifier le mot de passe }
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+}

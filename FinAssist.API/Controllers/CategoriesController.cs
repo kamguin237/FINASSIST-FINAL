@@ -17,7 +17,7 @@ public class CategoriesController(IBesoinsService besoinsService) : ControllerBa
         => Ok(await besoinsService.GetAllCategoriesAsync());
 
     [HttpGet("{id:int}")]
-    [RequirePermission("CATEGORIE_CONSULTER")]
+    [RequirePermission("BESOIN_CONSULTER")]
     public async Task<IActionResult> GetById(int id)
     {
         try { return Ok(await besoinsService.GetCategorieByIdAsync(id)); }

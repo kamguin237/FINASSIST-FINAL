@@ -12,12 +12,16 @@ public class BesoinsRepository(AppDbContext db) : IBesoinsRepository
             db.Besoins
               .Include(b => b.Utilisateur).ThenInclude(u => u.Role)
               .Include(b => b.Categorie)
+                  .ThenInclude(c => c!.WorkflowCircuit)
+                      .ThenInclude(wc => wc!.Etapes)
               .AsEnumerable());
 
     public Task<Besoin?> GetByIdAsync(int id)
         => db.Besoins
              .Include(b => b.Utilisateur).ThenInclude(u => u.Role)
              .Include(b => b.Categorie)
+                 .ThenInclude(c => c!.WorkflowCircuit)
+                     .ThenInclude(wc => wc!.Etapes)
              .Include(b => b.Documents)
              .Include(b => b.Historiques)
              .FirstOrDefaultAsync(b => b.Id == id);
@@ -27,7 +31,24 @@ public class BesoinsRepository(AppDbContext db) : IBesoinsRepository
             db.Besoins
               .Include(b => b.Utilisateur).ThenInclude(u => u.Role)
               .Include(b => b.Categorie)
+                  .ThenInclude(c => c!.WorkflowCircuit)
+                      .ThenInclude(wc => wc!.Etapes)
               .Where(b => b.UtilisateurId == utilisateurId)
+              .AsEnumerable());
+
+    public Task<IEnumerable<Validation>> GetValidationsParUtilisateurAsync(int utilisateurId)
+        => Task.FromResult<IEnumerable<Validation>>(
+            db.Validations
+            .Where(v => v.ValidateurId == utilisateurId)
+            .AsEnumerable());
+            
+
+    public Task<IEnumerable<int>> GetBesoinIdsValidesParUtilisateurAsync(int utilisateurId)
+        => Task.FromResult<IEnumerable<int>>(
+            db.Validations
+              .Where(v => v.ValidateurId == utilisateurId)
+              .Select(v => v.BesoinId)
+              .Distinct()
               .AsEnumerable());
 
     public async Task<Besoin> CreateAsync(Besoin besoin)
@@ -108,9 +129,27 @@ public class BesoinsRepository(AppDbContext db) : IBesoinsRepository
         await db.SaveChangesAsync();
     }
 
+    public async Task DeleteDocumentAsync(int documentId)
+        => await db.Documents.Where(d => d.Id == documentId).ExecuteDeleteAsync();
+
     public async Task DeleteBesoinAsync(Besoin besoin)
     {
         db.Besoins.Remove(besoin);
         await db.SaveChangesAsync();
     }
+
+    public Task<IEnumerable<string>> GetCodesPermissionsUtilisateurAsync(int utilisateurId)
+    => Task.FromResult<IEnumerable<string>>(
+        // Permissions du rôle de l'utilisateur
+        db.RolePermissions
+            .Where(rp => db.Utilisateurs.Any(u => u.Id == utilisateurId && u.RoleId == rp.RoleId))
+            .Select(rp => rp.Permission.Code)
+        // Union avec les permissions individuelles de l'utilisateur
+        .Union(
+            db.UtilisateurPermissions
+                .Where(up => up.UtilisateurId == utilisateurId)
+                .Select(up => up.Permission.Code)
+        )
+        .Distinct()
+        .AsEnumerable());
 }

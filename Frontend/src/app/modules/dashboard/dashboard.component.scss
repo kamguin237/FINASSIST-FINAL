@@ -1,0 +1,135 @@
+$card-bg:    #1e1e30;
+$accent:     #7c3aed;
+$text-main:  #ffffff;
+$text-muted: #a0a0b0;
+$row-alt:    #252540;
+
+.loading { color: $text-muted; padding: 2rem; }
+
+.dash-header {
+  margin-bottom: 1.5rem;
+  h2 { font-size: 1.4rem; color: $text-main; font-weight: 700; }
+  .dash-sub { font-size: .85rem; color: $text-muted; }
+}
+
+// ── Cartes stats ─────────────────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: $card-bg;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  transition: transform .15s;
+  &:hover { transform: translateY(-2px); }
+}
+
+.card-icon {
+  font-size: 1.6rem;
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: rgba(124,58,237,.15);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  &.approved { background: rgba(39,174,96,.15); }
+  &.rejected { background: rgba(231,76,60,.15); }
+  &.signed   { background: rgba(124,58,237,.15); }
+  &.notif    { background: rgba(243,156,18,.15); }
+}
+
+.card-body { display: flex; flex-direction: column; gap: .15rem; }
+
+.value {
+  font-size: 1.8rem; font-weight: 800; color: $accent; line-height: 1;
+  &.rejected { color: #e74c3c; }
+  &.signed   { color: $accent; }
+  &.notif    { color: #f39c12; }
+  &.approuve    { color: #59f312; }
+}
+
+.label { font-size: .78rem; color: $text-muted; }
+
+// ── Graphique ─────────────────────────────────────────────────────────────────
+.chart-card {
+  background: $card-bg; border-radius: 12px; padding: 1.25rem;
+  margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+
+.chart-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+}
+
+.chart-title { font-size: .95rem; font-weight: 600; color: $text-main; }
+
+.period-btns {
+  display: flex; gap: .4rem;
+  button {
+    padding: .3rem .75rem; border: 1px solid rgba(255,255,255,.1);
+    background: transparent; color: $text-muted; border-radius: 6px;
+    font-size: .78rem; cursor: pointer; transition: all .15s;
+    &:hover { border-color: $accent; color: $text-main; }
+    &.active { background: $accent; border-color: $accent; color: white; }
+  }
+}
+
+canvas { max-height: 220px; }
+
+.chart-title-block {
+  .chart-title { font-size: .95rem; font-weight: 600; color: $text-main; display: block; }
+  .dash-sub { font-size: .78rem; color: $text-muted; margin-top: 2px; }
+}
+
+.chart-kpis {
+  display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; font-size: .78rem; font-weight: 500;
+  .kpi.soumis    { color: #7c6ff7; }
+  .kpi.approuves { color: #22c55e; }
+  .kpi.rejetes   { color: #ef4444; }
+  .kpi.attente   { color: #f59e0b; }
+}
+
+.chart-wrapper {
+  position: relative; height: 280px; width: 100%;
+  canvas { width: 100% !important; height: 100% !important; }
+}
+
+// ── Tableau ───────────────────────────────────────────────────────────────────
+.table-card {
+  background: $card-bg; border-radius: 12px; padding: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  h3 { font-size: .95rem; font-weight: 600; color: $text-main; margin-bottom: 1rem; }
+}
+
+.table {
+  width: 100%; border-collapse: collapse;
+  th {
+    padding: .6rem 1rem; text-align: left; font-size: .78rem;
+    color: $text-muted; text-transform: uppercase; letter-spacing: .05em;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  td {
+    padding: .7rem 1rem; font-size: .88rem; color: $text-main;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    a { color: #a78bfa; &:hover { color: white; } }
+  }
+  tr:nth-child(even) td { background: $row-alt; }
+  tr:last-child td { border-bottom: none; }
+}
+
+// ── Badges statut ─────────────────────────────────────────────────────────────
+.badge {
+  padding: .25rem .7rem; border-radius: 20px; font-size: .72rem; font-weight: 700; display: inline-block;
+  &.grey   { background: rgba(160,160,176,.15); color: #a0a0b0; }
+  &.blue   { background: rgba(52,152,219,.15);  color: #3498db; }
+  &.green  { background: rgba(39,174,96,.15);   color: #27ae60; }
+  &.red    { background: rgba(231,76,60,.15);   color: #e74c3c; }
+  &.purple { background: rgba(124,58,237,.2);   color: #a78bfa; }
+  &.cyan   { background: rgba(0,188,212,.15);   color: #00bcd4; }
+}

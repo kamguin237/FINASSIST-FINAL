@@ -12,13 +12,18 @@ public static class WorkflowEngine
     public const string BROUILLON   = "BROUILLON";
     public const string ENREGISTRE  = "ENREGISTRE";
     public const string SOUMISE     = "SOUMISE";
-    public const string EN_ATTENTE  = "EN_ATTENTE";
+    public const string EN_ATTENTE  = "EN_ATTENTE";   // conservé pour compatibilité
     public const string TRANSMIS    = "TRANSMIS";
     public const string TERMINE     = "TERMINE";
 
-    public static string StatutApprouve(int ordre)  => $"APPROUVE_ROLE{ordre}";
-    public static string StatutSigne(int ordre)     => $"SIGNE_ROLE{ordre}";
-    public static string StatutRejete(int ordre)    => $"REJETE_ROLE{ordre}";
+    public static string StatutEnAttente(int ordre)  => $"EN_ATTENTE_ROLE{ordre}";
+    public static string StatutApprouve(int ordre)   => $"APPROUVE_ROLE{ordre}";
+    public static string StatutSigne(int ordre)      => $"SIGNE_ROLE{ordre}";
+    public static string StatutRejete(int ordre)     => $"REJETE_ROLE{ordre}";
+
+    // Vérifie si un statut est "en attente" (générique ou spécifique)
+    public static bool EstEnAttente(string statut)
+        => statut == EN_ATTENTE || statut.StartsWith("EN_ATTENTE_ROLE");
 
     // ── Résolution de l'étape courante ───────────────────────────────────────
 
@@ -30,12 +35,20 @@ public static class WorkflowEngine
     {
         var liste = etapes.OrderBy(e => e.Ordre).ToList();
 
-        if (statut == EN_ATTENTE)
+        if (statut == EN_ATTENTE || statut.StartsWith("EN_ATTENTE_ROLE"))
         {
-            // Si on connaît l'ordre de l'étape courante (après transmission), on l'utilise
+            // Si on connaît l'ordre de l'étape courante, on l'utilise
             if (etapeCouranteOrdre.HasValue)
                 return liste.FirstOrDefault(e => e.Ordre == etapeCouranteOrdre.Value)
                     ?? liste.FirstOrDefault();
+
+            // EN_ATTENTE_ROLE{N} → extraire N
+            if (statut.StartsWith("EN_ATTENTE_ROLE"))
+            {
+                var ordreStr = statut.Replace("EN_ATTENTE_ROLE", "");
+                if (int.TryParse(ordreStr, out var ordreN))
+                    return liste.FirstOrDefault(e => e.Ordre == ordreN) ?? liste.FirstOrDefault();
+            }
 
             return liste.FirstOrDefault();
         }
@@ -66,7 +79,7 @@ public static class WorkflowEngine
             throw new ArgumentException("La décision doit être APPROUVE ou REJETE.");
 
         // Approbation → si signature requise, on passe à APPROUVE_ROLE{N} (en attente de signature)
-        if (statutActuel == EN_ATTENTE)
+        if (EstEnAttente(statutActuel))
         {
             if (etape.SignatureRequise)
                 return (StatutApprouve(etape.Ordre), etape.Ordre);
@@ -117,7 +130,7 @@ public static class WorkflowEngine
         if (prochaine is null)
             return (TERMINE, null);
 
-        // Transition vers TRANSMIS puis EN_ATTENTE de la prochaine étape
-        return (TRANSMIS, prochaine.Ordre);
+        // Transition vers EN_ATTENTE_ROLE{N} de la prochaine étape
+        return (StatutEnAttente(prochaine.Ordre), prochaine.Ordre);
     }
 }

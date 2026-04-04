@@ -1,0 +1,223 @@
+@use '../../../../styles/dark' as d;
+
+.login-page {
+  display: flex;
+  min-height: 100vh;
+  background: d.$bg;
+}
+
+// ── Panneau gauche ────────────────────────────────────────────────────────────
+.login-left {
+  flex: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  @media (max-width: 768px) { display: none; }
+}
+
+
+.brand-block {
+  text-align: center;
+  z-index: 1;
+  position: relative;
+}
+
+.brand-logo {
+  width: 72px; height: 72px;
+  background: d.$accent;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 900; color: white;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 8px 32px rgba(124,58,237,.5);
+}
+
+.mot{
+   color: #7c3aed;
+  font-weight: 800;
+   transition: 0.3s;
+}
+
+// Préserver la couleur en light mode (override du span global de styles.scss)
+:host-context(body.light-mode) .mot,
+body.light-mode .mot {
+  color: #7c3aed !important;
+}
+
+.mot:hover {
+  letter-spacing: 2px;
+}
+
+.brand-block h1 {
+  font-size: 2.5rem; font-weight: 800; color: white; margin-bottom: .5rem;
+}
+
+.span{
+    color: #7c3aed;
+}
+
+.brand-block p {
+  font-size: .95rem; color: rgba(255,255,255,.55); max-width: 280px; line-height: 1.6;
+}
+
+// Cercles décoratifs
+.decorative-circles { position: absolute; inset: 0; pointer-events: none; }
+
+.circle {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(124,58,237,.2);
+}
+
+.c1 { width: 400px; height: 400px; top: -100px; right: -100px; }
+.c2 { width: 250px; height: 250px; bottom: 50px; left: -80px; background: rgba(124,58,237,.05); }
+.c3 { width: 150px; height: 150px; top: 40%; right: 10%; background: rgba(124,58,237,.08); }
+
+// ── Panneau droit ─────────────────────────────────────────────────────────────
+.login-right {
+  width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: d.$bg;
+
+  @media (max-width: 768px) { width: 100%; }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.card-header {
+  margin-bottom: 2rem;
+  h2 { font-size: 1.75rem; font-weight: 800; color: white; margin-bottom: .4rem; }
+  p  { font-size: .88rem; color: d.$muted; }
+}
+
+// ── Champs ────────────────────────────────────────────────────────────────────
+.field {
+  margin-bottom: 1.25rem;
+  label { display: block; 
+    font-size: .82rem; 
+    color: d.$muted; 
+    margin-bottom: .45rem; 
+    font-weight: 500; }
+}
+
+.input-wrap {
+  position: relative;
+  display: flex; 
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute; 
+  left: .85rem;
+  font-size: .95rem; 
+  // color: d.$muted; 
+  pointer-events: none;
+
+  color: rgba(255,255,255,0.5);
+  transition: 0.3s;
+    z-index: 2;
+}
+
+.input-wrap:focus-within .input-icon {
+  color: #a78bfa;
+}
+
+.input-wrap input {
+  @include d.dark-input;
+  padding-left: 2.5rem;
+  height: 46px;
+  font-size: .92rem;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: white;
+
+  transition: all 0.25s ease;
+}
+
+.input-wrap input:focus {
+  outline: none;
+
+  border: 1px solid transparent;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 0 0 1px rgba(124,58,237,0.6),
+    0 0 10px rgba(124,58,237,0.4),
+    0 0 20px rgba(124,58,237,0.2);
+}
+
+.input-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  padding: 1px;
+   z-index: 0;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5, #a78bfa);
+
+  -webkit-mask: 
+    linear-gradient(#000 0 0) content-box, 
+    linear-gradient(#000 0 0);
+
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.input-wrap:focus-within::before {
+  opacity: 1;
+}
+
+
+// ── Erreur ────────────────────────────────────────────────────────────────────
+.error-box {
+  background: rgba(231,76,60,.12);
+  border: 1px solid rgba(231,76,60,.3);
+  color: #e74c3c;
+  padding: .65rem 1rem;
+  border-radius: 8px;
+  font-size: .85rem;
+  margin-bottom: 1.25rem;
+}
+
+// ── Bouton ────────────────────────────────────────────────────────────────────
+.btn-submit {
+  @include d.btn-primary;
+  width: 100%;
+  padding: .85rem;
+  font-size: .95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: .5rem;
+  border-radius: 10px;
+}
+
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

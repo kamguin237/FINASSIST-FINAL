@@ -9,6 +9,9 @@ public interface IUsersService
     Task<UtilisateurDTO> CreateAsync(CreateUtilisateurDTO dto);
     Task<UtilisateurDTO> UpdateAsync(int id, UpdateUtilisateurDTO dto);
     Task DeactivateAsync(int id);
+    Task ActivateAsync(int id);
+    Task DeleteAsync(int id);
     Task<UtilisateurDTO> ChangeRoleAsync(int id, int roleId);
     Task<IEnumerable<LogUtilisateurDTO>> GetLogsAsync(int id);
+    Task ChangePasswordAsync(int id, string ancienMotDePasse, string nouveauMotDePasse);
 }

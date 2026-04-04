@@ -227,10 +227,6 @@ namespace FinAssist.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("AdresseIp")
-                        .HasMaxLength(45)
-                        .HasColumnType("nvarchar(45)");
-
                     b.Property<string>("AncienneValeur")
                         .HasColumnType("nvarchar(max)");
 
@@ -416,8 +412,26 @@ namespace FinAssist.Infrastructure.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<int?>("Hauteur")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Horodatage")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("Largeur")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("PdfSigne")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<double?>("PositionX")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("PositionY")
+                        .HasColumnType("float");
+
+                    b.Property<string>("SignatureBase64")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UtilisateurId")
                         .HasColumnType("int");

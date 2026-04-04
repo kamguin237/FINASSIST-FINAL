@@ -232,7 +232,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(l => l.Id);
             e.Property(l => l.Action).HasMaxLength(200).IsRequired();
             e.Property(l => l.EntiteType).HasMaxLength(100).IsRequired();
-            e.Property(l => l.AdresseIp).HasMaxLength(45);
             e.HasOne(l => l.Utilisateur)
              .WithMany()
              .HasForeignKey(l => l.UtilisateurId)

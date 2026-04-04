@@ -1,0 +1,65 @@
+.cs-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+  user-select: none;
+}
+
+// ── Trigger (dark mode par défaut) ────────────────────────────────────────────
+.cs-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .55rem .9rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #ffffff;
+  &:hover { border-color: rgba(124,58,237,.5); }
+  &.open  { border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,.2); }
+}
+
+.cs-value {
+  font-size: .88rem; font-weight: 500; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.cs-chevron {
+  flex-shrink: 0; color: rgba(255,255,255,.5);
+  transition: transform .2s ease; display: flex; align-items: center;
+  &.rotated { transform: rotate(180deg); }
+}
+
+// ── Dropdown (position:absolute avec coordonnées absolues dans le document) ───
+.cs-dropdown {
+  position: absolute;
+  z-index: 9999;
+  border-radius: 12px;
+  padding: .4rem;
+  overflow-y: auto;
+  max-height: 280px;
+  animation: csSlideIn .15s ease;
+  background: #1e1e35;
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+@keyframes csSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Options ───────────────────────────────────────────────────────────────────
+.cs-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem .85rem; border-radius: 8px; font-size: .88rem;
+  cursor: pointer; transition: background .12s;
+  color: rgba(255,255,255,.75);
+  &:hover:not(.cs-option--active) { background: rgba(255,255,255,.07); color: #ffffff; }
+  &--active { background: #7c3aed; color: #ffffff; font-weight: 600; }
+}
+
+.cs-check { flex-shrink: 0; }

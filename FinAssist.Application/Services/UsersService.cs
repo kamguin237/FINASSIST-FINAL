@@ -103,6 +103,35 @@ public class UsersService(IUsersRepository usersRepo, IPasswordService passwordS
         });
     }
 
+    public async Task ActivateAsync(int id)
+    {
+        var user = await usersRepo.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"Utilisateur {id} introuvable.");
+
+        if (user.Actif)
+            throw new InvalidOperationException("Le compte est déjà actif.");
+
+        user.Actif = true;
+        user.DateModification = DateTime.UtcNow;
+        await usersRepo.UpdateAsync(user);
+
+        await usersRepo.AddLogAsync(new LogUtilisateur
+        {
+            UtilisateurId = id,
+            Action = "ACTIVATION",
+            Details = $"Compte réactivé pour {user.Prenom} {user.Nom}",
+            DateAction = DateTime.UtcNow
+        });
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var user = await usersRepo.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"Utilisateur {id} introuvable.");
+
+        await usersRepo.DeleteCascadeAsync(id);
+    }
+
     public async Task<UtilisateurDTO> ChangeRoleAsync(int id, int roleId)
     {
         var user = await usersRepo.GetByIdAsync(id)
@@ -136,6 +165,27 @@ public class UsersService(IUsersRepository usersRepo, IPasswordService passwordS
             Action = l.Action,
             Details = l.Details,
             DateAction = l.DateAction
+        });
+    }
+
+    public async Task ChangePasswordAsync(int id, string ancienMotDePasse, string nouveauMotDePasse)
+    {
+        var user = await usersRepo.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"Utilisateur {id} introuvable.");
+
+        if (!passwordService.Verify(ancienMotDePasse, user.MotDePasse))
+            throw new UnauthorizedAccessException("Mot de passe actuel incorrect.");
+
+        user.MotDePasse = passwordService.Hash(nouveauMotDePasse);
+        user.DateModification = DateTime.UtcNow;
+        await usersRepo.UpdateAsync(user);
+
+        await usersRepo.AddLogAsync(new LogUtilisateur
+        {
+            UtilisateurId = id,
+            Action = "CHANGEMENT_MOT_DE_PASSE",
+            Details = "Mot de passe modifié par l'utilisateur.",
+            DateAction = DateTime.UtcNow
         });
     }
 

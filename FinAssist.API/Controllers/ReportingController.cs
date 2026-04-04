@@ -33,6 +33,11 @@ public class ReportingController(IReportingService reportingService) : Controlle
     public async Task<IActionResult> GetDashboard()
         => Ok(await reportingService.GetDashboardAsync(UtilisateurId, RoleCode));
 
+    [HttpGet("dashboard/evolution")]
+    [RequirePermission("DASHBOARD_CONSULTER")]
+    public async Task<IActionResult> GetEvolution([FromQuery] string periode = "jours")
+        => Ok(await reportingService.GetEvolutionBesoinsAsync(periode, UtilisateurId, RoleCode));
+
     [HttpPost("exporter")]
     [RequirePermission("RAPPORT_EXPORTER")]
     public async Task<IActionResult> Exporter([FromBody] ExportRequestDTO request)

@@ -1,0 +1,17 @@
+@use '../../../styles/dark' as d;
+
+.page-header { @include d.page-header; }
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary{ @include d.btn-secondary; }
+
+.table-card { @include d.card; margin-top: 1.5rem; }
+.table { @include d.dark-table; }
+
+.btn-sm {
+  padding: .25rem .65rem; border-radius: 6px; font-size: .78rem;
+  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer;
+  &.danger { background: rgba(231,76,60,.15); color: #e74c3c; }
+}
+
+@include d.dark-modal;
+@include d.field-label;

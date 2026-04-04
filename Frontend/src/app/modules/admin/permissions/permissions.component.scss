@@ -1,0 +1,27 @@
+@use '../../../../styles/dark' as d;
+
+h2 { font-size: 1.3rem; font-weight: 700; color: d.$text; margin-bottom: 1.5rem; }
+
+.table-card { @include d.card; }
+.table { @include d.dark-table;
+  code { background: rgba(124,58,237,.15); color: #a78bfa; padding: .15rem .5rem; border-radius: 4px; font-size: .82rem; }
+}
+
+.btn-sm {
+  padding: .25rem .65rem; border-radius: 6px; font-size: .78rem;
+  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer;
+}
+
+.edit-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+
+.form-card { @include d.card; width: 420px; border: 1px solid d.$border; }
+.form-card h3 { font-size: 1rem; color: d.$text; margin-bottom: 1rem; }
+
+@include d.field-label;
+
+.actions { display: flex; gap: 1rem; margin-top: 1rem; }
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary{ @include d.btn-secondary; }

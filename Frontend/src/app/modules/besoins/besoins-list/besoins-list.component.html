@@ -1,0 +1,204 @@
+<div class="page-header">
+  <h2>Besoins</h2>
+  <div class="header-actions">
+    <div class="filtre-statut">
+      <app-custom-select
+        [options]="statutOptions"
+        [selected]="filtreStatut"
+        placeholder="-- Choisir un statut --"
+        (selectedChange)="onFiltreStatutChange($any($event))">
+      </app-custom-select>
+      <button class="btn-primary" (click)="reinitialiserFiltre()">Réinitialiser</button>
+    </div>
+    @if (auth.hasPermission('BESOIN_CREER')) {
+      <button class="btn-primary" (click)="openCreate()">+ Nouveau besoin</button>
+    }
+  </div>
+</div>
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="table-card">
+    <table class="table">
+    <thead>
+      <tr>
+        <th>Titre</th><th>Catégorie</th><th>Statut</th>
+        <th>Importance</th><th>Créé par</th><th>Date</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (b of besoinsFiltres; track b.id) {
+        <tr>
+          <td><a [routerLink]="['/besoins', b.id]">{{ b.titre }}</a></td>
+          <td>
+            <button class="btn-categorie" (click)="ouvrirCircuit(b)" title="Voir le circuit de validation">
+              {{ b.categorieNom }}
+            </button>
+          </td>
+          <td><span class="badge">{{ b.statut }}</span></td>
+          <td>{{ b.niveauImportance }}</td>
+          <td>{{ b.utilisateurNom }}</td>
+          <td>{{ b.dateCreation | date:'dd/MM/yyyy' }}</td>
+          <td class="actions">
+            @if (auth.hasPermission('BESOIN_MODIFIER')) {
+              <button class="btn-sm" (click)="openEdit(b)">Modifier</button>
+            }
+            @if (auth.hasPermission('BESOIN_SUPPRIMER') && peutSupprimer(b)) {
+              <button class="btn-sm danger" (click)="delete(b.id)">Supprimer</button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  </div>
+}
+
+<!-- Modale création -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="fermerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Nouveau besoin</h3>
+        <button class="close-btn" (click)="fermerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="field">
+            <label>Titre *</label>
+            <input formControlName="titre" type="text" placeholder="Titre du besoin" />
+          </div>
+          <div class="field">
+            <label>Description *</label>
+            <textarea formControlName="description" rows="3" placeholder="Décrivez le besoin..."></textarea>
+          </div>
+          <div class="field">
+            <label>Niveau d'importance *</label>
+            <app-custom-select
+              [options]="niveaux | niveauOptions"
+              [selected]="form.controls['niveauImportance'].value"
+              placeholder="-- Choisir --"
+              (selectedChange)="form.controls['niveauImportance'].setValue($any($event))">
+            </app-custom-select>
+          </div>
+          <div class="field">
+            <label>Catégorie *</label>
+            <app-custom-select
+              [options]="categories | categorieOptions"
+              [selected]="form.controls['categorieId'].value"
+              placeholder="-- Choisir --"
+              (selectedChange)="form.controls['categorieId'].setValue($any($event))">
+            </app-custom-select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" (click)="fermerModal()" class="btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
+              {{ saving ? 'Création...' : 'Créer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modale circuit de validation -->
+@if (showCircuitModal) {
+  <div class="modal-overlay" (click)="fermerCircuit()">
+    <div class="modal circuit-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Circuit de validation — {{ circuitBesoin?.categorieNom }}</h3>
+        <button class="close-btn" (click)="fermerCircuit()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (circuitLoading) {
+          <p class="loading-text">Chargement...</p>
+        } @else if (circuitDetail?.circuit) {
+          <div class="circuit-info">
+            <span class="circuit-nom">{{ circuitDetail!.circuit!.nom }}</span>
+            @if (circuitDetail!.circuit!.description) {
+              <span class="circuit-desc">{{ circuitDetail!.circuit!.description }}</span>
+            }
+          </div>
+          <div class="statut-actuel">
+            <span class="statut-label">Statut actuel :</span>
+            <span class="badge">{{ circuitBesoin?.statut }}</span>
+          </div>
+          <div class="etapes-list">
+            @for (e of circuitDetail!.circuit!.etapes; track e.id) {
+              <div class="etape-item" [class]="etapeStatut(e.ordre, circuitBesoin?.statut ?? '')">
+                <div class="etape-num">{{ e.ordre }}</div>
+                <div class="etape-body">
+                  <div class="etape-role">{{ e.roleRequis }}</div>
+                  <div class="etape-flags">
+                    @if (e.approbationRequise) { <span class="flag">✅ Approbation</span> }
+                    @if (e.signatureRequise)   { <span class="flag">✍ Signature</span> }
+                    @if (e.delaiMaxJours > 0)  { <span class="flag">⏱ {{ e.delaiMaxJours }}j max</span> }
+                    @if (e.estDerniereEtape)   { <span class="flag last">🏁 Dernière étape</span> }
+                  </div>
+                </div>
+                <div class="etape-statut-icon">
+                  @if (etapeStatut(e.ordre, circuitBesoin?.statut ?? '') === 'done')    { <span class="icon done">✓</span> }
+                  @if (etapeStatut(e.ordre, circuitBesoin?.statut ?? '') === 'active')  { <span class="icon active">●</span> }
+                  @if (etapeStatut(e.ordre, circuitBesoin?.statut ?? '') === 'pending') { <span class="icon pending">○</span> }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="no-circuit">Aucun circuit configuré pour cette catégorie.</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="fermerCircuit()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+@if (showEditModal) {
+  <div class="modal-overlay" (click)="fermerEditModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Modifier le besoin</h3>
+        <button class="close-btn" (click)="fermerEditModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
+          <div class="field">
+            <label>Titre *</label>
+            <input formControlName="titre" type="text" placeholder="Titre du besoin" />
+          </div>
+          <div class="field">
+            <label>Description *</label>
+            <textarea formControlName="description" rows="3" placeholder="Décrivez le besoin..."></textarea>
+          </div>
+          <div class="field">
+            <label>Niveau d'importance *</label>
+            <app-custom-select
+              [options]="niveaux | niveauOptions"
+              [selected]="editForm.controls['niveauImportance'].value"
+              placeholder="-- Choisir --"
+              (selectedChange)="editForm.controls['niveauImportance'].setValue($any($event))">
+            </app-custom-select>
+          </div>
+          <div class="field">
+            <label>Catégorie *</label>
+            <app-custom-select
+              [options]="categories | categorieOptions"
+              [selected]="editForm.controls['categorieId'].value"
+              placeholder="-- Choisir --"
+              (selectedChange)="editForm.controls['categorieId'].setValue($any($event))">
+            </app-custom-select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" (click)="fermerEditModal()" class="btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="editForm.invalid || saving" class="btn-primary">
+              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,10 @@
+<div class="cs-wrapper">
+  <div #trigger class="cs-trigger" (click)="toggle(); $event.stopPropagation()" [class.open]="isOpen()">
+    <span class="cs-value">{{ selectedLabel }}</span>
+    <span class="cs-chevron" [class.rotated]="isOpen()">
+      <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+        <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+<h2>Permissions</h2>
+
+<table class="table">
+  <thead>
+    <tr><th>Code</th><th>Module</th><th>Fonctionnalité</th><th>Description</th>
+      @if (auth.hasPermission('PERMISSION_MODIFIER')) { <th>Actions</th> }
+    </tr>
+  </thead>
+  <tbody>
+    @for (p of permissions; track p.id) {
+      <tr>
+        <td><code>{{ p.code }}</code></td>
+        <td>{{ p.module }}</td>
+        <td>{{ p.fonctionnalite }}</td>
+        <td>{{ p.description }}</td>
+        @if (auth.hasPermission('PERMISSION_MODIFIER')) {
+          <td><button class="btn-sm" (click)="openEdit(p)">Modifier</button></td>
+        }
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (editPerm) {
+  <div class="edit-overlay">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-card">
+      <h3>Modifier la permission</h3>
+      <div class="field"><label>Code</label><input formControlName="code" /></div>
+      <div class="field"><label>Description</label><input formControlName="description" /></div>
+      <div class="field"><label>Fonctionnalité</label><input formControlName="fonctionnalite" /></div>
+      <div class="field"><label>Module</label><input formControlName="module" /></div>
+      <div class="actions">
+        <button type="button" (click)="editPerm = null" class="btn-secondary">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+}

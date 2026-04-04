@@ -7,12 +7,13 @@ namespace FinAssist.Application.Services;
 public class WorkflowService(
     IWorkflowRepository workflowRepo,
     IBesoinsRepository besoinsRepo,
+    ISignatureRepository signatureRepo,
     INotificationService notificationService) : IWorkflowService
 {
     // ── Valider un besoin ────────────────────────────────────────────────────
 
     public async Task<ValidationDTO> ValiderAsync(
-        int besoinId, ValiderBesoinDTO dto, int validateurId, string roleCode)
+        int besoinId, ValiderBesoinDTO dto, int validateurId, string roleCode, string nomValidateur)
     {
         var besoin = await besoinsRepo.GetByIdAsync(besoinId)
             ?? throw new KeyNotFoundException($"Besoin {besoinId} introuvable.");
@@ -33,7 +34,7 @@ public class WorkflowService(
         var etapeCourante = WorkflowEngine.ResoudreEtapeCourante(besoin.Statut, etapes, besoin.EtapeCouranteOrdre)
             ?? throw new InvalidOperationException(
                 $"Aucune étape active pour le statut '{besoin.Statut}'. " +
-                $"Statuts attendus : {WorkflowEngine.EN_ATTENTE} ou APPROUVE_ROLE{{N}}.");
+                $"Statuts attendus : EN_ATTENTE_ROLE{{N}} ou APPROUVE_ROLE{{N}}.");
 
         WorkflowEngine.VerifierRole(etapeCourante, roleCode);
 
@@ -62,9 +63,7 @@ public class WorkflowService(
 
         await workflowRepo.AddValidationAsync(validation);
 
-        besoin.Statut = nouveauStatut == WorkflowEngine.TRANSMIS
-            ? WorkflowEngine.EN_ATTENTE
-            : nouveauStatut;
+        besoin.Statut = nouveauStatut;
         besoin.EtapeCouranteOrdre = prochaineEtapeOrdre;
         besoin.DateModification = DateTime.UtcNow;
         await besoinsRepo.UpdateAsync(besoin);
@@ -77,15 +76,29 @@ public class WorkflowService(
             DateAction = DateTime.UtcNow
         });
 
-        await notificationService.NotifierValidationN1Async(besoinId,
-            validation.Decision, besoin.UtilisateurId);
+        // Notification dynamique selon la décision et le nouveau statut
+        if (validation.Decision == DecisionValidation.REJETE)
+        {
+            // Notifier le créateur du besoin
+            await notificationService.NotifierRejetAsync(
+                besoinId, besoin.Titre, besoin.UtilisateurId, etapeCourante.RoleRequis);
+        }
+        else if (WorkflowEngine.EstEnAttente(nouveauStatut))
+        {
+            // Approuvé sans signature → avance directement à la prochaine étape → notifier le prochain rôle
+            var prochaineEtape = etapes.FirstOrDefault(e => e.Ordre == prochaineEtapeOrdre);
+            if (prochaineEtape is not null)
+                await notificationService.NotifierTransmissionAsync(
+                    besoinId, besoin.Titre, prochaineEtape.RoleRequis, nomValidateur);
+        }
+        // Si APPROUVE_ROLE{N} (signature requise), pas de notification ici — elle sera envoyée après signature
 
         return ToValidationDTO(validation);
     }
 
     // ── Transmettre manuellement ─────────────────────────────────────────────
 
-    public async Task<ValidationDTO> TransmettreAsync(int besoinId, int validateurId)
+    public async Task<ValidationDTO> TransmettreAsync(int besoinId, int validateurId, string nomTransmetteur)
     {
         var besoin = await besoinsRepo.GetByIdAsync(besoinId)
             ?? throw new KeyNotFoundException($"Besoin {besoinId} introuvable.");
@@ -109,6 +122,22 @@ public class WorkflowService(
                 $"La transmission n'est possible que depuis un statut APPROUVE_ROLE{{N}} ou SIGNE_ROLE{{N}}. " +
                 $"Statut actuel : {besoin.Statut}.");
 
+        // Bloquer si la signature est requise mais pas encore posée
+        if (etapeCourante.SignatureRequise)
+        {
+            if (besoin.Statut == WorkflowEngine.StatutApprouve(etapeCourante.Ordre))
+                throw new InvalidOperationException(
+                    $"La signature électronique est obligatoire avant de transmettre. " +
+                    $"Veuillez signer le document (étape {etapeCourante.Ordre} — {etapeCourante.RoleRequis}).");
+
+            // Statut SIGNE_ROLE{N} : vérifier qu'une signature valide existe en base
+            var signature = await signatureRepo.GetByBesoinIdAsync(besoinId);
+            if (signature is null || !signature.Valide)
+                throw new InvalidOperationException(
+                    $"Aucune signature valide trouvée pour ce besoin. " +
+                    $"Veuillez signer le document avant de transmettre.");
+        }
+
         if (etapeCourante.EstDerniereEtape)
             throw new InvalidOperationException("Impossible de transmettre depuis la dernière étape.");
 
@@ -122,14 +151,14 @@ public class WorkflowService(
             Niveau = etapeCourante.Ordre,
             EtapeOrdre = etapeCourante.Ordre,
             Decision = DecisionValidation.TRANSMIS,
-            StatutApres = WorkflowEngine.EN_ATTENTE,
+            StatutApres = WorkflowEngine.StatutEnAttente(prochaine.Ordre),
             Commentaire = $"Transmis à l'étape {prochaine.Ordre} ({prochaine.RoleRequis}).",
             DateDecision = DateTime.UtcNow
         };
 
         await workflowRepo.AddValidationAsync(validation);
 
-        besoin.Statut = WorkflowEngine.EN_ATTENTE;
+        besoin.Statut = WorkflowEngine.StatutEnAttente(prochaine.Ordre);
         besoin.EtapeCouranteOrdre = prochaine.Ordre;
         besoin.DateModification = DateTime.UtcNow;
         await besoinsRepo.UpdateAsync(besoin);
@@ -141,6 +170,9 @@ public class WorkflowService(
             Description = $"Transmis à l'étape {prochaine.Ordre} ({prochaine.RoleRequis}).",
             DateAction = DateTime.UtcNow
         });
+
+        // Notifier les utilisateurs du rôle de la prochaine étape
+        await notificationService.NotifierTransmissionAsync(besoinId, besoin.Titre, prochaine.RoleRequis, nomTransmetteur);
 
         return ToValidationDTO(validation);
     }

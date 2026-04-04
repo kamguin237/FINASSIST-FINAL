@@ -11,6 +11,8 @@ public class ReportingRepository(AppDbContext db) : IReportingRepository
     public async Task<IEnumerable<Besoin>> GetAllBesoinsAsync() =>
         await db.Besoins
             .Include(b => b.Categorie)
+                .ThenInclude(c => c!.WorkflowCircuit)
+                    .ThenInclude(wc => wc!.Etapes)
             .Include(b => b.Utilisateur)
             .AsNoTracking()
             .ToListAsync();

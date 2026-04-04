@@ -1,0 +1,103 @@
+<div class="app-shell" [class.expanded]="expanded()">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" [class.expanded]="expanded()">
+
+    <div class="sidebar-header">
+      <button class="toggle-btn" (click)="toggle()" [title]="expanded() ? 'Réduire' : 'Étendre'">
+        <span class="hamburger" [class.open]="expanded()">
+          <span></span><span></span><span></span>
+        </span>
+      </button>
+      @if (expanded()) {
+        <div class="brand-inline">
+          <div class="brand-dot">F</div>
+          <span class="brand-name">FinAssist</span>
+        </div>
+      }
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems(); track item.path) {
+        <a [routerLink]="item.path"
+           routerLinkActive="active"
+           class="nav-item"
+           [class.expanded]="expanded()"
+           [attr.data-tooltip]="!expanded() ? item.label : null">
+          <!-- <span class="nav-icon">{{ item.icon }}</span> -->
+           <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
+          @if (expanded()) {
+            <span class="nav-label">{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer" [class.expanded]="expanded()">
+      <div class="separator"></div>
+      <a routerLink="/profil" class="user-block" [class.expanded]="expanded()" title="Mon profil">
+        <div class="avatar">{{ initiales }}</div>
+        @if (expanded()) {
+          <div class="user-info">
+            <span class="user-name">{{ user()?.prenom }} {{ user()?.nom }}</span>
+            <span class="user-role">{{ user()?.role }}</span>
+          </div>
+        }
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ── Zone principale ── -->
+  <div class="main">
+    <header class="topbar">
+      <span class="page-title">Bonjour, {{ user()?.prenom }} {{ user()?.nom }}</span>
+
+      <div class="topbar-actions">
+
+        <!-- 🔔 Clochette notifications -->
+        <div class="notif-wrap" (click)="toggleNotifDropdown($event)">
+          <button class="icon-btn" title="Notifications">
+            🔔
+            @if (unreadCount > 0) {
+              <span class="notif-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+            }
+          </button>
+
+          @if (showNotifDropdown()) {
+            <div class="notif-dropdown" (click)="$event.stopPropagation()">
+              <div class="notif-dropdown-header">
+                <span>Notifications</span>
+                <a routerLink="/notifications" class="notif-voir-tout" (click)="showNotifDropdown.set(false)">Tout voir</a>
+              </div>
+              @if (recentNotifs.length === 0) {
+                <div class="notif-empty">Aucune notification non lue</div>
+              } @else {
+                @for (n of recentNotifs; track n.id) {
+                  <div class="notif-item" (click)="marquerLuEtNaviguer(n)">
+                    <span class="notif-msg">{{ n.message }}</span>
+                    <span class="notif-date">{{ n.dateEnvoi | date:'dd/MM HH:mm' }}</span>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+
+        <!-- 🌙 / ☀️ Toggle thème -->
+        <button class="icon-btn" (click)="theme.toggle()" [title]="theme.isDark() ? 'Passer en mode clair' : 'Passer en mode sombre'">
+          {{ theme.isDark() ? '🌙' : '☀️' }}
+        </button>
+
+        <!-- Déconnexion -->
+        <button class="logout-btn" (click)="auth.logout()">⏻ Déconnexion</button>
+
+      </div>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+
+</div>

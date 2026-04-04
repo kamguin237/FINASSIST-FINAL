@@ -1,0 +1,72 @@
+<div class="page-header">
+  <h2>Rôles</h2>
+  @if (auth.hasPermission('ROLE_CREER')) {
+    <button class="btn-primary" (click)="openCreate()">+ Nouveau rôle</button>
+  }
+</div>
+
+<!-- Liste des rôles -->
+<div class="roles-list">
+  @for (r of roles; track r.id) {
+    <div class="role-card">
+      <div class="role-header" (click)="togglePermissions(r)">
+        <strong>{{ r.code }}</strong>
+        <span class="desc">{{ r.description }}</span>
+        @if (auth.hasPermission('ROLE_MODIFIER')) {
+          <button class="btn-sm" (click)="openEdit(r); $event.stopPropagation()">Modifier</button>
+        }
+        @if (auth.hasPermission('ROLE_SUPPRIMER')) {
+          <button class="btn-sm danger" (click)="delete(r.id); $event.stopPropagation()">Supprimer</button>
+        }
+      </div>
+      @if (selectedRole?.id === r.id) {
+        <div class="permissions-panel">
+          <h4>Permissions du rôle</h4>
+          <div class="perm-grid">
+            @for (p of allPermissions; track p.id) {
+              <label class="perm-item">
+                <input type="checkbox" [checked]="hasPermission(p.id)" (change)="togglePerm(r.id, p.id, $event)" />
+                <span>{{ p.code }}</span>
+                <small>{{ p.module }}</small>
+              </label>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modale création / modification -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="fermerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editId ? 'Modifier le rôle' : 'Nouveau rôle' }}</h3>
+        <button class="close-btn" (click)="fermerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="field">
+            <label>Code *</label>
+            <input formControlName="code" placeholder="ex: Responsable" />
+            @if (form.get('code')?.invalid && form.get('code')?.touched) {
+              <span class="field-error">Le code est obligatoire.</span>
+            }
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input formControlName="description" placeholder="Description du rôle" />
+          </div>
+          @if (erreur) { <p class="form-error">{{ erreur }}</p> }
+          <div class="modal-actions">
+            <button type="button" (click)="fermerModal()" class="btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
+              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

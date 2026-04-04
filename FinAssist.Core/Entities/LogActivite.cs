@@ -9,7 +9,6 @@ public class LogActivite
     public string? AncienneValeur { get; set; }
     public string? NouvelleValeur { get; set; }
     public int? UtilisateurId { get; set; }
-    public string? AdresseIp { get; set; }
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     // Navigation

@@ -1,0 +1,83 @@
+@if (loading) {
+  <div class="loading">Chargement...</div>
+} @else if (dashboard) {
+
+  <div class="dash-header">
+    <h2>Tableau de bord</h2>
+    <span class="dash-sub">Vue d'ensemble de l'activité</span>
+  </div>
+
+  <!-- Cartes statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card">
+       <img src="/assets/icons/en-attente.png" alt="attente" />
+      <div class="card-body">
+        <span class="value">{{ dashboard.besoinsEnAttente }}</span>
+        <span class="label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card">
+       <img src="/assets/icons/approuver.png" alt="approuve" />
+      <div class="card-body">
+        <span class="value approuve">{{ dashboard.besoinsApprouves }}</span>
+        <span class="label">Approuvés</span>
+      </div>
+    </div>
+    <div class="stat-card">
+       <img src="/assets/icons/rejeter.png" alt="rejete" />
+      <div class="card-body">
+        <span class="value rejected">{{ dashboard.besoinsRejetes }}</span>
+        <span class="label">Rejetés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title-block">
+        <span class="chart-title">Évolution des besoins</span>
+        <p class="dash-sub">Suivi du cycle de traitement</p>
+      </div>
+      <div class="period-btns">
+        <button [class.active]="periode === 'jours'"    (click)="changerPeriode('jours')">Jours</button>
+        <button [class.active]="periode === 'semaines'" (click)="changerPeriode('semaines')">Semaines</button>
+        <button [class.active]="periode === 'mois'"     (click)="changerPeriode('mois')">Mois</button>
+      </div>
+    </div>
+    <div class="chart-kpis">
+      <span class="kpi soumis">● {{ totalRecus }} recus</span>
+      <span class="kpi approuves">● {{ totalApprouves }} approuvés</span>
+      <span class="kpi rejetes">● {{ totalRejetes }} rejetés</span>
+      <span class="kpi attente">● {{ maxAttente }} max en attente +48h</span>
+    </div>
+    <div class="chart-wrapper">
+      <canvas #chartCanvas></canvas>
+    </div>
+  </div>
+
+  <!-- Tableau derniers besoins -->
+  <div class="table-card">
+    <h3>Derniers besoins</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Titre</th>
+          <th>Statut</th>
+          <th>Créé le</th>
+          <th>Modifié le</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of dashboard.derniersBesoins; track b.id) {
+          <tr>
+            <td><a [routerLink]="['/besoins', b.id]">{{ b.titre }}</a></td>
+            <td><span [class]="'badge ' + badgeClass(b.statut)">{{ statutLabel(b.statut) }}</span></td>
+            <td>{{ b.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ b.dateModification | date:'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
