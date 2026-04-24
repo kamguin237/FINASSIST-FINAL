@@ -31,7 +31,7 @@
         <div class="field">
           <label>Type</label>
           <app-custom-select
-            [options]="[{value:'INFO',label:'Info'},{value:'ALERTE',label:'Alerte'},{value:'SUCCES',label:'Succès'}]"
+            [options]="[{value:'ACCUSE_RECEPTION',label:'Accusé de réception'},{value:'VALIDATION',label:'Validation'},{value:'REJET',label:'Rejet'},{value:'SIGNATURE_REQUISE',label:'Signature requise'},{value:'RAPPEL',label:'Rappel'}]"
             [selected]="form.controls['type'].value"
             (selectedChange)="form.controls['type'].setValue($any($event))">
           </app-custom-select>

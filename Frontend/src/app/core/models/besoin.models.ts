@@ -11,6 +11,7 @@ export interface BesoinDTO {
   categorieId: number;
   categorieNom: string;
   estTermine: boolean;
+  dejaValideParMoi: boolean;
 }
 
 export interface CreateBesoinDTO {

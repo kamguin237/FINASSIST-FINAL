@@ -25,6 +25,8 @@
             "tsConfig": "tsconfig.json",
             "assets": [
                "src/favicon.ico",
+               "src/favicon.svg",
+               "src/sw.js",
                "src/assets"
             ],
             "styles": ["src/styles.scss"],
@@ -32,6 +34,12 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 { "type": "initial", "maximumWarning": "500kB", "maximumError": "1MB" },
                 { "type": "anyComponentStyle", "maximumWarning": "8kB", "maximumError": "16kB" }
@@ -53,7 +61,16 @@
             "development": { "buildTarget": "finassist-frontend:build:development" }
           },
           "defaultConfiguration": "development",
-          "options": { "port": 4200 }
+          "options": {
+            "port": 4200,
+            "host": "0.0.0.0",
+            "allowedHosts": [
+              "localhost",
+              ".ngrok-free.dev",
+              ".ngrok.io",
+              "all"
+            ]
+          }
         }
       }
     }

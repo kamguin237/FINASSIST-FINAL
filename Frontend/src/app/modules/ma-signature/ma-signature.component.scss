@@ -1,0 +1,502 @@
+@use '../../../styles/dark' as d;
+
+.page-header {
+  margin-bottom: 1.5rem;
+  h2 { font-size: 1.3rem; font-weight: 700; color: d.$text; }
+  .page-sub { font-size: .82rem; color: d.$muted; }
+}
+
+// ── Signature existante ────────────────────────────────────────────────────────
+.sig-existante-card {
+  @include d.card;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+}
+
+.sig-existante-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.sig-badge {
+  font-size: .8rem;
+  font-weight: 600;
+  background: rgba(34,197,94,.15);
+  color: #22c55e;
+  padding: .25rem .75rem;
+  border-radius: 20px;
+}
+
+.sig-meta {
+  font-size: .78rem;
+  color: d.$muted;
+  flex: 1;
+}
+
+.btn-danger-sm {
+  font-size: .78rem;
+  background: rgba(239,68,68,.15);
+  color: #ef4444;
+  border: none;
+  border-radius: 6px;
+  padding: .3rem .75rem;
+  cursor: pointer;
+  &:hover { background: rgba(239,68,68,.3); }
+}
+
+.sig-preview-wrap {
+  background: #fff;
+  border-radius: 8px;
+  padding: .75rem;
+  display: inline-block;
+}
+
+.sig-preview-img {
+  max-height: 100px;
+  max-width: 100%;
+  display: block;
+}
+
+// ── Card principale ────────────────────────────────────────────────────────────
+.sig-card { @include d.card; padding: 0; overflow: hidden; }
+
+// ── Onglets ────────────────────────────────────────────────────────────────────
+.onglets {
+  display: flex;
+  border-bottom: 1px solid d.$border;
+
+  button {
+    flex: 1;
+    padding: .85rem 1rem;
+    background: transparent;
+    border: none;
+    color: d.$muted;
+    font-size: .88rem;
+    cursor: pointer;
+    transition: color .15s, border-bottom .15s;
+    border-bottom: 2px solid transparent;
+
+    &.active {
+      color: d.$accent;
+      border-bottom-color: d.$accent;
+      font-weight: 600;
+    }
+    &:hover:not(.active) { color: d.$text; }
+  }
+}
+
+// ── Corps onglet ───────────────────────────────────────────────────────────────
+.onglet-body {
+  padding: 1.5rem;
+}
+
+.instruction {
+  font-size: .82rem;
+  color: d.$muted;
+  margin-bottom: 1rem;
+}
+
+// ── Canvas manuscrite ──────────────────────────────────────────────────────────
+.canvas-wrap {
+  position: relative;
+  margin-bottom: .75rem;
+}
+
+.sig-canvas {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  height: 180px;
+  border: 1px solid d.$border;
+  border-radius: 8px;
+  cursor: crosshair;
+  background: #fff;
+  touch-action: none;
+}
+
+.canvas-baseline {
+  position: absolute;
+  bottom: 40px;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: rgba(124,58,237,.2);
+  pointer-events: none;
+}
+
+// ── Typographique ──────────────────────────────────────────────────────────────
+.typo-input {
+  width: 100%;
+  max-width: 400px;
+  padding: .6rem .85rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid d.$border;
+  border-radius: 8px;
+  color: d.$text;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  &:focus { outline: none; border-color: d.$accent; }
+}
+
+.polices-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-bottom: 1rem;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: .25rem;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(124,58,237,.3); border-radius: 2px; }
+}
+
+.police-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .65rem 1rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid d.$border;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  text-align: left;
+  gap: 1rem;
+
+  &.active {
+    border-color: d.$accent;
+    background: d.$accent-dim;
+  }
+  &:hover:not(.active) { border-color: rgba(124,58,237,.4); background: rgba(124,58,237,.06); }
+}
+
+.police-name {
+  font-size: .75rem;
+  color: d.$muted;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+.police-apercu {
+  font-size: 1.5rem;
+  color: d.$text;
+  flex: 1;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Light mode
+:host-context(body.light-mode) {
+  .police-item {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    &.active { background: rgba(124,58,237,.08); border-color: #7c3aed; }
+    &:hover:not(.active) { background: rgba(124,58,237,.05); border-color: rgba(124,58,237,.3); }
+  }
+  .police-name { color: #6b7280; }
+  .police-apercu { color: #1f2937; }
+}
+
+// ── Upload ─────────────────────────────────────────────────────────────────────
+.upload-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border: 2px dashed rgba(124,58,237,.4);
+  border-radius: 10px;
+  cursor: pointer;
+  color: #a78bfa;
+  font-size: .88rem;
+  transition: border-color .15s;
+  &:hover { border-color: d.$accent; }
+  input[type=file] { display: none; }
+}
+
+.upload-preview {
+  max-height: 120px;
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+// ── Footer ─────────────────────────────────────────────────────────────────────
+.sig-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid d.$border;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary  { @include d.btn-primary; }
+.btn-secondary {
+  @include d.btn-secondary;
+  margin-top: .5rem;
+}
+
+// ── Light mode overrides ──────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .page-header h2    { color: #1a1d23; }
+  .page-sub          { color: #5a6072; }
+
+  .sig-existante-card,
+  .sig-card {
+    background: #ffffff;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+
+  .sig-meta { color: #5a6072; }
+
+  .onglets {
+    border-bottom-color: #e8eaed;
+    button {
+      color: #5a6072;
+      &.active { color: #0d9488; border-bottom-color: #0d9488; }
+      &:hover:not(.active) { color: #1a1d23; }
+    }
+  }
+
+  .instruction { color: #5a6072; }
+
+  .sig-canvas {
+    border-color: #e8eaed;
+    background: #fff;
+  }
+
+  .typo-input {
+    background: #fff;
+    border-color: #e8eaed;
+    color: #1a1d23;
+    &:focus { border-color: #0d9488; }
+  }
+
+  .police-btn {
+    background: #f9fafb;
+    border-color: #e8eaed;
+    color: #1a1d23;
+    &.active { border-color: #0d9488; background: #f0fdfa; }
+    &:hover:not(.active) { border-color: #0d9488; }
+  }
+
+  .upload-zone {
+    border-color: #cbd5e1;
+    color: #5a6072;
+    background: #f9fafb;
+    &:hover { border-color: #0d9488; background: #f0fdfa; color: #0d9488; }
+  }
+
+  .sig-footer { border-top-color: #e8eaed; }
+
+  .btn-primary {
+    background: #0d9488;
+    color: #fff;
+    &:hover { background: #0f766e; }
+  }
+
+  .btn-secondary {
+    background: #fff;
+    border-color: #e8eaed;
+    color: #5a6072;
+    &:hover { border-color: #0d9488; color: #0d9488; }
+  }
+}
+
+// ── QR Code ────────────────────────────────────────────────────────────────────
+.qr-body { padding: 1.5rem; }
+
+.qr-loading, .qr-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; padding: 2rem; color: d.$muted; text-align: center;
+}
+
+.qr-layout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.qr-infos {
+  display: flex; flex-direction: column; gap: .5rem;
+  background: rgba(255,255,255,.04); border: 1px solid d.$border;
+  border-radius: 10px; padding: 1rem;
+}
+
+.qr-infos-title {
+  font-size: .68rem; font-weight: 700; color: d.$muted;
+  letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: .5rem;
+}
+
+.qr-info-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .85rem; padding: .35rem 0; border-bottom: 1px solid d.$border;
+  &:last-of-type { border-bottom: none; }
+  span { color: d.$muted; }
+  strong { color: d.$text; }
+}
+
+.token-short { color: d.$accent; font-family: monospace; font-size: .8rem; }
+
+.badge-valide {
+  background: rgba(34,197,94,.15); color: #22c55e;
+  padding: .2rem .65rem; border-radius: 20px; font-size: .78rem; font-weight: 700;
+}
+
+// Vérification
+.qr-verify-section {
+  margin-top: 1rem; display: flex; flex-direction: column; gap: .6rem;
+}
+
+.qr-verify-title {
+  font-size: .82rem; font-weight: 600; color: d.$accent;
+}
+
+.qr-verify-input {
+  display: flex; gap: .5rem;
+  input {
+    flex: 1; padding: .55rem .85rem;
+    background: rgba(255,255,255,.06); border: 1px solid d.$border;
+    border-radius: 8px; color: d.$text; font-size: .82rem;
+    font-family: monospace;
+    &:focus { outline: none; border-color: d.$accent; }
+    &::placeholder { color: rgba(160,160,176,.5); }
+  }
+}
+
+.btn-verify {
+  padding: .55rem 1rem; background: d.$accent; color: white;
+  border: none; border-radius: 8px; cursor: pointer; font-size: .85rem; font-weight: 600;
+  white-space: nowrap;
+  &:hover { opacity: .85; }
+  &:disabled { opacity: .5; }
+}
+
+.verify-result {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .6rem .85rem; border-radius: 8px; font-size: .82rem;
+  &.valid  { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: #22c55e; }
+  &.invalid { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #ef4444; }
+}
+
+.verify-badge { font-weight: 700; }
+
+// Panel QR
+.qr-panel {
+  display: flex; flex-direction: column; align-items: center; gap: .75rem;
+  background: rgba(255,255,255,.04); border: 1px solid d.$border;
+  border-radius: 12px; padding: 1.25rem; min-width: 220px;
+}
+
+.qr-canvas {
+  border-radius: 8px; display: block;
+}
+
+.qr-token-label {
+  font-size: .72rem; font-family: monospace; color: d.$muted; text-align: center;
+}
+
+.qr-action-btn {
+  width: 100%; padding: .55rem; border-radius: 8px; font-size: .82rem; font-weight: 600;
+  background: rgba(255,255,255,.07); border: 1px solid d.$border; color: d.$text;
+  cursor: pointer; transition: background .15s;
+  &:hover { background: rgba(255,255,255,.12); }
+}
+
+.qr-step {
+  display: flex; align-items: flex-start; gap: .75rem;
+  font-size: .85rem; color: d.$muted; padding: .4rem 0;
+}
+
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: d.$accent; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700; flex-shrink: 0;
+}
+
+.qr-waiting {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: .82rem; color: #f59e0b; margin-top: .75rem;
+}
+
+.waiting-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.8); }
+}
+
+.qr-expiry { font-size: .72rem; color: d.$muted; margin-top: .5rem; }
+
+.qr-done {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; padding: 2rem; text-align: center;
+  h3 { color: d.$text; font-size: 1.1rem; }
+  p  { color: d.$muted; font-size: .85rem; }
+}
+
+.qr-done-icon { font-size: 2.5rem; }
+
+// ── Light mode QR Code ────────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .qr-infos {
+    background: #f9fafb;
+    border-color: #e8eaed;
+  }
+
+  .qr-infos-title { color: #9095a0; }
+
+  .qr-info-row {
+    border-bottom-color: #e8eaed;
+    span { color: #5a6072; }
+    strong { color: #1a1d23; }
+  }
+
+  .qr-step { color: #5a6072; }
+
+  .step-num { background: #7c3aed; color: #fff; }
+
+  .qr-waiting { color: #d97706; }
+
+  .qr-expiry { color: #9095a0; }
+
+  .qr-panel {
+    background: #f9fafb;
+    border-color: #e8eaed;
+  }
+
+  .qr-token-label { color: #9095a0; }
+
+  .qr-action-btn {
+    background: #f3f4f6;
+    border-color: #e8eaed;
+    color: #374151;
+    &:hover { background: #e5e7eb; color: #1a1d23; }
+  }
+
+  .qr-verify-title { color: #7c3aed; }
+
+  .qr-verify-input input {
+    background: #fff;
+    border-color: #e8eaed;
+    color: #1a1d23;
+    &::placeholder { color: #b0b8c4; }
+    &:focus { border-color: #0d9488; }
+  }
+
+  .qr-empty { color: #5a6072; }
+
+  .qr-done {
+    h3 { color: #1a1d23; }
+    p  { color: #5a6072; }
+  }
+}

@@ -51,9 +51,16 @@
       </div>
       <div class="field field-action">
         <label>&nbsp;</label>
-        <button type="button" class="btn-search" (click)="rechercher()" [disabled]="searching">
-          {{ searching ? 'Recherche...' : 'Rechercher' }}
-        </button>
+        <div class="action-btns">
+          <button type="button" class="btn-search" (click)="rechercher()" [disabled]="searching">
+            {{ searching ? 'Recherche...' : 'Rechercher' }}
+          </button>
+          @if (resultats !== null) {
+            <button type="button" class="btn-reset" (click)="reinitialiser()">
+              Réinitialiser
+            </button>
+          }
+        </div>
       </div>
     </form>
 

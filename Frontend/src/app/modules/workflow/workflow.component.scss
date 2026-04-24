@@ -34,7 +34,35 @@ body.light-mode .etapes-detail         { border-top-color: rgba(255,255,255,0.3)
 
 .role-select { flex: 1; min-width: 120px; max-width: 180px; }
 
-.delai-input { width: 75px !important; min-width: 56px !important; flex-shrink: 0; text-align: center; }
+.delai-input {
+  width: 110px !important;
+  min-width: 90px !important;
+  flex-shrink: 0;
+  padding: .45rem .7rem !important;
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid d.$border !important;
+  border-radius: 10px !important;
+  color: d.$text !important;
+  font-size: .88rem !important;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus {
+    outline: none !important;
+    border-color: d.$accent !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.15) !important;
+  }
+
+  // Supprimer le style natif du picker d'heure sur Chrome/Edge
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(0.6);
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px;
+    &:hover { filter: invert(0.9); }
+  }
+}
 
 .actions { display: flex; gap: 1rem; margin-top: 1rem; }
 

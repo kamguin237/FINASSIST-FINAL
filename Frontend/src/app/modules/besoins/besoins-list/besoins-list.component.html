@@ -41,7 +41,7 @@
           <td>{{ b.utilisateurNom }}</td>
           <td>{{ b.dateCreation | date:'dd/MM/yyyy' }}</td>
           <td class="actions">
-            @if (auth.hasPermission('BESOIN_MODIFIER')) {
+            @if (auth.hasPermission('BESOIN_MODIFIER') && auth.currentUser()?.id === b.utilisateurId) {
               <button class="btn-sm" (click)="openEdit(b)">Modifier</button>
             }
             @if (auth.hasPermission('BESOIN_SUPPRIMER') && peutSupprimer(b)) {
@@ -91,6 +91,20 @@
               (selectedChange)="form.controls['categorieId'].setValue($any($event))">
             </app-custom-select>
           </div>
+          <div class="field">
+            <label>Pièce jointe <span class="optional">(optionnel)</span></label>
+            @if (fichierSelectionne) {
+              <div class="fichier-selectionne">
+                <span class="fichier-nom">📄 {{ fichierSelectionne.name }}</span>
+                <button type="button" class="fichier-del-btn" (click)="supprimerFichierSelectionne()" title="Retirer">✕</button>
+              </div>
+            } @else {
+              <label class="upload-zone-inline">
+                <input type="file" (change)="onFichierChange($event)" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+                <span>📎 Cliquer pour joindre un fichier</span>
+              </label>
+            }
+          </div>
           <div class="modal-actions">
             <button type="button" (click)="fermerModal()" class="btn-secondary">Annuler</button>
             <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
@@ -127,21 +141,22 @@
           </div>
           <div class="etapes-list">
             @for (e of circuitDetail!.circuit!.etapes; track e.id) {
-              <div class="etape-item" [class]="etapeStatut(e.ordre, circuitBesoin?.statut ?? '')">
+              <div class="etape-item" [class]="etapeStatut(e.ordre, e.roleRequis, circuitBesoin?.statut ?? '')">
                 <div class="etape-num">{{ e.ordre }}</div>
                 <div class="etape-body">
                   <div class="etape-role">{{ e.roleRequis }}</div>
                   <div class="etape-flags">
                     @if (e.approbationRequise) { <span class="flag">✅ Approbation</span> }
                     @if (e.signatureRequise)   { <span class="flag">✍ Signature</span> }
-                    @if (e.delaiMaxJours > 0)  { <span class="flag">⏱ {{ e.delaiMaxJours }}j max</span> }
+                    @if (e.delaiMaxJours > 0)  { <span class="flag">⏱ {{ minutesToHHmm(e.delaiMaxJours) }}</span> }
                     @if (e.estDerniereEtape)   { <span class="flag last">🏁 Dernière étape</span> }
                   </div>
                 </div>
                 <div class="etape-statut-icon">
-                  @if (etapeStatut(e.ordre, circuitBesoin?.statut ?? '') === 'done')    { <span class="icon done">✓</span> }
-                  @if (etapeStatut(e.ordre, circuitBesoin?.statut ?? '') === 'active')  { <span class="icon active">●</span> }
-                  @if (etapeStatut(e.ordre, circuitBesoin?.statut ?? '') === 'pending') { <span class="icon pending">○</span> }
+                  @if (etapeStatut(e.ordre, e.roleRequis, circuitBesoin?.statut ?? '') === 'done')     { <span class="icon done">✓</span> }
+                  @if (etapeStatut(e.ordre, e.roleRequis, circuitBesoin?.statut ?? '') === 'active')   { <span class="icon active">●</span> }
+                  @if (etapeStatut(e.ordre, e.roleRequis, circuitBesoin?.statut ?? '') === 'pending')  { <span class="icon pending">○</span> }
+                  @if (etapeStatut(e.ordre, e.roleRequis, circuitBesoin?.statut ?? '') === 'rejected') { <span class="icon rejected">✕</span> }
                 </div>
               </div>
             }
@@ -190,6 +205,17 @@
               placeholder="-- Choisir --"
               (selectedChange)="editForm.controls['categorieId'].setValue($any($event))">
             </app-custom-select>
+          </div>
+          <div class="field">
+            <label>Pièce jointe <span class="optional">(optionnel)</span></label>
+            <label class="upload-zone-inline">
+              <input type="file" (change)="onFichierEditChange($event)" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+              @if (fichierEditSelectionne) {
+                <span class="fichier-nom">📄 {{ fichierEditSelectionne.name }}</span>
+              } @else {
+                <span>📎 Cliquer pour joindre un fichier</span>
+              }
+            </label>
           </div>
           <div class="modal-actions">
             <button type="button" (click)="fermerEditModal()" class="btn-secondary">Annuler</button>

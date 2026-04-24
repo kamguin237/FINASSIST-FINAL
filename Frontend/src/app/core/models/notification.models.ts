@@ -9,5 +9,5 @@ export interface NotificationDTO {
 export interface CreateNotificationDTO {
   message: string;
   type: string;
-  utilisateurIds: number[];
+  destinataireIds: number[];
 }

@@ -88,6 +88,9 @@
 .perm-group { margin-bottom: 1.25rem; }
 
 .perm-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: .72rem;
   font-weight: 700;
   color: d.$muted;
@@ -96,6 +99,21 @@
   margin-bottom: .6rem;
   padding-bottom: .4rem;
   border-bottom: 1px solid d.$border;
+}
+
+.btn-check-all {
+  font-size: .7rem;
+  font-weight: 600;
+  color: #a78bfa;
+  background: rgba(124,58,237,.1);
+  border: 1px solid rgba(124,58,237,.2);
+  border-radius: 4px;
+  padding: .15rem .55rem;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: background .15s;
+  &:hover { background: rgba(124,58,237,.2); }
 }
 
 .perm-grid {
@@ -171,4 +189,21 @@
   padding: 1rem 1.25rem;
   border-top: 1px solid d.$border;
   flex-shrink: 0;
+}
+
+.field-error {
+  display: block;
+  font-size: .75rem;
+  color: #e74c3c;
+  margin-top: .25rem;
+}
+
+.info-mdp {
+  font-size: .8rem;
+  color: #a78bfa;
+  background: rgba(124,58,237,.08);
+  border: 1px solid rgba(124,58,237,.2);
+  border-radius: 8px;
+  padding: .6rem .85rem;
+  margin-bottom: .5rem;
 }

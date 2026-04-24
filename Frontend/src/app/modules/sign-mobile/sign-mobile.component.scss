@@ -1,0 +1,123 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.mobile-page {
+  min-height: 100vh;
+  background: #13141f;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1.5rem 1rem 2rem;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+.mobile-loading {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; margin-top: 4rem; color: #a0a0b0;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(124,58,237,.3); border-top-color: #7c3aed;
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Erreur ────────────────────────────────────────────────────────────────────
+.mobile-error, .mobile-success {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; margin-top: 4rem; text-align: center; padding: 0 1rem;
+  h2 { color: #fff; font-size: 1.3rem; }
+  p  { color: #a0a0b0; font-size: .9rem; }
+}
+
+.error-icon   { font-size: 3rem; }
+.success-icon { font-size: 3rem; }
+.success-sub  { font-size: .8rem !important; color: #6b7280 !important; }
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.mobile-header {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .35rem; margin-bottom: 1.5rem; text-align: center;
+}
+
+.mobile-logo {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: #7c3aed; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 800; margin-bottom: .25rem;
+}
+
+h1 { color: #fff; font-size: 1.4rem; font-weight: 700; }
+.mobile-sub { color: #a0a0b0; font-size: .85rem; }
+
+// ── User card ─────────────────────────────────────────────────────────────────
+.mobile-user-card {
+  display: flex; align-items: center; gap: .85rem;
+  background: #1e2035; border: 1px solid rgba(124,58,237,.25);
+  border-radius: 12px; padding: .85rem 1rem;
+  width: 100%; max-width: 420px; margin-bottom: 1.25rem;
+}
+
+.mobile-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 800; color: white; flex-shrink: 0;
+}
+
+.mobile-name { font-size: .95rem; font-weight: 700; color: #fff; }
+.mobile-role { font-size: .78rem; color: #a0a0b0; }
+
+// ── Instruction ───────────────────────────────────────────────────────────────
+.mobile-instruction {
+  font-size: .82rem; color: #a0a0b0; margin-bottom: .75rem;
+  text-align: center;
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+.canvas-container {
+  position: relative;
+  width: 100%; max-width: 420px;
+  height: 200px;
+  background: #fff; border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  margin-bottom: 1rem;
+}
+
+.sign-canvas {
+  display: block; width: 100%; height: 100%;
+  cursor: crosshair; touch-action: none;
+}
+
+.canvas-line {
+  position: absolute; bottom: 45px; left: 5%; right: 5%;
+  height: 1px; background: rgba(124,58,237,.2); pointer-events: none;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+.mobile-actions {
+  display: flex; gap: .75rem; width: 100%; max-width: 420px;
+  margin-bottom: 1rem;
+}
+
+.btn-clear {
+  flex: 0 0 auto; padding: .75rem 1.25rem;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px; color: #a0a0b0; font-size: .88rem; cursor: pointer;
+  transition: background .15s;
+  &:hover { background: rgba(255,255,255,.12); }
+}
+
+.btn-send {
+  flex: 1; padding: .75rem;
+  background: #7c3aed; border: none; border-radius: 10px;
+  color: white; font-size: .95rem; font-weight: 700; cursor: pointer;
+  transition: opacity .15s;
+  &:hover:not(:disabled) { opacity: .85; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+// ── Expiry ────────────────────────────────────────────────────────────────────
+.mobile-expiry {
+  font-size: .72rem; color: #6b7280; text-align: center;
+}

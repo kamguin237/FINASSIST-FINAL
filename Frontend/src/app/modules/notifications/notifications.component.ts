@@ -4,7 +4,8 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { UsersService } from '../../core/services/users.service';
 import { AuthService } from '../../core/services/auth.service';
-import { NotificationDTO } from '../../core/models/notification.models';
+import { ToastrService } from 'ngx-toastr';
+import { NotificationDTO, CreateNotificationDTO } from '../../core/models/notification.models';
 import { UtilisateurDTO } from '../../core/models/user.models';
 import { CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
 
@@ -69,7 +70,7 @@ export class NotificationsComponent implements OnInit {
 
   form = this.fb.group({
     message:        ['', Validators.required],
-    type:           ['INFO', Validators.required],
+    type:           ['RAPPEL', Validators.required],
     utilisateurIds: [[] as number[]]
   });
 
@@ -77,7 +78,8 @@ export class NotificationsComponent implements OnInit {
     public auth: AuthService,
     private notifService: NotificationsService,
     private usersService: UsersService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
@@ -99,16 +101,24 @@ export class NotificationsComponent implements OnInit {
 
   envoyer() {
     if (this.form.invalid || this.selectedIds.length === 0) return;
-    const payload = { ...this.form.value, utilisateurIds: this.selectedIds };
-    this.notifService.envoyer(payload as any).subscribe(() => {
-      this.fermerForm();
-      this.notifService.getMesNotifications().subscribe(n => this.notifications = n);
+    const payload: CreateNotificationDTO = {
+      message: this.form.value.message!,
+      type: this.form.value.type!,
+      destinataireIds: this.selectedIds
+    };
+    this.notifService.envoyer(payload).subscribe({
+      next: () => {
+        this.toastr.success('Notification envoyée avec succès.');
+        this.fermerForm();
+        this.notifService.getMesNotifications().subscribe(n => this.notifications = n);
+      },
+      error: e => this.toastr.error(e.error?.message ?? 'Erreur lors de l\'envoi.')
     });
   }
 
   fermerForm() {
     this.showForm = false;
     this.selectedIds = [];
-    this.form.reset({ type: 'INFO', utilisateurIds: [] });
+    this.form.reset({ type: 'RAPPEL', utilisateurIds: [] });
   }
 }

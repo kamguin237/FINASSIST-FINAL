@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
@@ -9,8 +9,11 @@ import { CustomSelectComponent } from '../../../shared/components/custom-select/
 import { BesoinsService } from '../../../core/services/besoins.service';
 import { WorkflowService } from '../../../core/services/workflow.service';
 import { SignaturesService, SignatureApercu } from '../../../core/services/signatures.service';
+import { MaSignatureService } from '../../../core/services/ma-signature.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { BesoinDTO, HistoriqueDTO, DocumentDTO } from '../../../core/models/besoin.models';
+import { SignatureUtilisateurDTO } from '../../../core/models/signature-utilisateur.models';
 
 interface VerificationResult {
   signatureId: number;
@@ -59,6 +62,14 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
   get isImage(): boolean {
     return this.documents.length > 0 && this.documents[0].type?.startsWith('image/');
   }
+
+  get peutValider(): boolean {
+  if (!this.besoin) return false;
+
+  return !this.besoin.dejaValideParMoi &&
+         (this.besoin.statut ?? '').startsWith('EN_ATTENTE_') &&
+         !this.validerLoading;  // ← utiliser validerLoading qui existe déjà
+ }
 
   // URL image pour les non-PDF
   imageUrl: string | null = null;
@@ -141,16 +152,21 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
   validerLoading = false;
   validerDone = false;
 
+  signaturePerso: SignatureUtilisateurDTO | null = null;
+
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     public besoinsService: BesoinsService,
     private workflowService: WorkflowService,
     private signaturesService: SignaturesService,
+    private maSignatureService: MaSignatureService,
     public auth: AuthService,
     private fb: FormBuilder,
     private toastr: ToastrService,
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private confirm: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -180,6 +196,12 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
         this.documents = docs;
       },
       error: err => console.error('[FINASSIST][Init] getDocuments ERROR', err)
+    });
+
+    // Charger la signature personnelle de l'utilisateur
+    this.maSignatureService.get().subscribe({
+      next: s => this.signaturePerso = s,
+      error: () => this.signaturePerso = null
     });
   }
 
@@ -308,7 +330,7 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
 
   onPdfError(error: any) { this.pdfError = true; console.error('PDF error:', error); }
 
-  get estSigne(): boolean { return !!this.besoin?.statut?.startsWith('SIGNE_ROLE'); }
+  get estSigne(): boolean { return !!this.besoin?.statut?.startsWith('SIGNE_PAR_'); }
 
   // ── Pièces jointes ────────────────────────────────────────────────────────
   onFichierChange(event: Event) {
@@ -333,8 +355,9 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  supprimerDocument(docId: number) {
-    if (!confirm('Supprimer ce document ?')) return;
+  async supprimerDocument(docId: number) {
+    const ok = await this.confirm.confirm({ titre: 'Supprimer le document', message: 'Êtes-vous sûr de vouloir supprimer ce document ?', labelConfirm: 'Supprimer', danger: true });
+    if (!ok) return;
     this.besoinsService.supprimerDocument(this.besoin!.id, docId).subscribe({
       next: () => {
         this.toastr.success('Document supprimé.');
@@ -367,25 +390,35 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
 
   valider() {
     if (this.validerForm.invalid || this.validerLoading || this.validerDone) return;
+
+    const decision = this.validerForm.value.decision;
+    const motif = this.validerForm.value.motif?.trim();
+
+    if (decision === 'REJETE' && !motif) {
+      this.toastr.error('Le motif est obligatoire en cas de rejet.', 'Champ manquant');
+      return;
+    }
+
     this.validerLoading = true;
     this.workflowService.valider(this.besoin!.id, this.validerForm.value as any).subscribe({
       next: b => {
-        // Recharger le besoin complet depuis l'API pour avoir le statut à jour
         this.besoinsService.getById(this.besoin!.id).subscribe(besoinMisAJour => {
           this.besoin = besoinMisAJour;
           this.cdr.detectChanges();
         });
         this.validerDone = true;
         this.validerLoading = false;
-        this.validerForm.value.decision === 'APPROUVE'
-          ? this.toastr.success('Besoin approuvé.')
-          : this.toastr.warning('Besoin rejeté.');
+        if (decision === 'APPROUVE') {
+          this.toastr.success('Besoin approuvé avec succès.');
+        } else {
+          this.toastr.warning(`Besoin rejeté. Motif : ${motif}`, 'Rejet confirmé', { timeOut: 6000 });
+        }
         this.validerForm.reset({ decision: 'APPROUVE', motif: '', commentaire: '' });
         this.besoinsService.getHistorique(this.besoin!.id).subscribe(h => this.historique = h);
       },
       error: e => {
         this.validerLoading = false;
-        this.toastr.error(e.error?.message ?? 'Erreur.');
+        this.toastr.error(e.error?.message ?? 'Erreur lors de la validation.');
       }
     });
   }
@@ -406,6 +439,17 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
 
   // ── Modale signature manuscrite ───────────────────────────────────────────
   ouvrirSignature() {
+    // Vérifier si l'utilisateur a une signature personnelle enregistrée
+    if (!this.signaturePerso) {
+      this.toastr.warning(
+        'Vous n\'avez pas encore créé votre signature. Rendez-vous dans "Ma Signature" pour en créer une.',
+        'Signature requise',
+        { timeOut: 6000 }
+      );
+      this.router.navigate(['/ma-signature']);
+      return;
+    }
+
     this.signEtape = 1;
     this.signPos = null;
     this.signErreur = '';
@@ -475,94 +519,6 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
   fermerSignModal() { this.showSignModal = false; }
 
 
-  // ✅ Après — scrollTop ajouté au calcul
-// onDocClick(event: MouseEvent) {
-//   const target = event.currentTarget as HTMLElement;
-//     if (!target) {
-//     console.error('[FINASSIST][Signature] docZone non trouvé');
-//     return;
-//   }
-
-//   const rect = target.getBoundingClientRect();
-
-//   // Position du clic relative au conteneur visible
-//   const clickXDansZone = event.clientX - rect.left;
-//   const clickYDansZone = event.clientY - rect.top;
-
-//   // Ajouter le scroll interne du conteneur pour avoir la position réelle
-//   const scrollTop = target.scrollTop;
-//   const scrollLeft = target.scrollLeft;
-
-//   // Hauteur totale du contenu scrollable (pas juste la zone visible)
-//   const totalWidth  = target.scrollWidth;
-//   const totalHeight = target.scrollHeight;
-
-//   // 5. Position réelle dans le document (visible + scroll)
-//   const realX = clickXDansZone + scrollLeft;
-//   const realY = clickYDansZone + scrollTop;
-  
-//   // 6. Calcul des pourcentages par rapport au document TOTAL
-//   const pourcentageX = (realX / totalWidth) * 100;
-//   const pourcentageY = (realY / totalHeight) * 100;
-
-//   // this.signPos = {
-//   //   x: Math.round(((clickXDansZone + scrollLeft) / totalWidth)  * 1000) / 10,
-//   //   y: Math.round(((clickYDansZone + scrollTop)  / totalHeight) * 1000) / 10
-//   // };
-//    this.signPos = {
-//     x: Math.min(100, Math.max(0, Math.round(pourcentageX * 10) / 10)),
-//     y: Math.min(100, Math.max(0, Math.round(pourcentageY * 10) / 10))
-//   };
-
-//   console.log('[FINASSIST][Signature] Position calculée:', {
-//     clickXDansZone, clickYDansZone,
-//     scrollTop, scrollLeft,
-//     totalWidth, totalHeight,
-//     signPos: this.signPos
-//   });
-// }
-// onDocClick(event: MouseEvent) {
-//   // ✅ Cibler la première page rendue par ng2-pdf-viewer
-//   const firstPage = document.querySelector(
-//     '.pdf-content-wrapper .pdfViewer .page'
-//   ) as HTMLElement | null;
-
-//   const pdfContainer = document.querySelector(
-//     '.pdf-content-wrapper .ng2-pdf-viewer-container'
-//   ) as HTMLElement | null;
-
-//   if (!firstPage) {
-//     console.error('[FINASSIST] Première page PDF non trouvée dans le DOM');
-//     return;
-//   }
-
-//   // getBoundingClientRect donne la position dans le viewport (tient compte du scroll automatiquement)
-//   const pageRect = firstPage.getBoundingClientRect();
-
-//   // Position du clic par rapport au coin supérieur gauche de la page PDF rendue
-//   const clickXSurPage = event.clientX - pageRect.left;
-//   const clickYSurPage = event.clientY - pageRect.top;
-
-//   // Dimensions de la page PDF rendue en pixels (zoom inclus)
-//   const pageRendueLargeur = firstPage.offsetWidth;
-//   const pageRendueHauteur = firstPage.offsetHeight;
-
-//   // Pourcentage par rapport à la page PDF réelle
-//   const pourcentageX = (clickXSurPage / pageRendueLargeur) * 100;
-//   const pourcentageY = (clickYSurPage / pageRendueHauteur) * 100;
-
-//   this.signPos = {
-//     x: Math.min(100, Math.max(0, Math.round(pourcentageX * 10) / 10)),
-//     y: Math.min(100, Math.max(0, Math.round(pourcentageY * 10) / 10))
-//   };
-
-//   console.log('[FINASSIST][Signature] Position calculée:', {
-//     pageRect: { top: pageRect.top, left: pageRect.left },
-//     clickXSurPage, clickYSurPage,
-//     pageRendueLargeur, pageRendueHauteur,
-//     signPos: this.signPos
-//   });
-// }
 onDocClick(event: MouseEvent) {
   // ng2-pdf-viewer génère un canvas par page dans .ng2-pdf-viewer-container .page
   const allPages = Array.from(
@@ -726,8 +682,9 @@ onDocClick(event: MouseEvent) {
   }
 
   async validerSignature() {
-    if (!this.signCanvas || !this.signPos) return;
-    const signatureBase64 = this.signCanvas.nativeElement.toDataURL('image/png');
+    if (!this.signPos || !this.signaturePerso) return;
+    // Utiliser la signature personnelle sauvegardée
+    const signatureBase64 = this.signaturePerso.imageBase64;
     const docId = this.documents[0]?.id ?? 0;
     this.signLoading = true;
     this.signErreur = '';
@@ -786,10 +743,17 @@ onDocClick(event: MouseEvent) {
       console.groupEnd();
 
       // ── 4. Incrustation de la signature sur la page cible ────────────────
-      // Convertir le canvas PNG en bytes
-      const signatureDataUrl = signatureBase64.replace(/^data:image\/png;base64,/, '');
-      const signatureBytes = Uint8Array.from(atob(signatureDataUrl), c => c.charCodeAt(0));
-      const signatureImage = await pdfDoc.embedPng(signatureBytes);
+      // Retirer le préfixe data URL quel que soit le type (png, jpeg, etc.)
+      const dataUrlMatch = signatureBase64.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (!dataUrlMatch) throw new Error('Format de signature invalide.');
+      const imageType = dataUrlMatch[1].toLowerCase(); // png, jpeg, jpg, webp...
+      const imageData = dataUrlMatch[2];
+      const signatureBytes = Uint8Array.from(atob(imageData), c => c.charCodeAt(0));
+
+      // pdf-lib supporte PNG et JPEG nativement
+      const signatureImage = imageType === 'png'
+        ? await pdfDoc.embedPng(signatureBytes)
+        : await pdfDoc.embedJpg(signatureBytes);
 
       page.drawImage(signatureImage, {
         x: xPtClamped,
@@ -845,7 +809,7 @@ onDocClick(event: MouseEvent) {
       // ── 6. Envoyer au backend ─────────────────────────────────────────────
       this.signaturesService.signerParBesoin(this.besoin!.id, {
         documentId: docId,
-        signatureBase64,
+        signatureBase64: imageData,  // base64 pur sans préfixe data URL
         positionX: xPtClamped,
         positionY: yPtClamped,
         largeur: 150,

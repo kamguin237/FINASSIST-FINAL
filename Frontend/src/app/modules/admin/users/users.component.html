@@ -31,7 +31,7 @@
             @if (auth.hasPermission('USER_MODIFIER') && !u.actif) {
               <button class="btn-sm activate" (click)="activate(u.id)">Activer</button>
             }
-            @if (auth.hasPermission('USER_SUPPRIMER')) {
+            @if (auth.hasPermission('USER_SUPPRIMER') && !u.hasActions) {
               <button class="btn-sm delete" (click)="deletePermanent(u.id)" title="Suppression définitive">🗑 Supprimer</button>
             }
           </td>
@@ -60,7 +60,12 @@
 
         @for (group of permissionsByModule; track group.module) {
           <div class="perm-group">
-            <div class="perm-group-title">{{ group.module }}</div>
+            <div class="perm-group-title">
+              <span>{{ group.module }}</span>
+              <button class="btn-check-all" (click)="toggleModule(group.permissions)">
+                {{ isModuleAllChecked(group.permissions) ? 'Tout décocher' : 'Tout cocher' }}
+              </button>
+            </div>
             <div class="perm-grid">
               @for (p of group.permissions; track p.id) {
                 <label class="perm-item" [class.from-role]="isFromRole(p.id)" [class.is-direct]="isDirecte(p.id)">
@@ -106,9 +111,15 @@
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="field"><label>Nom *</label><input formControlName="nom" placeholder="Nom" /></div>
           <div class="field"><label>Prénom *</label><input formControlName="prenom" placeholder="Prénom" /></div>
-          <div class="field"><label>Email *</label><input formControlName="email" type="email" placeholder="email@exemple.com" /></div>
+          <div class="field">
+            <label>Email *</label>
+            <input formControlName="email" type="email" placeholder="prenom.nom@finstar-cm.com" />
+            @if (form.controls['email'].touched && form.controls['email'].errors?.['finstarDomain']) {
+              <span class="field-error">L'email doit se terminer par &#64;finstar-cm.com</span>
+            }
+          </div>
           @if (!editId) {
-            <div class="field"><label>Mot de passe *</label><input formControlName="motDePasse" type="password" placeholder="••••••••" /></div>
+            <p class="info-mdp">🔑 Un mot de passe aléatoire sera généré et envoyé par email à l'utilisateur.</p>
           }
           <div class="field">
             <label>Rôle *</label>

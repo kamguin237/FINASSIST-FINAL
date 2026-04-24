@@ -181,31 +181,52 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   statutLabel(statut: string): string {
-    if (statut === 'BROUILLON')   return 'Brouillon';
-    if (statut === 'ENREGISTRE')  return 'Enregistré';
-    if (statut === 'EN_ATTENTE')  return 'En attente';
-    if (statut.startsWith('EN_ATTENTE_ROLE')) {
-      const n = statut.replace('EN_ATTENTE_ROLE', '');
-      return `En attente N${n}`;
+    if (statut === 'BROUILLON')  return 'Brouillon';
+    if (statut === 'ENREGISTRE') return 'Enregistré';
+    if (statut === 'SOUMISE')    return 'Soumis';
+    if (statut === 'TRANSMIS')   return 'Transmis';
+    if (statut === 'TERMINE')    return 'Terminé';
+
+    // Statuts dynamiques basés sur le rôle
+    if (statut.startsWith('EN_ATTENTE_')) {
+      const role = statut.replace('EN_ATTENTE_', '');
+      return `En attente — ${this.formatRole(role)}`;
     }
-    if (statut === 'TRANSMIS')    return 'Transmis';
-    if (statut === 'TERMINE')     return 'Terminé';
-    if (statut.startsWith('APPROUVE_ROLE1')) return 'Approuvé N1';
-    if (statut.startsWith('APPROUVE_ROLE2')) return 'Approuvé N2';
-    if (statut.startsWith('REJETE_ROLE1'))   return 'Rejeté N1';
-    if (statut.startsWith('REJETE_ROLE2'))   return 'Rejeté N2';
-    if (statut.startsWith('SIGNE_ROLE1'))    return 'Signé N1';
-    if (statut.startsWith('SIGNE_ROLE2'))    return 'Signé N2';
+    if (statut.startsWith('APPROUVE_PAR_')) {
+      const role = statut.replace('APPROUVE_PAR_', '');
+      return `Approuvé par ${this.formatRole(role)}`;
+    }
+    if (statut.startsWith('REJETE_PAR_')) {
+      const role = statut.replace('REJETE_PAR_', '');
+      return `Rejeté par ${this.formatRole(role)}`;
+    }
+    if (statut.startsWith('SIGNE_PAR_')) {
+      const role = statut.replace('SIGNE_PAR_', '');
+      return `Signé par ${this.formatRole(role)}`;
+    }
     return statut;
   }
 
+  // Formate le nom du rôle extrait du statut pour l'affichage
+  // Ex: "RESPONSABLE" → "le Responsable" | "DIRECTIONGENERALE" → "la Direction Générale"
+  private formatRole(roleCode: string): string {
+    const map: Record<string, string> = {
+      'RESPONSABLE':        'le Responsable',
+      'DIRECTION':          'la Direction',
+      'DIRECTIONGENERALE':  'la Direction Générale',
+      'ADMINISTRATEUR':     "l'Administrateur",
+    };
+    return map[roleCode] ?? roleCode.charAt(0) + roleCode.slice(1).toLowerCase();
+  }
+
   badgeClass(statut: string): string {
-    if (statut === 'BROUILLON')                    return 'grey';
-    if (statut === 'EN_ATTENTE' || statut.startsWith('EN_ATTENTE_ROLE') || statut === 'TRANSMIS') return 'blue';
-    if (statut.startsWith('APPROUVE_ROLE'))         return 'green';
-    if (statut.startsWith('REJETE_ROLE'))           return 'red';
-    if (statut.startsWith('SIGNE_ROLE'))            return 'purple';
-    if (statut === 'TERMINE')                       return 'cyan';
+    if (statut === 'BROUILLON')                          return 'grey';
+    if (statut === 'SOUMISE' || statut === 'TRANSMIS')   return 'blue';
+    if (statut.startsWith('EN_ATTENTE_'))                return 'blue';
+    if (statut.startsWith('APPROUVE_PAR_'))              return 'green';
+    if (statut.startsWith('REJETE_PAR_'))                return 'red';
+    if (statut.startsWith('SIGNE_PAR_'))                 return 'purple';
+    if (statut === 'TERMINE')                            return 'cyan';
     return 'grey';
   }
 }

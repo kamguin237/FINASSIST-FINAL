@@ -1,0 +1,66 @@
+<div class="mobile-page">
+
+  @if (loading) {
+    <div class="mobile-loading">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+  } @else if (erreur) {
+    <div class="mobile-error">
+      <div class="error-icon">⚠️</div>
+      <h2>Session invalide</h2>
+      <p>{{ erreur }}</p>
+    </div>
+  } @else if (submitted) {
+    <div class="mobile-success">
+      <div class="success-icon">✅</div>
+      <h2>Signature envoyée !</h2>
+      <p>Votre signature a été enregistrée avec succès dans FinAssist.</p>
+      <p class="success-sub">Vous pouvez fermer cette page.</p>
+    </div>
+  } @else if (sessionInfo) {
+    <div class="mobile-header">
+      <div class="mobile-logo">FA</div>
+      <h1>FinAssist</h1>
+      <p class="mobile-sub">Créez votre signature électronique</p>
+    </div>
+
+    <div class="mobile-user-card">
+      <div class="mobile-avatar">{{ sessionInfo.prenom[0] }}{{ sessionInfo.nom[0] }}</div>
+      <div>
+        <div class="mobile-name">{{ sessionInfo.prenom }} {{ sessionInfo.nom }}</div>
+        <div class="mobile-role">{{ sessionInfo.role }}</div>
+      </div>
+    </div>
+
+    <div class="mobile-instruction">
+      Dessinez votre signature dans la zone ci-dessous
+    </div>
+
+    <div class="canvas-container">
+      <canvas #canvas class="sign-canvas"
+        (touchstart)="onTouchStart($event)"
+        (touchmove)="onTouchMove($event)"
+        (touchend)="onTouchEnd()"
+        (mousedown)="onMouseDown($event)"
+        (mousemove)="onMouseMove($event)"
+        (mouseup)="onMouseUp()"
+        (mouseleave)="onMouseUp()">
+      </canvas>
+      <div class="canvas-line"></div>
+    </div>
+
+    <div class="mobile-actions">
+      <button class="btn-clear" (click)="effacer()">🗑 Effacer</button>
+      <button class="btn-send" (click)="envoyer()" [disabled]="submitting">
+        @if (submitting) { Envoi... }
+        @else { ✅ Envoyer ma signature }
+      </button>
+    </div>
+
+    <div class="mobile-expiry">
+      Session valide jusqu'à {{ sessionInfo.expiration | date:'HH:mm' }}
+    </div>
+  }
+
+</div>

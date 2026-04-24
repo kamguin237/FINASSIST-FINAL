@@ -5,6 +5,7 @@ import { permissionGuard } from './core/guards/permission.guard';
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./modules/auth/login/login.component').then(m => m.LoginComponent) },
   { path: '403',   loadComponent: () => import('./shared/components/forbidden/forbidden.component').then(m => m.ForbiddenComponent) },
+  { path: 'sign-mobile/:token', loadComponent: () => import('./modules/sign-mobile/sign-mobile.component').then(m => m.SignMobileComponent) },
   {
     path: '',
     canActivate: [authGuard],
@@ -23,6 +24,7 @@ export const routes: Routes = [
         data: { permission: 'BESOIN_CONSULTER' },
         children: [
           { path: '', loadComponent: () => import('./modules/besoins/besoins-list/besoins-list.component').then(m => m.BesoinsListComponent) },
+          { path: 'validations', canActivate: [permissionGuard], data: { permission: 'BESOIN_VALIDER' }, loadComponent: () => import('./modules/besoins/validations-dashboard/validations-dashboard.component').then(m => m.ValidationsDashboardComponent) },
           { path: 'new', canActivate: [permissionGuard], data: { permission: 'BESOIN_CREER' }, loadComponent: () => import('./modules/besoins/besoin-form/besoin-form.component').then(m => m.BesoinFormComponent) },
           { path: ':id', loadComponent: () => import('./modules/besoins/besoin-detail/besoin-detail.component').then(m => m.BesoinDetailComponent) },
           { path: ':id/edit', canActivate: [permissionGuard], data: { permission: 'BESOIN_MODIFIER' }, loadComponent: () => import('./modules/besoins/besoin-form/besoin-form.component').then(m => m.BesoinFormComponent) },
@@ -79,6 +81,16 @@ export const routes: Routes = [
       {
         path: 'profil',
         loadComponent: () => import('./modules/profil/profil.component').then(m => m.ProfilComponent)
+      },
+      {
+        path: 'ma-signature',
+        canActivate: [permissionGuard],
+        data: { permission: 'SIGNATURE_PERSO_GERER' },
+        loadComponent: () => import('./modules/ma-signature/ma-signature.component').then(m => m.MaSignatureComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./modules/settings/settings.component').then(m => m.SettingsComponent)
       },
     ]
   },

@@ -1,0 +1,254 @@
+@use '../../../styles/dark' as d;
+
+.settings-page { width: 100%; }
+
+.settings-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.75rem;
+  h2 { font-size: 1.3rem; font-weight: 700; color: d.$text; margin: 0; }
+}
+
+.btn-reset {
+  font-size: .78rem; color: d.$muted; background: rgba(255,255,255,.05);
+  border: 1px solid d.$border; border-radius: 8px; padding: .35rem .85rem;
+  cursor: pointer; transition: all .15s;
+  &:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,.08); }
+}
+
+// ── Grille ────────────────────────────────────────────────────────────────────
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ── Carte ─────────────────────────────────────────────────────────────────────
+.settings-card {
+  @include d.card;
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: .85rem;
+}
+
+.card-title {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .78rem; font-weight: 700; color: d.$muted;
+  text-transform: uppercase; letter-spacing: .1em;
+  padding-bottom: .75rem; border-bottom: 1px solid d.$border;
+  .card-icon { font-size: 1rem; }
+}
+
+// ── Compte ────────────────────────────────────────────────────────────────────
+.account-row {
+  display: flex; align-items: center; gap: 1rem;
+}
+
+.account-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, d.$accent, #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 800; color: white; flex-shrink: 0;
+}
+
+.account-info { display: flex; flex-direction: column; gap: .15rem; }
+.account-name  { font-size: .95rem; font-weight: 700; color: d.$text; }
+.account-email { font-size: .78rem; color: d.$muted; }
+.account-role  {
+  font-size: .72rem; font-weight: 600; color: #a78bfa;
+  background: d.$accent-dim; padding: .15rem .5rem; border-radius: 10px;
+  display: inline-block; width: fit-content;
+}
+
+.settings-link {
+  font-size: .82rem; color: d.$accent; text-decoration: none;
+  transition: opacity .15s;
+  &:hover { opacity: .75; }
+}
+
+// ── Infos ─────────────────────────────────────────────────────────────────────
+.info-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .85rem; padding: .3rem 0; border-bottom: 1px solid d.$border;
+  &:last-of-type { border-bottom: none; }
+}
+.info-label { color: d.$muted; }
+.info-val   { color: d.$text; font-weight: 500; }
+
+.badge-ok { background: rgba(34,197,94,.15); color: #22c55e; padding: .2rem .6rem; border-radius: 10px; font-size: .75rem; font-weight: 700; }
+.badge-ko { background: rgba(239,68,68,.15); color: #ef4444; padding: .2rem .6rem; border-radius: 10px; font-size: .75rem; font-weight: 700; }
+
+// ── Apparence ─────────────────────────────────────────────────────────────────
+.pref-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+
+.pref-label {
+  display: flex; flex-direction: column; gap: .1rem;
+  span { font-size: .88rem; color: d.$text; }
+  small { font-size: .72rem; color: d.$muted; }
+}
+
+.theme-toggle {
+  padding: .4rem .9rem; border-radius: 20px; font-size: .82rem; font-weight: 600;
+  background: d.$accent-dim; color: #a78bfa; border: 1px solid rgba(124,58,237,.3);
+  cursor: pointer; white-space: nowrap; transition: all .15s;
+  &:hover { background: rgba(124,58,237,.25); }
+}
+
+.pref-select {
+  padding: .4rem .7rem; border-radius: 8px; font-size: .82rem;
+  background: rgba(255,255,255,.06); border: 1px solid d.$border;
+  color: d.$text; cursor: pointer; min-width: 130px;
+  &:focus { outline: none; border-color: d.$accent; }
+  option { background: #1a1b2e; color: d.$text; }
+}
+
+// ── Toggles ───────────────────────────────────────────────────────────────────
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.toggle-label span { font-size: .88rem; color: d.$text; }
+
+.toggle-btn {
+  width: 44px; height: 24px; border-radius: 12px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.12); position: relative; transition: background .2s;
+  flex-shrink: 0;
+
+  &.on { background: d.$accent; }
+
+  .toggle-knob {
+    position: absolute; top: 3px; left: 3px;
+    width: 18px; height: 18px; border-radius: 50%; background: white;
+    transition: transform .2s; display: block;
+  }
+
+  &.on .toggle-knob { transform: translateX(20px); }
+}
+
+// ── Signature ─────────────────────────────────────────────────────────────────
+.sig-preview {
+  background: #fff; border-radius: 8px; padding: .5rem;
+  display: flex; align-items: center; justify-content: center;
+  img { max-height: 60px; max-width: 100%; display: block; }
+}
+
+.empty-hint { font-size: .82rem; color: d.$muted; font-style: italic; }
+
+// ── Administration ────────────────────────────────────────────────────────────
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: .75rem;
+}
+
+.admin-card {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .85rem 1rem; border-radius: 10px;
+  background: rgba(255,255,255,.04); border: 1px solid d.$border;
+  text-decoration: none; color: d.$text; font-size: .88rem;
+  transition: background .15s, border-color .15s;
+  &:hover { background: d.$accent-dim; border-color: rgba(124,58,237,.4); color: #a78bfa; }
+}
+
+.admin-icon { font-size: 1.1rem; }
+.admin-label { flex: 1; font-weight: 500; }
+.admin-arrow { color: d.$muted; font-size: .9rem; }
+
+// ── Light mode ────────────────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .settings-header h2 { color: #1a1d23; }
+  .btn-reset { color: #5a6072; background: #f3f4f6; border-color: #e8eaed; }
+
+  .settings-card { background: #fff; border-color: #e8eaed; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card-title { color: #9095a0; border-bottom-color: #e8eaed; }
+
+  .account-name  { color: #1a1d23; }
+  .account-email { color: #5a6072; }
+  .info-label { color: #9095a0; }
+  .info-val   { color: #1a1d23; }
+  .info-row   { border-bottom-color: #e8eaed; }
+
+  .pref-label span { color: #1a1d23; }
+  .pref-select {
+    background: #f9fafb; border-color: #e8eaed; color: #1a1d23;
+    option { background: #fff; color: #1a1d23; }
+  }
+
+  .toggle-label span { color: #1a1d23; }
+  .toggle-btn { background: #e5e7eb; &.on { background: #0d9488; } }
+
+  .admin-card {
+    background: #f9fafb; border-color: #e8eaed; color: #374151;
+    &:hover { background: #f0fdfa; border-color: #0d9488; color: #0d9488; }
+  }
+  .admin-arrow { color: #9095a0; }
+
+  .empty-hint { color: #9095a0; }
+}
+
+// ── Session et inactivité ─────────────────────────────────────────────────────
+.card-desc {
+  font-size: .82rem; color: d.$muted; margin-top: -.25rem;
+}
+
+.session-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding: .85rem 1rem;
+  background: rgba(255,255,255,.04); border: 1px solid d.$border;
+  border-radius: 10px;
+}
+
+.session-label {
+  display: flex; flex-direction: column; gap: .2rem;
+  .session-label-title { font-size: .9rem; font-weight: 600; color: d.$text; }
+  small { font-size: .78rem; color: d.$muted; }
+}
+
+.session-field {
+  display: flex; flex-direction: column; gap: .4rem;
+  label { font-size: .85rem; font-weight: 600; color: d.$text; }
+}
+
+.session-input-row {
+  display: flex; align-items: center; gap: .75rem;
+}
+
+.session-input {
+  width: 90px; padding: .55rem .75rem;
+  background: rgba(255,255,255,.06); border: 1px solid d.$border;
+  border-radius: 8px; color: d.$text; font-size: .9rem;
+  text-align: center;
+  &:focus { outline: none; border-color: d.$accent; }
+  &::-webkit-inner-spin-button { opacity: 1; }
+}
+
+.session-unit {
+  font-size: .82rem; color: d.$muted;
+}
+
+.session-hint {
+  font-size: .75rem; color: d.$muted; font-style: italic;
+}
+
+.session-save {
+  display: flex; justify-content: flex-start; padding-top: .25rem;
+}
+
+.btn-session-save {
+  padding: .6rem 1.25rem; background: d.$accent; color: white;
+  border: none; border-radius: 8px; cursor: pointer;
+  font-size: .88rem; font-weight: 600; transition: opacity .15s;
+  &:hover { opacity: .85; }
+}
+
+// Light mode
+:host-context(body.light-mode) {
+  .card-desc { color: #5a6072; }
+  .session-row { background: #f9fafb; border-color: #e8eaed; }
+  .session-label .session-label-title { color: #1a1d23; }
+  .session-label small { color: #9095a0; }
+  .session-field label { color: #1a1d23; }
+  .session-input { background: #fff; border-color: #e8eaed; color: #1a1d23; }
+  .session-unit, .session-hint { color: #9095a0; }
+  .btn-session-save { background: #0d9488; }
+}

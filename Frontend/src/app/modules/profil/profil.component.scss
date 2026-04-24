@@ -1,121 +1,231 @@
 @use '../../../styles/dark' as d;
 
+$card-bg:     #1a1b2e;
+$card-inner:  #12132a;
+$border:      rgba(124,58,237,.2);
+$accent:      #7c3aed;
+$text:        #ffffff;
+$muted:       #a0a0b0;
+
 .profil-loading {
   display: flex; align-items: center; justify-content: center;
-  height: 200px; color: d.$muted; font-size: .9rem;
+  height: 200px; color: $muted; font-size: .9rem;
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
 .profil-page {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.5rem;
-  min-height: calc(100vh - 56px); // 56px = hauteur topbar
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-    align-items: stretch;
-  }
+  width: 100%;
+  min-height: calc(100vh - 56px - 3rem);
 }
 
-// ── Carte profil ──────────────────────────────────────────────────────────────
-.profil-card {
-  @include d.card;
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex; 
-  flex-direction: column; 
+// ── Cartes ────────────────────────────────────────────────────────────────────
+.profil-card, .pwd-card {
+  background: $card-bg;
+  border: 1px solid $border;
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,.3);
+}
+
+.pwd-card { flex: 1; }
+
+// ── Titre de section ──────────────────────────────────────────────────────────
+.card-section-title {
+  display: flex;
   align-items: center;
-  gap: 1.25rem; 
-  padding: 2rem 1.5rem;
+  gap: .6rem;
+  font-size: .75rem;
+  font-weight: 700;
+  color: $muted;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid $border;
+
+  .section-icon { font-size: 1rem; }
 }
 
-.profil-avatar {
-  width: 80px; height: 80px; border-radius: 50%;
-  background: linear-gradient(135deg, d.$accent, #a78bfa);
+// ── Identité ──────────────────────────────────────────────────────────────────
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.avatar {
+  width: 72px; height: 72px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.8rem; font-weight: 700; color: white;
-  box-shadow: 0 4px 20px rgba(124,58,237,.4);
+  font-size: 1.6rem; font-weight: 800; color: white;
   flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(124,58,237,.3);
 }
 
-.profil-header {
-  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+.identity-info {
+  display: flex; flex-direction: column; gap: .5rem;
 }
 
-.profil-nom {
-  font-size: 1.3rem; font-weight: 700; color: d.$text; margin: 0; text-align: center;
+.identity-nom {
+  font-size: 1.4rem; font-weight: 700; color: $text; margin: 0;
 }
 
-.profil-infos {
-  width: 100%; border: 1px solid d.$border; border-radius: 10px; overflow: hidden;
+.identity-badges {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
 }
 
-.info-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: .75rem 1rem; border-bottom: 1px solid d.$border; font-size: .88rem;
-  gap: .5rem;
-  &:last-child { border-bottom: none; }
-
-  @media (max-width: 400px) {
-    flex-direction: column; align-items: flex-start; gap: .25rem;
-  }
-}
-
-.info-label { color: d.$muted; font-size: .82rem; }
-.info-value  { color: d.$text; font-weight: 500; }
-
-.role-badge {
-  background: d.$accent-dim; color: #a78bfa;
-  padding: .2rem .65rem; border-radius: 12px; font-size: .78rem; font-weight: 600;
+.badge-role {
+  background: rgba(124,58,237,.2); color: #a78bfa;
+  padding: .25rem .75rem; border-radius: 20px; font-size: .78rem; font-weight: 600;
+  border: 1px solid rgba(124,58,237,.3);
 }
 
 .badge-actif {
-  background: rgba(39,174,96,.15); color: #27ae60;
-  padding: .25rem .7rem; border-radius: 12px; font-size: .78rem; font-weight: 700;
+  background: rgba(34,197,94,.15); color: #22c55e;
+  padding: .25rem .75rem; border-radius: 20px; font-size: .78rem; font-weight: 600;
+  border: 1px solid rgba(34,197,94,.3);
 }
 
 .badge-inactif {
-  background: rgba(231,76,60,.15); color: #e74c3c;
-  padding: .25rem .7rem; border-radius: 12px; font-size: .78rem; font-weight: 700;
+  background: rgba(239,68,68,.15); color: #ef4444;
+  padding: .25rem .75rem; border-radius: 20px; font-size: .78rem; font-weight: 600;
+  border: 1px solid rgba(239,68,68,.3);
 }
 
-// ── Carte mot de passe ────────────────────────────────────────────────────────
-.pwd-card {
-  @include d.card;
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 1.5rem;
+.badge-date {
+  background: rgba(255,255,255,.06); color: $muted;
+  padding: .25rem .75rem; border-radius: 20px; font-size: .78rem;
+  border: 1px solid rgba(255,255,255,.08);
 }
 
-.pwd-title {
-  font-size: 1rem; font-weight: 600; color: d.$text; margin-bottom: 1.25rem;
+.card-divider {
+  height: 1px; background: $border; margin-bottom: 1.5rem;
 }
 
-.pwd-form { display: flex; flex-direction: column; gap: 1rem; }
+// ── Grille champs lecture seule ───────────────────────────────────────────────
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
 
-.field {
-  display: flex; flex-direction: column; gap: .35rem;
-  label { font-size: .82rem; color: d.$muted; }
-  input {
-    padding: .6rem .85rem;
-    background: rgba(255,255,255,.06); border: 1px solid d.$border;
-    border-radius: 8px; color: d.$text; font-size: .88rem;
-    transition: border-color .15s;
-    &:focus { outline: none; border-color: d.$accent; }
+  @media (max-width: 768px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.field-ro {
+  display: flex; flex-direction: column; gap: .4rem;
+
+  label {
+    font-size: .68rem; font-weight: 700; color: $muted;
+    letter-spacing: .1em; text-transform: uppercase;
   }
 }
 
-.field-error { font-size: .78rem; color: #e74c3c; }
+.field-value {
+  background: $card-inner;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  padding: .7rem 1rem;
+  color: $text;
+  font-size: .9rem;
+  min-height: 42px;
+  display: flex; align-items: center;
+
+  &.email { color: #a78bfa; }
+}
+
+.text-actif  { color: #22c55e; font-weight: 600; }
+.text-inactif { color: #ef4444; font-weight: 600; }
+
+// ── Formulaire mot de passe ───────────────────────────────────────────────────
+.pwd-form { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.pwd-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.field-pwd {
+  display: flex; flex-direction: column; gap: .4rem;
+
+  label {
+    font-size: .68rem; font-weight: 700; color: $muted;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+}
+
+.input-wrap {
+  position: relative;
+  display: flex; align-items: center;
+
+  input {
+    width: 100%;
+    padding: .7rem 2.5rem .7rem 1rem;
+    background: $card-inner;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    color: $text;
+    font-size: .9rem;
+    transition: border-color .15s;
+    &:focus { outline: none; border-color: $accent; box-shadow: 0 0 0 3px rgba(124,58,237,.15); }
+    &::placeholder { color: rgba(160,160,176,.5); }
+  }
+}
+
+.eye-btn {
+  position: absolute; right: .75rem;
+  background: none; border: none; cursor: pointer;
+  font-size: 1rem; color: $muted; padding: 0; line-height: 1;
+  &:hover { color: $text; }
+}
+
+// ── Jauge de force ────────────────────────────────────────────────────────────
+.strength-bar {
+  height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%; border-radius: 2px; transition: width .3s ease, background .3s;
+  &.weak   { background: #ef4444; }
+  &.medium { background: #f59e0b; }
+  &.strong { background: #22c55e; }
+}
+
+.strength-label {
+  font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+  &.weak   { color: #ef4444; }
+  &.medium { color: #f59e0b; }
+  &.strong { color: #22c55e; }
+}
+
+.field-error { font-size: .75rem; color: #ef4444; }
+
+// ── Footer bouton ─────────────────────────────────────────────────────────────
+.pwd-footer {
+  display: flex; justify-content: flex-end;
+  padding-top: .5rem;
+  border-top: 1px solid $border;
+}
 
 .btn-pwd {
-  margin-top: .25rem; padding: .65rem;
-  background: d.$accent; color: white; border: none; border-radius: 8px;
-  cursor: pointer; font-size: .88rem; font-weight: 600;
-  display: flex; align-items: center; justify-content: center; gap: .5rem;
-  transition: opacity .15s;
-  &:hover:not(:disabled) { opacity: .85; }
-  &:disabled { opacity: .5; cursor: not-allowed; }
+  padding: .75rem 1.75rem;
+  background: transparent;
+  color: $text;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: .9rem;
+  font-weight: 600;
+  display: flex; align-items: center; gap: .5rem;
+  transition: background .15s, border-color .15s;
+  &:hover:not(:disabled) { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.35); }
+  &:disabled { opacity: .45; cursor: not-allowed; }
 }
 
 .spinner-sm {
@@ -124,3 +234,61 @@
   border-radius: 50%; animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Light mode overrides ──────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .profil-card, .pwd-card {
+    background: #ffffff;
+    border-color: #e8eaed;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+
+  .card-section-title {
+    color: #9095a0;
+    border-bottom-color: #e8eaed;
+  }
+
+  .identity-nom { color: #1a1d23; }
+
+  .badge-date {
+    background: #f3f4f6;
+    color: #5a6072;
+    border-color: #e8eaed;
+  }
+
+  .card-divider { background: #e8eaed; }
+
+  .field-ro label { color: #9095a0; }
+
+  .field-value {
+    background: #f9fafb;
+    border-color: #e8eaed;
+    color: #1a1d23;
+    &.email { color: #7c3aed; }
+  }
+
+  .text-actif  { color: #16a34a; }
+  .text-inactif { color: #dc2626; }
+
+  .field-pwd label { color: #9095a0; }
+
+  .input-wrap input {
+    background: #f9fafb;
+    border-color: #e8eaed;
+    color: #1a1d23;
+    &::placeholder { color: #b0b8c4; }
+    &:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+  }
+
+  .eye-btn { color: #9095a0; &:hover { color: #1a1d23; } }
+
+  .strength-bar { background: #e8eaed; }
+
+  .pwd-footer { border-top-color: #e8eaed; }
+
+  .btn-pwd {
+    color: #1a1d23;
+    border-color: #e8eaed;
+    &:hover:not(:disabled) { background: #f3f4f6; border-color: #0d9488; color: #0d9488; }
+  }
+}

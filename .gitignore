@@ -480,3 +480,42 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+
+# ======================
+# 🔥 ANGULAR / FRONTEND
+# ======================
+
+# Angular cache
+Frontend/.angular/
+.angular/
+
+# Node modules
+Frontend/node_modules/
+node_modules/
+
+# Build Angular
+Frontend/dist/
+dist/
+
+# Logs Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+Frontend/src/environments/environment*.ts
+
+# ======================
+# 🔥 AUTRES UTILES
+# ======================
+
+# Docker
+docker-compose.override.yml
+
+# Env files (sécurité)
+.env
+.env.*
+
+# OS
+Thumbs.db

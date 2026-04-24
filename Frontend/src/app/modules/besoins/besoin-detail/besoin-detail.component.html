@@ -25,33 +25,75 @@
       @if (besoin.statut === 'ENREGISTRE' && auth.hasPermission('BESOIN_MODIFIER')) {
         <button (click)="soumettre()" class="btn">Soumettre</button>
       }
-      @if (auth.hasPermission('BESOIN_VALIDER') && (besoin.statut ?? '').startsWith('EN_ATTENTE_ROLE')) {
+      @if (auth.hasPermission('BESOIN_VALIDER') && (besoin.statut ?? '').startsWith('EN_ATTENTE_') && auth.currentUser()?.id !== besoin.utilisateurId && auth.currentUser()?.role !== 'Administrateur') {
         <div class="valider-form">
           <h4>Décision de validation</h4>
-          <form [formGroup]="validerForm" (ngSubmit)="valider()">
+          <!-- <form [formGroup]="validerForm" (ngSubmit)="valider()">
             <app-custom-select
               [options]="[{value:'APPROUVE',label:'Approuver'},{value:'REJETE',label:'Rejeter'}]"
               [selected]="validerForm.controls['decision'].value"
               (selectedChange)="validerForm.controls['decision'].setValue($any($event))">
             </app-custom-select>
-            <input formControlName="motif" placeholder="Motif (optionnel)" />
+            <input formControlName="motif" placeholder="Motif (obligatoire si rejet)" />
             <input formControlName="commentaire" placeholder="Commentaire (optionnel)" />
             <button type="submit" class="btn"
-              [disabled]="validerForm.invalid || validerLoading || validerDone">
+              [disabled]="validerForm.invalid || validerLoading || validerDone ||
+                (validerForm.controls['decision'].value === 'REJETE' && !validerForm.controls['motif'].value?.trim())">
               @if (validerLoading) { En cours... }
               @else if (validerDone) { ✓ Validé }
               @else { Valider }
             </button>
-          </form>
+          </form> -->
+           <!-- Message affiché si l'utilisateur a déjà validé ce besoin -->
+      @if (besoin.dejaValideParMoi) {
+        <div class="info-deja-valide">
+          ✅ Vous avez déjà rendu une décision sur ce besoin.
+          Une double validation n'est pas autorisée.
+        </div>
+      }
+
+      <form [formGroup]="validerForm" (ngSubmit)="valider()">
+        <app-custom-select
+          [options]="[{value:'APPROUVE',label:'Approuver'},{value:'REJETE',label:'Rejeter'}]"
+          [selected]="validerForm.controls['decision'].value"
+          (selectedChange)="validerForm.controls['decision'].setValue($any($event))"
+          [disabled]="besoin.dejaValideParMoi">
+        </app-custom-select>
+        <input
+          formControlName="motif"
+          placeholder="Motif (obligatoire si rejet)"
+          [readonly]="besoin.dejaValideParMoi" />
+        <input
+          formControlName="commentaire"
+          placeholder="Commentaire (optionnel)"
+          [readonly]="besoin.dejaValideParMoi" />
+        <button
+          type="submit"
+          class="btn"
+          [class.btn-disabled]="!peutValider"
+          [title]="besoin.dejaValideParMoi
+            ? 'Vous avez déjà rendu une décision sur ce besoin'
+            : 'Soumettre votre décision'"
+          [disabled]="
+            !peutValider ||
+            validerForm.invalid ||
+            validerLoading ||
+            validerDone">
+          @if (validerLoading) { En cours... }
+          @else if (validerDone) { ✓ Validé }
+          @else if (besoin.dejaValideParMoi) { ✓ Déjà validé }
+          @else { Valider }
+        </button>
+      </form>
         </div>
       }
       @if (auth.hasPermission('BESOIN_VALIDER') &&
-           (besoin.statut ?? '').startsWith('SIGNE_ROLE')) {
+           (besoin.statut ?? '').startsWith('SIGNE_PAR_')) {
         <button (click)="transmettre()" class="btn secondary">
           Transmettre au niveau supérieur
         </button>
       }
-      @if (auth.hasPermission('BESOIN_SIGNER') && (besoin.statut ?? '').startsWith('APPROUVE_ROLE')) {
+      @if (auth.hasPermission('BESOIN_SIGNER') && (besoin.statut ?? '').startsWith('APPROUVE_PAR_')) {
         <button (click)="ouvrirSignature()" class="btn sign">✍ Signer électroniquement</button>
       }
       @if (estSigne && signatureId) {
@@ -125,7 +167,7 @@
   <div class="sign-overlay" (click)="fermerSignModal()">
     <div class="sign-modal" (click)="$event.stopPropagation()">
       <div class="sign-modal-header">
-        <h3>{{ signEtape === 1 ? 'Placement de la signature' : 'Dessinez votre signature' }}</h3>
+        <h3>{{ signEtape === 1 ? 'Placement de la signature' : 'Confirmer la signature' }}</h3>
         <button class="close-btn" (click)="fermerSignModal()">✕</button>
       </div>
       @if (signErreur) { <div class="sign-error">⚠ {{ signErreur }}</div> }
@@ -185,26 +227,18 @@
 
       @if (signEtape === 2) {
         <div class="sign-modal-body canvas-body">
-          <p class="sign-instruction">Dessinez votre signature ci-dessous</p>
-          <div class="canvas-wrap">
-            <canvas #signCanvas width="600" height="200" class="sign-canvas"
-              (mousedown)="onCanvasMouseDown($event)"
-              (mousemove)="onCanvasMouseMove($event)"
-              (mouseup)="onCanvasMouseUp()"
-              (mouseleave)="onCanvasMouseUp()"
-              (touchstart)="onCanvasTouchStart($event)"
-              (touchmove)="onCanvasTouchMove($event)"
-              (touchend)="onCanvasMouseUp()">
-            </canvas>
-            <div class="canvas-baseline"></div>
-          </div>
+          <p class="sign-instruction">Votre signature personnelle sera apposée à l'emplacement sélectionné</p>
+          @if (signaturePerso) {
+            <div class="sig-perso-preview">
+              <img [src]="signaturePerso.imageBase64" alt="Ma signature" />
+            </div>
+          }
         </div>
         <div class="sign-modal-footer">
           <button class="btn-secondary" (click)="retourEtape1()">← Retour</button>
-          <button class="btn-secondary" (click)="effacerCanvas()">Effacer</button>
           <button class="btn-primary" [disabled]="signLoading" (click)="validerSignature()">
             @if (signLoading) { <span class="spinner-sm"></span> Envoi... }
-            @else { ✅ Valider la signature }
+            @else { ✅ Apposer ma signature }
           </button>
         </div>
       }
@@ -247,7 +281,7 @@
               <img [src]="imageUrl" style="width:100%;display:block;" alt="Document" />
             } @else {
               <div class="apercu-doc-placeholder">
-                <span>📄 {{ documents[0]?.nom ?? 'Aucun document joint' }}</span>
+                <span>📄 {{ documents[0]?.nom ? documents[0].nom : 'Aucun document joint' }}</span>
               </div>
             }
           </div>

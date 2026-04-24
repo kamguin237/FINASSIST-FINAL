@@ -20,6 +20,7 @@ export class CustomSelectComponent implements OnDestroy {
   @Input() options: SelectOption[] = [];
   @Input() selected: string | number | null = null;
   @Input() placeholder = 'Sélectionner';
+  @Input() disabled = false;
   @Output() selectedChange = new EventEmitter<string | number | null>();
 
   @ViewChild('trigger') triggerRef!: ElementRef<HTMLElement>;
@@ -36,6 +37,7 @@ export class CustomSelectComponent implements OnDestroy {
   }
 
   toggle() {
+    if (this.disabled) return;
     if (this.isOpen()) {
       this.closeDropdown();
     } else {

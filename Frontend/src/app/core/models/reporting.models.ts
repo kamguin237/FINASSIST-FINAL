@@ -3,9 +3,12 @@ export interface DashboardDTO {
   besoinsSoumis: number;
   besoinsApprouves: number;
   besoinsRejetes: number;
+  besoinsEnregistres: number;
+  besoinsBrouillons: number;
   besoinsSignes: number;
   notificationsNonLues: number;
   derniersBesoins: BesoinRecent[];
+    besoinsSoumisParMoi:  number; 
 }
 
 export interface EvolutionPoint {

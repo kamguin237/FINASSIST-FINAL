@@ -77,9 +77,10 @@ body.light-mode .btn-categorie { color: #7c3aed; }
   border: 1px solid d.$border; background: rgba(255,255,255,.03);
   transition: border-color .15s;
 
-  &.active  { border-color: d.$accent; background: rgba(124,58,237,.08); }
-  &.done    { border-color: #22c55e;   background: rgba(34,197,94,.06); opacity: .85; }
-  &.pending { opacity: .55; }
+  &.active   { border-color: d.$accent; background: rgba(124,58,237,.08); }
+  &.done     { border-color: #22c55e;   background: rgba(34,197,94,.06); opacity: .85; }
+  &.pending  { opacity: .55; }
+  &.rejected { border-color: #ef4444;   background: rgba(239,68,68,.08); }
 }
 
 .etape-num {
@@ -103,9 +104,10 @@ body.light-mode .btn-categorie { color: #7c3aed; }
 
 .etape-statut-icon .icon {
   font-size: 1.1rem; font-weight: 700;
-  &.done    { color: #22c55e; }
-  &.active  { color: d.$accent; }
-  &.pending { color: d.$muted; }
+  &.done     { color: #22c55e; }
+  &.active   { color: d.$accent; }
+  &.pending  { color: d.$muted; }
+  &.rejected { color: #ef4444; }
 }
 
 .loading-text, .no-circuit { color: d.$muted; font-size: .88rem; text-align: center; padding: 1rem 0; }
@@ -113,4 +115,58 @@ body.light-mode .btn-categorie { color: #7c3aed; }
 .modal-footer {
   display: flex; justify-content: flex-end;
   padding: 1rem 1.5rem; border-top: 1px solid d.$border;
+}
+
+.upload-zone-inline {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem .85rem;
+  border: 1px dashed rgba(124,58,237,.4);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .85rem;
+  color: #a78bfa;
+  transition: border-color .15s, background .15s;
+  &:hover { border-color: #7c3aed; background: rgba(124,58,237,.05); }
+  input[type=file] { display: none; }
+}
+
+.fichier-nom {
+  color: #a78bfa;
+  font-size: .82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+.optional {
+  font-size: .75rem;
+  color: #a0a0b0;
+  font-weight: 400;
+  margin-left: .25rem;
+}
+
+.fichier-selectionne {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .85rem;
+  background: rgba(124,58,237,.08);
+  border: 1px solid rgba(124,58,237,.2);
+  border-radius: 8px;
+}
+
+.fichier-del-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: rgba(231,76,60,.7);
+  cursor: pointer;
+  font-size: .85rem;
+  padding: .1rem .3rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  &:hover { background: rgba(231,76,60,.15); color: #e74c3c; }
 }

@@ -11,7 +11,15 @@ export class BesoinsService {
 
   getAll()                          { return this.http.get<BesoinDTO[]>(this.url); }
   getById(id: number)               { return this.http.get<BesoinDTO>(`${this.url}/${id}`); }
-  create(dto: CreateBesoinDTO)      { return this.http.post<BesoinDTO>(this.url, dto); }
+  create(dto: CreateBesoinDTO, fichier?: File) {
+    const form = new FormData();
+    form.append('titre', dto.titre);
+    form.append('description', dto.description);
+    form.append('niveauImportance', dto.niveauImportance);
+    form.append('categorieId', dto.categorieId.toString());
+    if (fichier) form.append('fichier', fichier);
+    return this.http.post<BesoinDTO>(this.url, form);
+  }
   update(id: number, dto: UpdateBesoinDTO) { return this.http.put<BesoinDTO>(`${this.url}/${id}`, dto); }
   delete(id: number)                { return this.http.delete<void>(`${this.url}/${id}`); }
   enregistrer(id: number)           { return this.http.post<BesoinDTO>(`${this.url}/${id}/enregistrer`, {}); }

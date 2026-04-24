@@ -6,38 +6,79 @@
 </div>
 
 <!-- Liste des rôles -->
-<div class="roles-list">
-  @for (r of roles; track r.id) {
-    <div class="role-card">
-      <div class="role-header" (click)="togglePermissions(r)">
-        <strong>{{ r.code }}</strong>
-        <span class="desc">{{ r.description }}</span>
-        @if (auth.hasPermission('ROLE_MODIFIER')) {
-          <button class="btn-sm" (click)="openEdit(r); $event.stopPropagation()">Modifier</button>
-        }
-        @if (auth.hasPermission('ROLE_SUPPRIMER')) {
-          <button class="btn-sm danger" (click)="delete(r.id); $event.stopPropagation()">Supprimer</button>
-        }
-      </div>
-      @if (selectedRole?.id === r.id) {
-        <div class="permissions-panel">
-          <h4>Permissions du rôle</h4>
-          <div class="perm-grid">
-            @for (p of allPermissions; track p.id) {
-              <label class="perm-item">
-                <input type="checkbox" [checked]="hasPermission(p.id)" (change)="togglePerm(r.id, p.id, $event)" />
-                <span>{{ p.code }}</span>
-                <small>{{ p.module }}</small>
-              </label>
+<div class="table-card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Code</th><th>Description</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of roles; track r.id) {
+        <tr>
+          <td><strong>{{ r.code }}</strong></td>
+          <td>{{ r.description }}</td>
+          <td class="actions">
+            @if (auth.hasPermission('ROLE_MODIFIER')) {
+              <button class="btn-sm perm" (click)="openPermissions(r)" title="Gérer les permissions">🔑 Permissions</button>
+              <button class="btn-sm" (click)="openEdit(r)">Modifier</button>
             }
-          </div>
-        </div>
+            @if (auth.hasPermission('ROLE_SUPPRIMER')) {
+              <button class="btn-sm danger" (click)="delete(r.id)">Supprimer</button>
+            }
+          </td>
+        </tr>
       }
-    </div>
-  }
+    </tbody>
+  </table>
 </div>
 
-<!-- Modale création / modification -->
+<!-- ── Modale permissions ── -->
+@if (showPermModal && permRole) {
+  <div class="modal-overlay" (click)="fermerPermModal()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>Permissions du rôle {{ permRole.code }}</h3>
+          <p class="modal-sub">Cochez les permissions à attribuer à ce rôle.</p>
+        </div>
+        <button class="close-btn" (click)="fermerPermModal()">✕</button>
+      </div>
+      <div class="modal-body perm-body">
+        @for (group of permissionsByModule; track group.module) {
+          <div class="perm-group">
+            <div class="perm-group-title">
+              <span>{{ group.module }}</span>
+              <button class="btn-check-all" (click)="toggleModule(group.permissions)">
+                {{ isModuleAllChecked(group.permissions) ? 'Tout décocher' : 'Tout cocher' }}
+              </button>
+            </div>
+            <div class="perm-grid">
+              @for (p of group.permissions; track p.id) {
+                <label class="perm-item" [class.is-checked]="hasPerm(p.id)">
+                  <input
+                    type="checkbox"
+                    [checked]="hasPerm(p.id)"
+                    (change)="togglePerm(p.id, $event)"
+                  />
+                  <span class="perm-code">{{ p.code }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="fermerPermModal()">Annuler</button>
+        <button class="btn-primary" (click)="sauvegarderPermissions()" [disabled]="savingPerms">
+          {{ savingPerms ? 'Enregistrement...' : 'Enregistrer les permissions' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Modale création / modification ── -->
 @if (showModal) {
   <div class="modal-overlay" (click)="fermerModal()">
     <div class="modal" (click)="$event.stopPropagation()">

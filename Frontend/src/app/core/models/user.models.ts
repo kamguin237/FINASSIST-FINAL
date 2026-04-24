@@ -6,6 +6,7 @@ export interface UtilisateurDTO {
   role: string;
   dateCreation: string;
   actif: boolean;
+  hasActions?: boolean;
 }
 
 export interface CreateUtilisateurDTO {

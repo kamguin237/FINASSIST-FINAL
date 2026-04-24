@@ -309,3 +309,124 @@
   height: 600px; 
   display: block;
 }
+
+.info-deja-valide {
+  background: #f0fdf4;
+  border-left: 4px solid #22c55e;
+  color: #166534;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+}
+
+.btn-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sig-perso-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem auto;
+  max-width: 400px;
+  border: 1px solid rgba(124,58,237,.2);
+
+  img {
+    max-height: 100px;
+    max-width: 100%;
+    display: block;
+  }
+}
+
+// ── Light mode overrides ──────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .detail-header h2  { color: #1a1d23; }
+  .back-link         { color: #0d9488; }
+
+  .info-card, .actions-card, .historique-card, .pj-card, .sign-confirm-card {
+    background: #ffffff;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    h3, h4 { color: #1a1d23; }
+    p { color: #5a6072; strong { color: #1a1d23; } }
+  }
+
+  .btn {
+    &.secondary { background: #f3f4f6; color: #5a6072; border-color: #e8eaed; }
+    &.sign      { background: #0d9488; }
+  }
+
+  .valider-form {
+    select, input {
+      background: #fff;
+      border-color: #e8eaed;
+      color: #1a1d23;
+      &:focus { border-color: #0d9488; }
+      option { background: #fff; color: #1a1d23; }
+    }
+  }
+
+  .upload-zone {
+    border-color: #cbd5e1;
+    color: #5a6072;
+    background: #f9fafb;
+    &:hover { border-color: #0d9488; background: #f0fdfa; color: #0d9488; }
+  }
+
+  .doc-list li { background: #f9fafb; border: 1px solid #e8eaed; }
+  .doc-nom      { color: #1a1d23; }
+  .doc-type, .doc-date { color: #9095a0; }
+
+  .historique-card li { border-bottom-color: #e8eaed; color: #5a6072; strong { color: #1a1d23; } }
+  .date { color: #9095a0; }
+
+  .verif-row   { color: #1a1d23; border-bottom-color: #e8eaed; }
+  .verif-label { color: #5a6072; }
+  .verif-message { color: #6b7280; }
+
+  .sign-row    { border-bottom-color: #e8eaed; }
+  .sign-label  { color: #5a6072; }
+
+  .sign-instruction { color: #0d9488; }
+
+  .doc-zone {
+    background: #f9fafb;
+    border-color: #e8eaed;
+  }
+
+  .doc-placeholder { color: #9095a0; small { color: #b0b8c4; } }
+
+  .zoom-btn {
+    background: #f3f4f6;
+    color: #5a6072;
+    &:hover { background: #e5e7eb; }
+  }
+
+  .doc-zoom-bar span { color: #5a6072; }
+
+  .pdf-loading { color: #5a6072; }
+  .pdf-error   { color: #e11d48; }
+
+  .apercu-loading { color: #5a6072; }
+
+  .btn-primary  { background: #0d9488; color: #fff; &:hover { background: #0f766e; } }
+  .btn-secondary { background: #fff; border-color: #e8eaed; color: #5a6072; &:hover { border-color: #0d9488; color: #0d9488; } }
+
+  .sign-modal {
+    background: rgba(255,255,255,.85);
+    border-color: rgba(255,255,255,.9);
+    .sign-modal-header { border-bottom-color: #e8eaed; h3 { color: #1a1d23; } }
+    .sign-modal-footer { border-top-color: #e8eaed; }
+  }
+
+  .sig-perso-preview {
+    background: #f9fafb;
+    border-color: #e8eaed;
+  }
+}

@@ -24,6 +24,10 @@ export class ProfilComponent implements OnInit {
   loading = true;
   pwdLoading = false;
 
+  showAncien  = false;
+  showNouveau = false;
+  showConfirm = false;
+
   pwdForm = this.fb.group({
     ancienMotDePasse:    ['', Validators.required],
     nouveauMotDePasse:   ['', [Validators.required, Validators.minLength(8)]],
@@ -47,6 +51,47 @@ export class ProfilComponent implements OnInit {
   get initiales(): string {
     if (!this.profil) return '?';
     return `${this.profil.prenom?.[0] ?? ''}${this.profil.nom?.[0] ?? ''}`.toUpperCase();
+  }
+
+  get avatarColor(): string {
+    const colors: Record<string, string> = {
+      'Administrateur': '#7c3aed',
+      'Direction':      '#0d9488',
+      'Responsable':    '#2563eb',
+      'Agent':          '#7c3aed',
+    };
+    return colors[this.profil?.role ?? ''] ?? '#7c3aed';
+  }
+
+  // ── Jauge de force du mot de passe ────────────────────────────────────────
+  get strengthScore(): number {
+    const pwd = this.pwdForm.get('nouveauMotDePasse')?.value ?? '';
+    if (!pwd) return 0;
+    let score = 0;
+    if (pwd.length >= 8)  score++;
+    if (pwd.length >= 12) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    return score;
+  }
+
+  get strengthLabel(): string {
+    const s = this.strengthScore;
+    if (s <= 1) return 'FAIBLE';
+    if (s <= 3) return 'MOYENNE';
+    return 'FORTE';
+  }
+
+  get strengthClass(): string {
+    const s = this.strengthScore;
+    if (s <= 1) return 'weak';
+    if (s <= 3) return 'medium';
+    return 'strong';
+  }
+
+  get strengthWidth(): string {
+    return `${(this.strengthScore / 5) * 100}%`;
   }
 
   changerMotDePasse() {

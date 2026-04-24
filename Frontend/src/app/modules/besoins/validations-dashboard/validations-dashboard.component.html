@@ -1,0 +1,155 @@
+<div class="vd-page">
+  <div class="vd-layout">
+
+    <!-- ── Liste des besoins ── -->
+    <div class="vd-main">
+      <div class="vd-header">
+        <h2>Tableau de bord — Validations en attente</h2>
+        <span class="vd-count">{{ besoins.length }} besoin(s) en attente</span>
+      </div>
+
+      @if (loading) {
+        <div class="vd-loading">Chargement...</div>
+      } @else if (besoins.length === 0) {
+        <div class="vd-empty">
+          <span>✅</span>
+          <p>Aucun besoin en attente de validation.</p>
+        </div>
+      } @else {
+        <div class="vd-list">
+          @for (b of besoins; track b.id) {
+            <div class="vd-card" [class]="'vd-card--' + getUrgenceClass(b)">
+              <div class="vd-card-top">
+                <div class="vd-card-info">
+                  <h3 class="vd-titre">{{ b.titre }}</h3>
+                  <span class="vd-meta">{{ b.categorieNom }} · Par : {{ b.utilisateurNom }}</span>
+                </div>
+                <div class="vd-card-right">
+                  <span class="vd-badge" [class]="'vd-badge--' + getUrgenceClass(b)">
+                    {{ formatRole(b.etapeRole) }}
+                  </span>
+                  @if (b.delaiMaxMinutes > 0) {
+                    <span class="vd-expire" [style.color]="getBarColor(b.pourcentageEcoule)">
+                      @if (b.pourcentageEcoule >= 100) { Délai dépassé }
+                      @else { Expire dans {{ formatDuree(b.minutesRestantes) }} }
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Barre de progression -->
+              @if (b.delaiMaxMinutes > 0) {
+                <div class="vd-progress-wrap">
+                  <div class="vd-progress-track">
+                    <div class="vd-progress-fill"
+                         [style.width.%]="Math.min(b.pourcentageEcoule, 100)"
+                         [style.background]="getBarColor(b.pourcentageEcoule)"
+                         [class.vd-blink]="b.pourcentageEcoule >= 100">
+                    </div>
+                    <div class="vd-marker" style="left:50%">50%</div>
+                    <div class="vd-marker" style="left:80%">80%</div>
+                  </div>
+                </div>
+
+              <!-- Indicateurs rappels -->
+                <div class="vd-rappels">
+                  <span class="vd-rappel-item" [class.checked]="b.rappel1Envoye" [class.pending]="!b.rappel1Envoye" style="--c:#f59e0b">
+                    <span class="vd-rappel-dot"></span>
+                    @if(b.rappel1Envoye) {
+                      Rappel 1 <span class="vd-check">✓</span>
+                    } @else {
+                      Rappel 1 <span class="vd-time">{{ tempsAvantSeuil(b, 50) }}</span>
+                    }
+                  </span>
+                  <span class="vd-rappel-item" [class.checked]="b.rappel2Envoye" [class.pending]="!b.rappel2Envoye" style="--c:#f97316">
+                    <span class="vd-rappel-dot"></span>
+                    @if(b.rappel2Envoye) {
+                      Rappel 2 <span class="vd-check">✓</span>
+                    } @else {
+                      Rappel 2 <span class="vd-time">{{ tempsAvantSeuil(b, 80) }}</span>
+                    }
+                  </span>
+                  <span class="vd-rappel-item" [class.checked]="b.emailRappelEnvoye" [class.pending]="!b.emailRappelEnvoye" style="--c:#7c3aed">
+                    <span class="vd-rappel-dot"></span>
+                    @if(b.emailRappelEnvoye) {
+                      Email <span class="vd-check">✓</span>
+                    } @else {
+                      Email <span class="vd-time">{{ tempsAvantSeuil(b, 100) }}</span>
+                    }
+                  </span>
+                  <span class="vd-rappel-item" [class.checked]="b.rejeteAutomatiquement" [class.pending]="!b.rejeteAutomatiquement" style="--c:#ef4444">
+                    <span class="vd-rappel-dot"></span>
+                    @if(b.rejeteAutomatiquement) {
+                      Rejet auto <span class="vd-check">✓</span>
+                    } @else {
+                      Rejet auto <span class="vd-time">{{ tempsAvantRejet(b) }}</span>
+                    }
+                  </span>
+                </div>
+              } @else {
+                <p class="vd-no-delai">Aucun délai configuré pour cette étape.</p>
+              }
+
+              <!-- Actions -->
+              <div class="vd-actions">
+                <a [routerLink]="['/besoins', b.id]" class="vd-btn-valider">
+                  ✓ Valider
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ── Légende cycle de déclenchement ── -->
+    <aside class="vd-legend">
+      <div class="vd-legend-title">
+        <span class="vd-legend-icon">⚡</span>
+        CYCLE DE DÉCLENCHEMENT
+      </div>
+      <div class="vd-legend-list">
+        <div class="vd-legend-item">
+          <div class="vd-legend-dot dot--green">✓</div>
+          <div class="vd-legend-text">
+            <span class="vd-legend-label green">Besoin soumis</span>
+            <span class="vd-legend-desc">Délai décompte en cours</span>
+          </div>
+        </div>
+        <div class="vd-legend-line"></div>
+        <div class="vd-legend-item">
+          <div class="vd-legend-dot dot--orange">◉</div>
+          <div class="vd-legend-text">
+            <span class="vd-legend-label orange">50% — Rappel in-app 1</span>
+            <span class="vd-legend-desc">Notification orange · 1ère alerte</span>
+          </div>
+        </div>
+        <div class="vd-legend-line"></div>
+        <div class="vd-legend-item">
+          <div class="vd-legend-dot dot--red">△</div>
+          <div class="vd-legend-text">
+            <span class="vd-legend-label red">80% — Rappel in-app 2</span>
+            <span class="vd-legend-desc">Notification rouge · Urgente</span>
+          </div>
+        </div>
+        <div class="vd-legend-line"></div>
+        <div class="vd-legend-item">
+          <div class="vd-legend-dot dot--purple">▣</div>
+          <div class="vd-legend-text">
+            <span class="vd-legend-label purple">100% — Email automatique</span>
+            <span class="vd-legend-desc">Mail envoyé via SMTP</span>
+          </div>
+        </div>
+        <div class="vd-legend-line"></div>
+        <div class="vd-legend-item">
+          <div class="vd-legend-dot dot--crimson">⊗</div>
+          <div class="vd-legend-text">
+            <span class="vd-legend-label crimson">100% + 1h — Rejet auto</span>
+            <span class="vd-legend-desc">Statut REJETE · motif système</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>

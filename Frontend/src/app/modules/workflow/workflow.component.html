@@ -36,7 +36,7 @@
               </app-custom-select>
               <label><input type="checkbox" formControlName="approbationRequise" /> Approbation</label>
               <label><input type="checkbox" formControlName="signatureRequise" /> Signature</label>
-              <input formControlName="delaiMaxJours" type="number" placeholder="Délai" class="delai-input" />
+              <input formControlName="delaiMaxJours" type="time" placeholder="HH:mm" class="delai-input" />
               <label><input type="checkbox" formControlName="estDerniereEtape" /> Dernière</label>
               <button type="button" (click)="removeEtape($index)" class="btn-sm danger">✕</button>
             </div>
@@ -46,7 +46,9 @@
 
         <div class="modal-footer">
           <button type="button" (click)="showForm = false" class="btn-secondary">Annuler</button>
-          <button type="submit" [disabled]="form.invalid" class="btn-primary">Enregistrer</button>
+          <button type="submit" [disabled]="form.invalid || !derniereEtapeDefinie || !tousDelaisValides" class="btn-primary">
+            Enregistrer
+          </button>
         </div>
       </form>
     </div>
@@ -74,7 +76,7 @@
               <span>{{ e.roleRequis }}</span>
               @if (e.approbationRequise) { <span class="tag">Approbation</span> }
               @if (e.signatureRequise) { <span class="tag">Signature</span> }
-              <span class="tag muted">{{ e.delaiMaxJours }}j</span>
+              <span class="tag muted">⏱ {{ minutesToHHmm(e.delaiMaxJours) }}</span>
               @if (e.estDerniereEtape) { <span class="tag last">Dernière</span> }
             </div>
           }

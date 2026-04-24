@@ -1,15 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { UsersService } from '../../../core/services/users.service';
 import { RolesService } from '../../../core/services/roles.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { UtilisateurDTO } from '../../../core/models/user.models';
 import { RoleDTO, PermissionDTO } from '../../../core/models/role.models';
 import { CustomSelectComponent } from '../../../shared/components/custom-select/custom-select.component';
 import { RoleOptionsPipe } from '../../../shared/pipes/select-options.pipe';
+
+// Validateur domaine email
+function finstarEmailValidator(control: AbstractControl): ValidationErrors | null {
+  const value: string = control.value ?? '';
+  return value.toLowerCase().endsWith('@finstar-cm.com') ? null : { finstarDomain: true };
+}
 
 @Component({
   selector: 'app-users',
@@ -30,11 +37,10 @@ export class UsersComponent implements OnInit {
   erreur = '';
 
   form = this.fb.group({
-    nom:        ['', Validators.required],
-    prenom:     ['', Validators.required],
-    email:      ['', [Validators.required, Validators.email]],
-    motDePasse: [''],
-    roleId:     [null as number | null, Validators.required]
+    nom:    ['', Validators.required],
+    prenom: ['', Validators.required],
+    email:  ['', [Validators.required, Validators.email, finstarEmailValidator]],
+    roleId: [null as number | null, Validators.required]
   });
 
   // Modale permissions
@@ -50,7 +56,8 @@ export class UsersComponent implements OnInit {
     private rolesService: RolesService,
     private permissionsService: PermissionsService,
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private confirm: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -98,6 +105,20 @@ export class UsersComponent implements OnInit {
     else this.permDirectes.delete(permId);
   }
 
+  isModuleAllChecked(permissions: PermissionDTO[]): boolean {
+    return permissions
+      .filter(p => !this.isFromRole(p.id))
+      .every(p => this.permDirectes.has(p.id));
+  }
+
+  toggleModule(permissions: PermissionDTO[]) {
+    const editables = permissions.filter(p => !this.isFromRole(p.id));
+    if (this.isModuleAllChecked(permissions))
+      editables.forEach(p => this.permDirectes.delete(p.id));
+    else
+      editables.forEach(p => this.permDirectes.add(p.id));
+  }
+
   sauvegarderPermissions() {
     if (!this.permUser) return;
     this.savingPerms = true;
@@ -118,15 +139,11 @@ export class UsersComponent implements OnInit {
   // ── Modale création/modification ───────────────────────────────────────────
   openCreate() {
     this.editId = null; this.erreur = ''; this.form.reset();
-    this.form.get('motDePasse')?.setValidators(Validators.required);
-    this.form.get('motDePasse')?.updateValueAndValidity();
     this.showModal = true;
   }
 
   openEdit(u: UtilisateurDTO) {
     this.editId = u.id; this.erreur = '';
-    this.form.get('motDePasse')?.clearValidators();
-    this.form.get('motDePasse')?.updateValueAndValidity();
     this.form.patchValue({ nom: u.nom, prenom: u.prenom, email: u.email });
     this.showModal = true;
   }
@@ -140,8 +157,12 @@ export class UsersComponent implements OnInit {
     const isEdit = !!this.editId;
     const req = isEdit ? this.usersService.update(this.editId!, dto) : this.usersService.create(dto);
     req.subscribe({
-      next: () => {
-        this.toastr.success(isEdit ? 'Utilisateur modifié.' : 'Utilisateur créé.');
+      next: (res: any) => {
+        if (!isEdit && res?.emailWarning) {
+          this.toastr.warning(res.emailWarning, 'Avertissement email', { timeOut: 8000 });
+        } else {
+          this.toastr.success(isEdit ? 'Utilisateur modifié.' : 'Utilisateur créé. Un email avec le mot de passe a été envoyé.');
+        }
         this.fermerModal();
         this.usersService.getAll().subscribe(u => this.users = u);
       },
@@ -149,24 +170,27 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  deactivate(id: number) {
-    if (!confirm('Désactiver cet utilisateur ?')) return;
+  async deactivate(id: number) {
+    const ok = await this.confirm.confirm({ titre: 'Désactiver l\'utilisateur', message: 'Êtes-vous sûr de vouloir désactiver ce compte ?', labelConfirm: 'Désactiver', danger: true });
+    if (!ok) return;
     this.usersService.deactivate(id).subscribe({
       next: () => { this.toastr.success('Compte désactivé.'); this.usersService.getAll().subscribe(u => this.users = u); },
       error: e => this.toastr.error(e.error?.message ?? 'Erreur lors de la désactivation.')
     });
   }
 
-  activate(id: number) {
-    if (!confirm('Réactiver cet utilisateur ?')) return;
+  async activate(id: number) {
+    const ok = await this.confirm.confirm({ titre: 'Réactiver l\'utilisateur', message: 'Êtes-vous sûr de vouloir réactiver ce compte ?', labelConfirm: 'Réactiver', danger: false });
+    if (!ok) return;
     this.usersService.activate(id).subscribe({
       next: () => { this.toastr.success('Compte réactivé.'); this.usersService.getAll().subscribe(u => this.users = u); },
       error: e => this.toastr.error(e.error?.message ?? 'Erreur lors de la réactivation.')
     });
   }
 
-  deletePermanent(id: number) {
-    if (!confirm('⚠ Supprimer définitivement cet utilisateur ? Cette action est irréversible.')) return;
+  async deletePermanent(id: number) {
+    const ok = await this.confirm.confirm({ titre: 'Suppression définitive', message: '⚠ Cette action est irréversible. Supprimer définitivement cet utilisateur ?', labelConfirm: 'Supprimer', danger: true });
+    if (!ok) return;
     this.usersService.deletePermanent(id).subscribe({
       next: () => { this.toastr.success('Utilisateur supprimé définitivement.'); this.usersService.getAll().subscribe(u => this.users = u); },
       error: e => this.toastr.error(e.error?.message ?? 'Erreur lors de la suppression.')

@@ -1,49 +1,106 @@
 <div class="app-shell" [class.expanded]="expanded()">
 
   <!-- ── Sidebar ── -->
-  <aside class="sidebar" [class.expanded]="expanded()">
+  <aside class="sidebar" [class.expanded]="expanded()"
+         (mouseenter)="onSidebarEnter()"
+         (mouseleave)="onSidebarLeave()">
 
     <div class="sidebar-header">
-      <button class="toggle-btn" (click)="toggle()" [title]="expanded() ? 'Réduire' : 'Étendre'">
-        <span class="hamburger" [class.open]="expanded()">
-          <span></span><span></span><span></span>
-        </span>
-      </button>
       @if (expanded()) {
         <div class="brand-inline">
           <div class="brand-dot">F</div>
           <span class="brand-name">FinAssist</span>
         </div>
       }
+      <button class="toggle-btn" (click)="toggle()" [title]="expanded() ? 'Réduire' : 'Étendre'">
+        <span class="toggle-arrow" [class.rotated]="expanded()">‹</span>
+      </button>
     </div>
 
     <nav class="sidebar-nav">
-      @for (item of navItems(); track item.path) {
-        <a [routerLink]="item.path"
-           routerLinkActive="active"
-           class="nav-item"
-           [class.expanded]="expanded()"
-           [attr.data-tooltip]="!expanded() ? item.label : null">
-          <!-- <span class="nav-icon">{{ item.icon }}</span> -->
-           <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
-          @if (expanded()) {
-            <span class="nav-label">{{ item.label }}</span>
-          }
-        </a>
+      @for (item of navItems(); track item.label) {
+        @if (item.children && item.children.length > 0) {
+          <!-- Menu parent avec sous-menus -->
+          <div class="nav-group" [class.open]="openGroup() === item.label">
+            <button class="nav-item nav-parent" [class.expanded]="expanded()"
+                    (click)="toggleGroup(item.label)"
+                    [attr.data-tooltip]="!expanded() ? item.label : null">
+              <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
+              @if (expanded()) {
+                <span class="nav-label">{{ item.label }}</span>
+                <span class="nav-chevron" [class.rotated]="openGroup() === item.label">›</span>
+              }
+            </button>
+            @if (expanded() && openGroup() === item.label) {
+              <div class="nav-children">
+                @for (child of item.children; track child.path) {
+                  <a [routerLink]="child.path"
+                     routerLinkActive="active"
+                     [routerLinkActiveOptions]="{exact: true}"
+                     class="nav-item nav-child">
+                    <img [src]="child.icon" [alt]="child.label" class="nav-icon" />
+                    <span class="nav-label">{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Item simple -->
+          <a [routerLink]="item.path"
+             routerLinkActive="active"
+             class="nav-item"
+             [class.expanded]="expanded()"
+             [attr.data-tooltip]="!expanded() ? item.label : null">
+            <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
+            @if (expanded()) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+          </a>
+        }
       }
     </nav>
 
     <div class="sidebar-footer" [class.expanded]="expanded()">
       <div class="separator"></div>
-      <a routerLink="/profil" class="user-block" [class.expanded]="expanded()" title="Mon profil">
-        <div class="avatar">{{ initiales }}</div>
-        @if (expanded()) {
-          <div class="user-info">
-            <span class="user-name">{{ user()?.prenom }} {{ user()?.nom }}</span>
-            <span class="user-role">{{ user()?.role }}</span>
+      <div class="user-wrap" #userBlockRef>
+        <button class="user-block" [class.expanded]="expanded()"
+                (click)="toggleUserMenu($event)" title="Mon compte">
+          <div class="avatar">{{ initiales }}</div>
+          @if (expanded()) {
+            <div class="user-info">
+              <span class="user-name">{{ user()?.prenom }} {{ user()?.nom }}</span>
+              <span class="user-role">{{ user()?.role }}</span>
+            </div>
+            <span class="user-chevron">›</span>
+          }
+        </button>
+
+        @if (showUserMenu()) {
+          <div class="user-menu" #userMenuRef (click)="$event.stopPropagation()">
+            <!-- Infos utilisateur -->
+            <div class="user-menu-header">
+              <span class="um-name">{{ user()?.prenom }} {{ user()?.nom }}</span>
+              <span class="um-email">{{ user()?.email }}</span>
+            </div>
+            <div class="um-divider"></div>
+            <!-- Options -->
+            <button class="um-item" (click)="navigateTo('/profil')">
+              <span class="um-icon">👤</span>
+              <span>Profil</span>
+            </button>
+            <button class="um-item" (click)="navigateTo('/settings')">
+              <span class="um-icon">⚙️</span>
+              <span>Paramètres</span>
+            </button>
+            <div class="um-divider"></div>
+            <button class="um-item um-item--danger" (click)="confirmLogout(); showUserMenu.set(false)">
+              <span class="um-icon">⏻</span>
+              <span>Déconnexion</span>
+            </button>
           </div>
         }
-      </a>
+      </div>
     </div>
 
   </aside>
@@ -90,7 +147,7 @@
         </button>
 
         <!-- Déconnexion -->
-        <button class="logout-btn" (click)="auth.logout()">⏻ Déconnexion</button>
+        <button class="logout-btn" (click)="confirmLogout()">⏻ Déconnexion</button>
 
       </div>
     </header>
@@ -101,3 +158,57 @@
   </div>
 
 </div>
+
+<!-- ── Modal de confirmation global ── -->
+@if (confirmService.visible()) {
+  <div class="confirm-overlay" (click)="confirmService.respond(false)">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">{{ confirmService.options().danger ? '🗑' : '❓' }}</div>
+      @if (confirmService.options().titre) {
+        <h3>{{ confirmService.options().titre }}</h3>
+      }
+      <p>{{ confirmService.options().message }}</p>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" (click)="confirmService.respond(false)">
+          {{ confirmService.options().labelCancel }}
+        </button>
+        <button class="confirm-ok" [class.danger]="confirmService.options().danger"
+                (click)="confirmService.respond(true)">
+          {{ confirmService.options().labelConfirm }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Modale inactivité ── -->
+@if (showInactivityModal()) {
+  <div class="inactivity-overlay">
+    <div class="inactivity-modal">
+      <div class="inactivity-icon">⏱</div>
+      <h3>Session inactive</h3>
+      <p>Vous allez être déconnecté dans</p>
+      <div class="inactivity-countdown">{{ countdown() }}</div>
+      <p class="inactivity-sub">secondes</p>
+      <div class="inactivity-actions">
+        <button class="btn-stay" (click)="resterConnecte()">Rester connecté</button>
+        <button class="btn-logout-now" (click)="doLogout()">Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Modale confirmation déconnexion ── -->
+@if (showLogoutConfirm()) {
+  <div class="logout-overlay" (click)="cancelLogout()">
+    <div class="logout-modal" (click)="$event.stopPropagation()">
+      <div class="logout-modal-icon">⏻</div>
+      <h3>Confirmer la déconnexion</h3>
+      <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+      <div class="logout-modal-actions">
+        <button class="btn-cancel" (click)="cancelLogout()">Annuler</button>
+        <button class="btn-confirm" (click)="doLogout()">Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+}

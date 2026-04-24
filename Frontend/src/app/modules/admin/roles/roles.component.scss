@@ -1,40 +1,130 @@
 @use '../../../../styles/dark' as d;
 
-.page-header { @include d.page-header; }
+.page-header  { @include d.page-header; }
 .btn-primary  { @include d.btn-primary; }
 .btn-secondary{ @include d.btn-secondary; }
 
-.roles-list { display: flex; flex-direction: column; gap: 1rem; }
+.table-card { @include d.card; }
+.table      { @include d.dark-table; }
 
-.role-card { @include d.card; padding: 0; overflow: hidden; }
-
-.role-header {
-  display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
-  cursor: pointer; transition: background .15s;
-  &:hover { background: rgba(255,255,255,.04); }
-  strong { color: d.$text; }
-  .desc { color: d.$muted; font-size: .82rem; flex: 1; }
-}
-
-.permissions-panel { padding: 1rem 1.25rem; border-top: 1px solid d.$border;
-  h4 { font-size: .85rem; color: d.$muted; margin-bottom: .75rem; } }
-
-.perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .5rem; }
-
-.perm-item {
-  display: flex; align-items: center; gap: .5rem; font-size: .82rem; cursor: pointer;
-  color: d.$muted;
-  input[type=checkbox] { accent-color: d.$accent; }
-  small { color: rgba(160,160,176,.6); font-size: .72rem; }
-}
+.actions { display: flex; gap: .4rem; flex-wrap: wrap; }
 
 .btn-sm {
   padding: .25rem .65rem; border-radius: 6px; font-size: .78rem;
-  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer; white-space: nowrap;
-  &.danger { background: rgba(231,76,60,.15); color: #e74c3c; }
+  background: d.$accent-dim; color: #a78bfa; border: none; cursor: pointer;
+  white-space: nowrap; transition: background .15s;
+  &:hover  { background: rgba(124,58,237,.3); }
+  &.danger { background: rgba(231,76,60,.15); color: #e74c3c;
+    &:hover { background: rgba(231,76,60,.3); } }
+  &.perm   { background: rgba(241,196,15,.1); color: #f1c40f;
+    &:hover { background: rgba(241,196,15,.2); } }
 }
 
-.form-error { color: #e74c3c; font-size: .82rem; margin-bottom: .75rem; }
+.form-error  { color: #e74c3c; font-size: .82rem; margin-bottom: .75rem; }
+.field-error { display: block; font-size: .75rem; color: #e74c3c; margin-top: .25rem; }
 
+// ── Modales ───────────────────────────────────────────────────────────────────
 @include d.dark-modal;
 @include d.field-label;
+
+.modal-lg {
+  width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-sub {
+  font-size: .78rem;
+  color: d.$muted;
+  margin-top: .2rem;
+}
+
+.perm-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.25rem;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(124,58,237,.3); border-radius: 2px; }
+}
+
+.perm-group { margin-bottom: 1.25rem; }
+
+.perm-group-title {
+  font-size: .72rem;
+  font-weight: 700;
+  color: d.$muted;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: .6rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid d.$border;
+}
+
+.perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: .4rem;
+}
+
+.perm-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .45rem .65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .12s;
+
+  &:hover { background: rgba(255,255,255,.04); }
+
+  &.is-checked {
+    border-color: rgba(124,58,237,.3);
+    background: rgba(124,58,237,.08);
+  }
+
+  input[type=checkbox] {
+    accent-color: d.$accent;
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+}
+
+.perm-code {
+  font-size: .78rem;
+  color: d.$text;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid d.$border;
+  flex-shrink: 0;
+}
+
+.perm-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-check-all {
+  font-size: .7rem;
+  font-weight: 600;
+  color: #a78bfa;
+  background: rgba(124,58,237,.1);
+  border: 1px solid rgba(124,58,237,.2);
+  border-radius: 4px;
+  padding: .15rem .55rem;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: rgba(124,58,237,.2); }
+}

@@ -1,0 +1,144 @@
+<div class="page-header">
+  <h2>Ma Signature</h2>
+  <span class="page-sub">Créez et enregistrez votre signature personnelle</span>
+</div>
+
+<!-- Signature existante -->
+@if (signatureExistante) {
+  <div class="sig-existante-card">
+    <div class="sig-existante-header">
+      <span class="sig-badge">✅ Signature enregistrée</span>
+      <span class="sig-meta">{{ signatureExistante.type }} — modifiée le {{ signatureExistante.dateModification | date:'dd/MM/yyyy HH:mm' }}</span>
+      <button class="btn-danger-sm" (click)="supprimer()">🗑 Supprimer</button>
+    </div>
+    <div class="sig-preview-wrap">
+      <img [src]="signatureExistante.imageBase64" alt="Ma signature" class="sig-preview-img" />
+    </div>
+  </div>
+}
+
+<!-- Onglets -->
+<div class="sig-card">
+  <div class="onglets">
+    <button [class.active]="onglet === 'manuscrite'"    (click)="setOnglet('manuscrite')">✍ Manuscrite</button>
+    <button [class.active]="onglet === 'typographique'" (click)="setOnglet('typographique')">🔤 Typographique</button>
+    <button [class.active]="onglet === 'upload'"        (click)="setOnglet('upload')">📁 Importer</button>
+    <button [class.active]="onglet === 'qrcode'"        (click)="setOnglet('qrcode')">⬛ QR Code</button>
+  </div>
+
+  <!-- Manuscrite -->
+  @if (onglet === 'manuscrite') {
+    <div class="onglet-body">
+      <p class="instruction">Dessinez votre signature dans la zone ci-dessous</p>
+      <div class="canvas-wrap">
+        <canvas #canvas width="600" height="180" class="sig-canvas"
+          (mousedown)="onMouseDown($event)"
+          (mousemove)="onMouseMove($event)"
+          (mouseup)="onMouseUp()"
+          (mouseleave)="onMouseUp()"
+          (touchstart)="onTouchStart($event)"
+          (touchmove)="onTouchMove($event)"
+          (touchend)="onMouseUp()">
+        </canvas>
+        <div class="canvas-baseline"></div>
+      </div>
+      <button class="btn-secondary" (click)="effacer()">Effacer</button>
+    </div>
+  }
+
+  <!-- Typographique -->
+  @if (onglet === 'typographique') {
+    <div class="onglet-body">
+      <p class="instruction">Tapez votre nom et choisissez une police</p>
+      <input class="typo-input" [(ngModel)]="texteSignature" placeholder="Votre nom complet" maxlength="50" />
+
+      <div class="polices-list">
+        @for (p of polices; track p.value) {
+          <button class="police-item" [class.active]="policeChoisie === p.value"
+                  (click)="policeChoisie = p.value">
+            <span class="police-name">{{ p.label }}</span>
+            <span class="police-apercu" [style.fontFamily]="p.value">
+              {{ texteSignature || 'Votre signature' }}
+            </span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Upload -->
+  @if (onglet === 'upload') {
+    <div class="onglet-body">
+      <p class="instruction">Importez une image de votre signature (PNG, JPG)</p>
+      <label class="upload-zone">
+        <input type="file" accept="image/png,image/jpeg" (change)="onFileChange($event)" />
+        @if (uploadPreview) {
+          <img [src]="uploadPreview" alt="Aperçu" class="upload-preview" />
+        } @else {
+          <span>📎 Cliquer pour sélectionner une image</span>
+        }
+      </label>
+    </div>
+  }
+
+  <!-- QR Code -->
+  @if (onglet === 'qrcode') {
+    <div class="onglet-body qr-body">
+      @if (qrLoading) {
+        <div class="qr-loading">Génération du QR Code...</div>
+      } @else if (qrStatus === 'done') {
+        <div class="qr-done">
+          <div class="qr-done-icon">✅</div>
+          <h3>Signature reçue !</h3>
+          <p>Votre signature a été enregistrée depuis votre téléphone.</p>
+          <button class="btn-primary" (click)="genererQr()">Générer un nouveau QR Code</button>
+        </div>
+      } @else if (qrStatus === 'expired') {
+        <div class="qr-done">
+          <div class="qr-done-icon">⏱</div>
+          <h3>Session expirée</h3>
+          <p>Le QR Code a expiré. Générez-en un nouveau.</p>
+          <button class="btn-primary" (click)="genererQr()">Régénérer</button>
+        </div>
+      } @else if (!qrSession) {
+        <div class="qr-empty">
+          <p>Scannez un QR Code avec votre téléphone pour créer votre signature.</p>
+          <button class="btn-primary" (click)="genererQr()">⬛ Générer le QR Code</button>
+        </div>
+      } @else {
+        <div class="qr-layout">
+          <!-- Instructions -->
+          <div class="qr-infos">
+            <div class="qr-infos-title">COMMENT ÇA MARCHE</div>
+            <div class="qr-step"><span class="step-num">1</span><span>Scannez le QR Code avec votre téléphone</span></div>
+            <div class="qr-step"><span class="step-num">2</span><span>Dessinez votre signature sur l'écran tactile</span></div>
+            <div class="qr-step"><span class="step-num">3</span><span>Appuyez sur "Envoyer" — la signature apparaît ici automatiquement</span></div>
+
+            <div class="qr-waiting">
+              <span class="waiting-dot"></span>
+              En attente de votre signature...
+            </div>
+
+            <div class="qr-expiry">
+              Expire à {{ qrSession.expiration | date:'HH:mm' }}
+            </div>
+          </div>
+
+          <!-- QR Canvas + actions -->
+          <div class="qr-panel">
+            <canvas #qrCanvas class="qr-canvas"></canvas>
+            <button class="qr-action-btn" (click)="telechargerQr()">⬇ Télécharger PNG</button>
+            <button class="qr-action-btn" (click)="copierLien()">📋 Copier le lien</button>
+            <button class="qr-action-btn" (click)="genererQr()">🔄 Régénérer</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="sig-footer">
+    <button class="btn-primary" (click)="sauvegarder()" [disabled]="saving">
+      {{ saving ? 'Enregistrement...' : '💾 Enregistrer ma signature' }}
+    </button>
+  </div>
+</div>

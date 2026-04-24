@@ -9,6 +9,7 @@ import { CategorieDTO } from '../../core/models/categorie.models';
 import { WorkflowCircuitDTO } from '../../core/models/workflow.models';
 import { CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
 import { CircuitOptionsPipe } from '../../shared/pipes/select-options.pipe';
+import { ConfirmService } from '../../core/services/confirm.service';
 
 @Component({
   selector: 'app-categories',
@@ -35,7 +36,8 @@ export class CategoriesComponent implements OnInit {
     private categoriesService: CategoriesService,
     private workflowService: WorkflowService,
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private confirm: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -70,8 +72,9 @@ export class CategoriesComponent implements OnInit {
     });
   }
 
-  delete(id: number) {
-    if (!confirm('Supprimer cette catégorie ?')) return;
+  async delete(id: number) {
+    const ok = await this.confirm.confirm({ titre: 'Supprimer la catégorie', message: 'Êtes-vous sûr de vouloir supprimer cette catégorie ?', labelConfirm: 'Supprimer', danger: true });
+    if (!ok) return;
     this.categoriesService.delete(id).subscribe({
       next: () => { this.toastr.success('Catégorie supprimée.'); this.load(); },
       error: e => this.toastr.error(e.error?.message ?? 'Erreur lors de la suppression.')
