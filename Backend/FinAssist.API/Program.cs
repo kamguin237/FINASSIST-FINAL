@@ -120,13 +120,19 @@ builder.Services.AddAuthorization();
 var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",")
     ?? ["http://localhost:4200"];
 
-builder.Services.AddCors(options =>
-{
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("FinAssistPolicy", policy =>
+//         policy.WithOrigins(allowedOrigins)
+//               .AllowAnyHeader()
+//               .AllowAnyMethod()
+//               .AllowCredentials()); // Requis pour SignalR
+// });
+builder.Services.AddCors(options => {
     options.AddPolicy("FinAssistPolicy", policy =>
-        policy.WithOrigins(allowedOrigins)
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials()); // Requis pour SignalR
+              .AllowAnyMethod());
 });
 
 // ── SignalR ──────────────────────────────────────────────────────────────────
