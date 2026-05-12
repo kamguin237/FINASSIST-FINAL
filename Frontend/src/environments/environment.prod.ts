@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api'  // Proxy Nginx vers backend:8080 en Docker
+  apiUrl: 'https://finassist-final-production.up.railway.app'  
 };
