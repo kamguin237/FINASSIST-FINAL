@@ -15,4 +15,5 @@ public class LogActiviteDTO
     public string? Navigateur { get; set; }
     public string? Pays { get; set; }
     public string? Ville { get; set; }
+    public string? NomUtilisateur { get; set; }
 }
