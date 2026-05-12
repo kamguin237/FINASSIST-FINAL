@@ -177,8 +177,7 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinAssist A
 app.UseCors("FinAssistPolicy");
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseCors("FinAssistPolicy");
 
 // ── Audit Middleware (après auth pour avoir l'identité) ───────────────────────
 app.UseMiddleware<FinAssist.API.Middleware.AuditMiddleware>();
