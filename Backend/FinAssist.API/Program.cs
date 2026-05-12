@@ -187,7 +187,6 @@ app.MapControllers();
 app.MapHub<FinAssist.Infrastructure.Hubs.BesoinsHub>("/api/hubs/besoins");
 
 // ── Seed des données initiales (dev uniquement) ───────────────────────────────
-if (app.Environment.IsDevelopment())
-    await DataSeeder.SeedAsync(app.Services);
+await DataSeeder.SeedAsync(app.Services);
 
 app.Run();
