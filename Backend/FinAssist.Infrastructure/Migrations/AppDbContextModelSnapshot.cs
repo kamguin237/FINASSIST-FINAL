@@ -679,6 +679,9 @@ namespace FinAssist.Infrastructure.Migrations
                     b.Property<DateTime>("DateModification")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("DoitChangerMotDePasse")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)

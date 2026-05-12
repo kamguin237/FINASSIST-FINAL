@@ -1,11 +1,17 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
+import { changePasswordGuard } from './core/guards/change-password.guard';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./modules/auth/login/login.component').then(m => m.LoginComponent) },
   { path: '403',   loadComponent: () => import('./shared/components/forbidden/forbidden.component').then(m => m.ForbiddenComponent) },
   { path: 'sign-mobile/:token', loadComponent: () => import('./modules/sign-mobile/sign-mobile.component').then(m => m.SignMobileComponent) },
+  {
+    path: 'change-password',
+    canActivate: [changePasswordGuard],
+    loadComponent: () => import('./modules/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent)
+  },
   {
     path: '',
     canActivate: [authGuard],

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
+import { SignalRService } from './core/services/signalr.service';
 
 @Component({
   selector: 'app-root',
@@ -9,6 +10,13 @@ import { ThemeService } from './core/services/theme.service';
   template: '<router-outlet />'
 })
 export class AppComponent implements OnInit {
-  constructor(private theme: ThemeService) {}
-  ngOnInit() { this.theme.init(); }
+  constructor(
+    private theme: ThemeService,
+    private signalR: SignalRService
+  ) {}
+  
+  ngOnInit() {
+    this.theme.init();
+    this.signalR.startConnection();
+  }
 }

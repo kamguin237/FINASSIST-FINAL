@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { PermissionDTO } from '../../../core/models/role.models';
@@ -8,7 +9,7 @@ import { PermissionDTO } from '../../../core/models/role.models';
 @Component({
   selector: 'app-permissions',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './permissions.component.html',
   styleUrl: './permissions.component.scss'
 })

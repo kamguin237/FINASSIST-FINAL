@@ -1,0 +1,72 @@
+<div class="datepicker-wrapper">
+  @if (label) {
+    <label class="datepicker-label">{{ label }}</label>
+  }
+  
+  <div class="datepicker-input-wrapper" (click)="toggleCalendar()">
+    <span class="datepicker-icon">📅</span>
+    <input 
+      type="text" 
+      [value]="displayValue" 
+      [placeholder]="placeholder"
+      readonly
+      class="datepicker-input"
+    />
+    @if (selectedDate()) {
+      <button type="button" class="datepicker-clear" (click)="clear(); $event.stopPropagation()">✕</button>
+    }
+  </div>
+
+  @if (showCalendar()) {
+    <div class="datepicker-overlay" (click)="closeCalendar()"></div>
+    <div class="datepicker-calendar" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="calendar-header">
+        <button type="button" class="calendar-nav" (click)="previousMonth()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <div class="calendar-title">
+          <span class="calendar-month">{{ monthNames[currentMonth()] }}</span>
+          <span class="calendar-year">{{ currentYear() }}</span>
+        </div>
+        <button type="button" class="calendar-nav" (click)="nextMonth()">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Days of week -->
+      <div class="calendar-weekdays">
+        @for (day of dayNames; track day) {
+          <div class="calendar-weekday">{{ day }}</div>
+        }
+      </div>
+
+      <!-- Days grid -->
+      <div class="calendar-days">
+        @for (day of calendarDays; track $index) {
+          <button
+            type="button"
+            class="calendar-day"
+            [class.today]="isToday(day)"
+            [class.selected]="isSelected(day)"
+            [class.empty]="day === null"
+            [disabled]="day === null"
+            (click)="selectDay(day)"
+          >
+            {{ day }}
+          </button>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="calendar-footer">
+        <button type="button" class="calendar-btn-clear" (click)="clear()">
+          Effacer
+        </button>
+        <button type="button" class="calendar-btn-today" (click)="selectToday()">
+          Aujourd'hui
+        </button>
+      </div>
+    </div>
+  }
+</div>

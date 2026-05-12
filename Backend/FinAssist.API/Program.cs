@@ -98,6 +98,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.Zero
         };
+        // Permettre au Hub SignalR de recevoir le token via query string (WebSockets)
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -111,8 +125,13 @@ builder.Services.AddCors(options =>
     options.AddPolicy("FinAssistPolicy", policy =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .AllowCredentials()); // Requis pour SignalR
 });
+
+// ── SignalR ──────────────────────────────────────────────────────────────────
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IBesoinsHubService, BesoinsHubService>();
 
 // ── Controllers + Swagger (net8) ─────────────────────────────────────────────
 builder.Services.AddControllers()
@@ -165,6 +184,7 @@ app.UseAuthorization();
 app.UseMiddleware<FinAssist.API.Middleware.AuditMiddleware>();
 
 app.MapControllers();
+app.MapHub<FinAssist.Infrastructure.Hubs.BesoinsHub>("/api/hubs/besoins");
 
 // ── Seed des données initiales (dev uniquement) ───────────────────────────────
 if (app.Environment.IsDevelopment())

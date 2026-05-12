@@ -133,3 +133,60 @@ canvas { max-height: 220px; }
   &.purple { background: rgba(124,58,237,.2);   color: #a78bfa; }
   &.cyan   { background: rgba(0,188,212,.15);   color: #00bcd4; }
 }
+
+// ── Responsive Mobile ─────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+
+  .dash-header {
+    margin-bottom: 1rem;
+    h2 { font-size: 1.1rem; }
+  }
+
+  // Stats : 2 colonnes sur mobile
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: .6rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    padding: .85rem;
+    gap: .6rem;
+    img { width: 28px; height: 28px; }
+  }
+
+  .value { font-size: 1.4rem !important; }
+  .label { font-size: .7rem; }
+
+  // Graphique : header en colonne
+  .chart-card { padding: .85rem; margin-bottom: 1rem; }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .6rem;
+  }
+
+  // Boutons période : plus compacts
+  .period-btns {
+    width: 100%;
+    button {
+      flex: 1;
+      padding: .3rem .4rem;
+      font-size: .72rem;
+      text-align: center;
+    }
+  }
+
+  // KPIs : 2 par ligne
+  .chart-kpis {
+    gap: 8px;
+    font-size: .72rem;
+  }
+
+  // Canvas : hauteur réduite sur mobile
+  .chart-wrapper { height: 200px; }
+
+  // Tableau : scroll horizontal
+  .table-card { padding: .85rem; overflow-x: auto; }
+}

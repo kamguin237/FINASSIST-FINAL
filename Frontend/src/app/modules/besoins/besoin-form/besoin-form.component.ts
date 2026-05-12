@@ -40,10 +40,37 @@ export class BesoinFormComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.categoriesService.getAll().subscribe(c => this.categories = c);
+    // En mode création: charger uniquement les catégories disponibles pour le rôle de l'utilisateur
+    // En mode édition: charger toutes les catégories (la catégorie existante doit rester sélectionnable)
     this.editId = this.route.snapshot.params['id'] ? +this.route.snapshot.params['id'] : null;
+
     if (this.editId) {
-      this.besoinsService.getById(this.editId).subscribe(b => this.form.patchValue(b as any));
+      // Mode édition: charger toutes les catégories pour ne pas bloquer la catégorie existante
+      this.categoriesService.getAll().subscribe(c => this.categories = c);
+      this.besoinsService.getById(this.editId).subscribe({
+        next: b => {
+          // Bloquer l'édition si le besoin n'est pas en statut BROUILLON
+          if (b.statut !== 'BROUILLON') {
+            this.toastr.error('Seuls les besoins en statut BROUILLON peuvent être modifiés.');
+            this.router.navigate(['/besoins', this.editId]);
+            return;
+          }
+          this.form.patchValue(b as any);
+        },
+        error: () => {
+          this.toastr.error('Impossible de charger le besoin.');
+          this.router.navigate(['/besoins']);
+        }
+      });
+    } else {
+      // Mode création: filtrer les catégories selon le rôle de l'utilisateur
+      this.categoriesService.getDisponibles().subscribe({
+        next: c => this.categories = c,
+        error: () => {
+          // Fallback sur toutes les catégories en cas d'erreur
+          this.categoriesService.getAll().subscribe(c => this.categories = c);
+        }
+      });
     }
   }
 

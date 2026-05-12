@@ -5,4 +5,5 @@ public class LoginResponseDTO
     public string AccessToken { get; set; } = string.Empty;
     public DateTime Expiration { get; set; }
     public UtilisateurInfoDTO Utilisateur { get; set; } = null!;
+    public bool DoitChangerMotDePasse { get; set; } = false;
 }

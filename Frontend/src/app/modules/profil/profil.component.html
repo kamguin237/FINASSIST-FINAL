@@ -1,5 +1,5 @@
 @if (loading) {
-  <div class="profil-loading">Chargement...</div>
+  <div class="profil-loading">{{ 'profile.loading' | translate }}</div>
 } @else if (profil) {
   <div class="profil-page">
 
@@ -7,7 +7,7 @@
     <div class="profil-card">
       <div class="card-section-title">
         <span class="section-icon">👤</span>
-        <span>INFORMATIONS PERSONNELLES</span>
+        <span>{{ 'profile.personalInfo' | translate }}</span>
       </div>
 
       <!-- Avatar + identité -->
@@ -18,11 +18,11 @@
           <div class="identity-badges">
             <span class="badge-role">● {{ profil.role }}</span>
             @if (profil.actif) {
-              <span class="badge-actif">● Actif</span>
+              <span class="badge-actif">● {{ 'common.active' | translate }}</span>
             } @else {
-              <span class="badge-inactif">● Inactif</span>
+              <span class="badge-inactif">● {{ 'common.inactive' | translate }}</span>
             }
-            <span class="badge-date">🗓 Membre depuis le {{ profil.dateCreation | date:'dd/MM/yyyy' }}</span>
+            <span class="badge-date">🗓 {{ 'settings.memberSince' | translate }} {{ profil.dateCreation | date:'dd/MM/yyyy' }}</span>
           </div>
         </div>
       </div>
@@ -32,30 +32,30 @@
       <!-- Grille des champs -->
       <div class="fields-grid">
         <div class="field-ro">
-          <label>PRÉNOM</label>
+          <label>{{ 'profile.firstName' | translate }}</label>
           <div class="field-value">{{ profil.prenom }}</div>
         </div>
         <div class="field-ro">
-          <label>NOM</label>
+          <label>{{ 'profile.lastName' | translate }}</label>
           <div class="field-value">{{ profil.nom }}</div>
         </div>
         <div class="field-ro">
-          <label>EMAIL</label>
+          <label>{{ 'profile.email' | translate }}</label>
           <div class="field-value email">{{ profil.email }}</div>
         </div>
         <div class="field-ro">
-          <label>RÔLE</label>
+          <label>{{ 'profile.role' | translate }}</label>
           <div class="field-value">{{ profil.role }}</div>
         </div>
         <div class="field-ro">
-          <label>STATUT</label>
+          <label>{{ 'profile.status' | translate }}</label>
           <div class="field-value">
-            @if (profil.actif) { <span class="text-actif">✓ Actif</span> }
-            @else { <span class="text-inactif">✕ Inactif</span> }
+            @if (profil.actif) { <span class="text-actif">✓ {{ 'common.active' | translate }}</span> }
+            @else { <span class="text-inactif">✕ {{ 'common.inactive' | translate }}</span> }
           </div>
         </div>
         <div class="field-ro">
-          <label>MEMBRE DEPUIS</label>
+          <label>{{ 'profile.memberSince' | translate }}</label>
           <div class="field-value">{{ profil.dateCreation | date:'dd/MM/yyyy' }}</div>
         </div>
       </div>
@@ -65,7 +65,7 @@
     <div class="pwd-card">
       <div class="card-section-title">
         <span class="section-icon">🔒</span>
-        <span>SÉCURITÉ — MODIFIER LE MOT DE PASSE</span>
+        <span>{{ 'profile.security' | translate }}</span>
       </div>
 
       <form [formGroup]="pwdForm" (ngSubmit)="changerMotDePasse()" class="pwd-form">
@@ -73,7 +73,7 @@
 
           <!-- Mot de passe actuel -->
           <div class="field-pwd">
-            <label>MOT DE PASSE ACTUEL</label>
+            <label>{{ 'profile.currentPassword' | translate }}</label>
             <div class="input-wrap">
               <input [type]="showAncien ? 'text' : 'password'"
                      formControlName="ancienMotDePasse"
@@ -86,7 +86,7 @@
 
           <!-- Nouveau mot de passe -->
           <div class="field-pwd">
-            <label>NOUVEAU MOT DE PASSE</label>
+            <label>{{ 'profile.newPassword' | translate }}</label>
             <div class="input-wrap">
               <input [type]="showNouveau ? 'text' : 'password'"
                      formControlName="nouveauMotDePasse"
@@ -100,13 +100,13 @@
               <div class="strength-fill" [class]="strengthClass" [style.width]="strengthWidth"></div>
             </div>
             @if (pwdForm.get('nouveauMotDePasse')?.value) {
-              <span class="strength-label" [class]="strengthClass">FORCE : {{ strengthLabel }}</span>
+              <span class="strength-label" [class]="strengthClass">{{ 'profile.strength' | translate }} : {{ strengthLabel | translate }}</span>
             }
           </div>
 
           <!-- Confirmer -->
           <div class="field-pwd">
-            <label>CONFIRMER LE MOT DE PASSE</label>
+            <label>{{ 'profile.confirmPassword' | translate }}</label>
             <div class="input-wrap">
               <input [type]="showConfirm ? 'text' : 'password'"
                      formControlName="confirmerMotDePasse"
@@ -116,7 +116,7 @@
               </button>
             </div>
             @if (pwdForm.touched && pwdForm.hasError('mismatch')) {
-              <span class="field-error">Les mots de passe ne correspondent pas.</span>
+              <span class="field-error">{{ 'profile.passwordMismatch' | translate }}</span>
             }
           </div>
 
@@ -124,8 +124,8 @@
 
         <div class="pwd-footer">
           <button type="submit" class="btn-pwd" [disabled]="pwdForm.invalid || pwdLoading">
-            @if (pwdLoading) { <span class="spinner-sm"></span> Modification... }
-            @else { 🔒 Enregistrer le nouveau mot de passe }
+            @if (pwdLoading) { <span class="spinner-sm"></span> {{ 'profile.saving' | translate }} }
+            @else { 🔒 {{ 'profile.saveNewPassword' | translate }} }
           </button>
         </div>
       </form>

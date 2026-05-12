@@ -15,17 +15,16 @@ public class ExportService : IExportService
         using var workbook = new XLWorkbook();
         var ws = workbook.Worksheets.Add("Besoins");
 
-        // En-têtes
-        ws.Cell(1, 1).Value = "ID";
-        ws.Cell(1, 2).Value = "Titre";
-        ws.Cell(1, 3).Value = "Statut";
-        ws.Cell(1, 4).Value = "Importance";
-        ws.Cell(1, 5).Value = "Catégorie";
-        ws.Cell(1, 6).Value = "Créateur";
-        ws.Cell(1, 7).Value = "Date création";
-        ws.Cell(1, 8).Value = "Date modification";
+        // En-têtes (sans ID)
+        ws.Cell(1, 1).Value = "Titre";
+        ws.Cell(1, 2).Value = "Statut";
+        ws.Cell(1, 3).Value = "Importance";
+        ws.Cell(1, 4).Value = "Catégorie";
+        ws.Cell(1, 5).Value = "Créateur";
+        ws.Cell(1, 6).Value = "Date création";
+        ws.Cell(1, 7).Value = "Date modification";
 
-        var headerRow = ws.Range(1, 1, 1, 8);
+        var headerRow = ws.Range(1, 1, 1, 7);
         headerRow.Style.Font.Bold = true;
         headerRow.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E79");
         headerRow.Style.Font.FontColor = XLColor.White;
@@ -34,16 +33,15 @@ public class ExportService : IExportService
         int row = 2;
         foreach (var b in besoins)
         {
-            ws.Cell(row, 1).Value = b.Id;
-            ws.Cell(row, 2).Value = b.Titre;
-            ws.Cell(row, 3).Value = b.Statut.ToString();
-            ws.Cell(row, 4).Value = b.NiveauImportance;
-            ws.Cell(row, 5).Value = b.Categorie?.Nom ?? string.Empty;
-            ws.Cell(row, 6).Value = b.Utilisateur is not null
+            ws.Cell(row, 1).Value = b.Titre;
+            ws.Cell(row, 2).Value = b.Statut.ToString();
+            ws.Cell(row, 3).Value = b.NiveauImportance;
+            ws.Cell(row, 4).Value = b.Categorie?.Nom ?? string.Empty;
+            ws.Cell(row, 5).Value = b.Utilisateur is not null
                 ? $"{b.Utilisateur.Prenom} {b.Utilisateur.Nom}"
                 : string.Empty;
-            ws.Cell(row, 7).Value = b.DateCreation.ToString("yyyy-MM-dd HH:mm");
-            ws.Cell(row, 8).Value = b.DateModification.ToString("yyyy-MM-dd HH:mm");
+            ws.Cell(row, 6).Value = b.DateCreation.ToString("yyyy-MM-dd HH:mm");
+            ws.Cell(row, 7).Value = b.DateModification.ToString("yyyy-MM-dd HH:mm");
             row++;
         }
 
@@ -75,7 +73,6 @@ public class ExportService : IExportService
                 {
                     table.ColumnsDefinition(cols =>
                     {
-                        cols.ConstantColumn(30);   // ID
                         cols.RelativeColumn(3);    // Titre
                         cols.RelativeColumn(2);    // Statut
                         cols.RelativeColumn(1.5f); // Importance
@@ -84,13 +81,13 @@ public class ExportService : IExportService
                         cols.RelativeColumn(2);    // Date création
                     });
 
-                    // En-têtes
+                    // En-têtes (sans ID)
                     static IContainer HeaderCell(IContainer c) =>
                         c.Background(Colors.Blue.Darken3).Padding(4);
 
                     table.Header(header =>
                     {
-                        foreach (var titre in new[] { "ID", "Titre", "Statut", "Importance", "Catégorie", "Créateur", "Date création" })
+                        foreach (var titre in new[] { "Titre", "Statut", "Importance", "Catégorie", "Créateur", "Date création" })
                             header.Cell().Element(HeaderCell).Text(titre).FontColor(Colors.White).SemiBold();
                     });
 
@@ -103,7 +100,6 @@ public class ExportService : IExportService
 
                         IContainer DataCell(IContainer c) => c.Background(bg).Padding(4);
 
-                        table.Cell().Element(DataCell).Text(b.Id.ToString());
                         table.Cell().Element(DataCell).Text(b.Titre);
                         table.Cell().Element(DataCell).Text(b.Statut.ToString());
                         table.Cell().Element(DataCell).Text(b.NiveauImportance);

@@ -170,3 +170,53 @@ body.light-mode .btn-categorie { color: #7c3aed; }
   flex-shrink: 0;
   &:hover { background: rgba(231,76,60,.15); color: #e74c3c; }
 }
+
+// ── Light mode - Améliorer le contraste des noms de rôles ────────────────────
+body.light-mode .etape-role {
+  color: #1a1a3e !important;
+  font-weight: 700 !important;
+}
+
+// ── Pièces jointes existantes dans le modal d'édition ────────────────────────
+.edit-docs-list {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-bottom: .75rem;
+  padding: .6rem .75rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+}
+
+.edit-doc-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .82rem;
+}
+
+.edit-doc-nom {
+  flex: 1;
+  color: #e5e7eb;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-doc-type {
+  color: #a0a0b0;
+  font-size: .72rem;
+  flex-shrink: 0;
+}
+
+// Light mode
+body.light-mode {
+  .edit-docs-list {
+    background: #f9fafb;
+    border-color: #e8eaed;
+  }
+  .edit-doc-nom { color: #1a1d23; }
+  .edit-doc-type { color: #9095a0; }
+}

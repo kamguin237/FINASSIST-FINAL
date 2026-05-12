@@ -1,0 +1,74 @@
+// ── Trigger ───────────────────────────────────────────────────────────────────
+.tp-trigger {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .45rem .75rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-size: .88rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  min-width: 110px;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: rgba(124,58,237,.4);
+    background: rgba(255,255,255,.09);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.15);
+  }
+}
+
+.tp-icon { font-size: .9rem; opacity: .7; flex-shrink: 0; }
+
+.tp-display {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: .05em;
+  color: #e5e7eb;
+
+  &.tp-placeholder { color: rgba(255,255,255,.3); font-weight: 400; }
+}
+
+.tp-chevron {
+  font-size: 1rem;
+  color: #a0a0b0;
+  transition: transform .2s;
+  line-height: 1;
+  &.open { transform: rotate(90deg); }
+}
+
+// ── Light mode trigger ────────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .tp-trigger {
+    background: #fff;
+    border-color: #e8eaed;
+    color: #1a1d23;
+
+    &:hover {
+      border-color: rgba(124,58,237,.4);
+      background: #f9fafb;
+    }
+
+    &:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+    }
+  }
+
+  .tp-display {
+    color: #1a1d23;
+    &.tp-placeholder { color: rgba(26,29,35,.35); }
+  }
+
+  .tp-chevron { color: #9095a0; }
+}

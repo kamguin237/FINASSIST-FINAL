@@ -21,9 +21,10 @@ public class PushSubscriptionRepository(AppDbContext db) : IPushSubscriptionRepo
         await db.SaveChangesAsync();
     }
 
-    public Task<IEnumerable<PushSubscription>> GetByUtilisateurAsync(int utilisateurId)
-        => Task.FromResult<IEnumerable<PushSubscription>>(
-            db.PushSubscriptions.Where(s => s.UtilisateurId == utilisateurId).AsEnumerable());
+    public async Task<IEnumerable<PushSubscription>> GetByUtilisateurAsync(int utilisateurId)
+        => await db.PushSubscriptions
+            .Where(s => s.UtilisateurId == utilisateurId)
+            .ToListAsync();
 
     public async Task DeleteAsync(string endpoint)
     {

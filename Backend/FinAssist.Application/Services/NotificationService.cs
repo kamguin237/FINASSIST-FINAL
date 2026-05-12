@@ -8,7 +8,8 @@ public class NotificationService(
     INotificationRepository notifRepo,
     IUserPreferencesRepository prefsRepo,
     IFirebaseNotificationService firebase,
-    IWebPushService webPush) : INotificationService
+    IWebPushService webPush,
+    IBesoinsHubService hubService) : INotificationService
 {
     // Vérifie si un utilisateur a activé les notifs in-app
     private async Task<bool> NotifAppActive(int userId)
@@ -71,8 +72,11 @@ public class NotificationService(
 
         await notifRepo.CreateAsync(notif, dto.DestinataireIds);
         await firebase.SendAsync(dto.DestinataireIds, "Notification", dto.Message);
-        foreach (var id in dto.DestinataireIds)
-            _ = webPush.SendToUserAsync(id, "Notification FinAssist", dto.Message).ConfigureAwait(false);
+        var pushTasks = dto.DestinataireIds.Select(id =>
+            webPush.SendToUserAsync(id, "Notification FinAssist", dto.Message));
+        var hubTasks = dto.DestinataireIds.Select(id =>
+            hubService.NotifierUtilisateurAsync(id, dto.Message, type.ToString()));
+        await Task.WhenAll(pushTasks.Concat(hubTasks));
 
         return new NotificationDTO
         {
@@ -102,8 +106,10 @@ public class NotificationService(
         };
         await notifRepo.CreateAsync(notif, idsFiltered);
         await firebase.SendAsync(idsFiltered, "Nouvelle demande", notif.Message);
-        foreach (var id in idsFiltered)
-            _ = webPush.SendToUserAsync(id, "Nouvelle demande", notif.Message).ConfigureAwait(false);
+        await Task.WhenAll(
+            Task.WhenAll(idsFiltered.Select(id => webPush.SendToUserAsync(id, "Nouvelle demande", notif.Message))),
+            Task.WhenAll(idsFiltered.Select(id => hubService.NotifierUtilisateurAsync(id, notif.Message, notif.Type.ToString())))
+        );
     }
 
     // Transmission -> notifier les utilisateurs du role de la prochaine etape
@@ -124,8 +130,10 @@ public class NotificationService(
         };
         await notifRepo.CreateAsync(notif, idsFiltered);
         await firebase.SendAsync(idsFiltered, "Demande transmise", notif.Message);
-        foreach (var id in idsFiltered)
-            _ = webPush.SendToUserAsync(id, "Demande transmise", notif.Message).ConfigureAwait(false);
+        await Task.WhenAll(
+            Task.WhenAll(idsFiltered.Select(id => webPush.SendToUserAsync(id, "Demande transmise", notif.Message))),
+            Task.WhenAll(idsFiltered.Select(id => hubService.NotifierUtilisateurAsync(id, notif.Message, notif.Type.ToString())))
+        );
     }
 
     // Rejet -> notifier le createur du besoin
@@ -141,7 +149,8 @@ public class NotificationService(
         };
         await notifRepo.CreateAsync(notif, [createurId]);
         await firebase.SendAsync([createurId], "Demande rejetée", notif.Message);
-        _ = webPush.SendToUserAsync(createurId, "Demande rejetée", notif.Message).ConfigureAwait(false);
+        await webPush.SendToUserAsync(createurId, "Demande rejetée", notif.Message);
+        await hubService.NotifierUtilisateurAsync(createurId, notif.Message, notif.Type.ToString());
     }
 
     // Signature apposee -> notifier le createur du besoin
@@ -157,7 +166,8 @@ public class NotificationService(
         };
         await notifRepo.CreateAsync(notif, [agentId]);
         await firebase.SendAsync([agentId], "Signature apposée", notif.Message);
-        _ = webPush.SendToUserAsync(agentId, "Signature apposée", notif.Message).ConfigureAwait(false);
+        await webPush.SendToUserAsync(agentId, "Signature apposée", notif.Message);
+        await hubService.NotifierUtilisateurAsync(agentId, notif.Message, notif.Type.ToString());
     }
 
     public async Task EnvoyerRappelAsync(int utilisateurId, int besoinId, string titreBesoin, int niveau, string message)
@@ -171,6 +181,26 @@ public class NotificationService(
             DateEnvoi = DateTime.UtcNow
         };
         await notifRepo.CreateAsync(notif, [utilisateurId]);
-        _ = webPush.SendToUserAsync(utilisateurId, niveau >= 2 ? "⚠ Urgent" : "🔔 Rappel", message).ConfigureAwait(false);
+
+        var titre = niveau >= 3 ? "🚨 Expiration imminente" : niveau >= 2 ? "⚠ Urgent" : "🔔 Rappel";
+        await firebase.SendAsync([utilisateurId], titre, message);
+        await webPush.SendToUserAsync(utilisateurId, titre, message);
+        await hubService.NotifierUtilisateurAsync(utilisateurId, message, TypeNotification.RAPPEL.ToString());
+    }
+
+    public async Task EnvoyerAlertExpirationAsync(int utilisateurId, int besoinId, string titreBesoin, string message)
+    {
+        if (!await FlagActif(utilisateurId, p => p.AlertEnAttente && p.NotifApp)) return;
+
+        var notif = new Notification
+        {
+            Message = message,
+            Type = TypeNotification.RAPPEL,
+            DateEnvoi = DateTime.UtcNow
+        };
+        await notifRepo.CreateAsync(notif, [utilisateurId]);
+
+        // SignalR uniquement — pas de WebPush, l'email est géré séparément par ValidationDeadlineService
+        _ = hubService.NotifierUtilisateurAsync(utilisateurId, message, TypeNotification.RAPPEL.ToString()).ConfigureAwait(false);
     }
 }

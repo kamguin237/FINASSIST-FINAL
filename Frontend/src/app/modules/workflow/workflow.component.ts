@@ -2,6 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormArray, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule } from '@ngx-translate/core';
 import { WorkflowService } from '../../core/services/workflow.service';
 import { RolesService } from '../../core/services/roles.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -9,11 +10,12 @@ import { ConfirmService } from '../../core/services/confirm.service';
 import { WorkflowCircuitDTO } from '../../core/models/workflow.models';
 import { RoleDTO } from '../../core/models/role.models';
 import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
+import { TimePickerComponent } from '../../shared/components/time-picker/time-picker.component';
 
 @Component({
   selector: 'app-workflow',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, TranslateModule, TimePickerComponent],
   templateUrl: './workflow.component.html',
   styleUrl: './workflow.component.scss',
   encapsulation: ViewEncapsulation.None

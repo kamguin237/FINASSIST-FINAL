@@ -135,6 +135,7 @@ $shadow:     0 4px 20px rgba(0,0,0,.35);
   .badge {
     padding: .25rem .7rem; border-radius: 20px;
     font-size: .72rem; font-weight: 700; display: inline-block;
+    // Classes génériques
     &.grey   { background: rgba(160,160,176,.15); color: #a0a0b0; }
     &.blue   { background: rgba(52,152,219,.15);  color: #3498db; }
     &.green  { background: rgba(39,174,96,.15);   color: #27ae60; }
@@ -142,5 +143,14 @@ $shadow:     0 4px 20px rgba(0,0,0,.35);
     &.purple { background: rgba(124,58,237,.2);   color: #a78bfa; }
     &.cyan   { background: rgba(0,188,212,.15);   color: #00bcd4; }
     &.orange { background: rgba(243,156,18,.15);  color: #f39c12; }
+    // Classes sémantiques par statut
+    &.statut-brouillon   { background: rgba(160,160,176,.15); color: #a0a0b0; }
+    &.statut-enregistre  { background: rgba(52,152,219,.15);  color: #3498db; }
+    &.statut-attente     { background: rgba(243,156,18,.15);  color: #f39c12; }
+    &.statut-approuve    { background: rgba(39,174,96,.15);   color: #27ae60; }
+    &.statut-rejete      { background: rgba(231,76,60,.2);    color: #e74c3c; }
+    &.statut-signe       { background: rgba(0,188,212,.15);   color: #00bcd4; }
+    &.statut-transmis    { background: rgba(124,58,237,.2);   color: #a78bfa; }
+    &.statut-termine     { background: rgba(39,174,96,.25);   color: #2ecc71; font-weight: 800; }
   }
 }

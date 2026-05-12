@@ -1,6 +1,7 @@
-import { Component, computed, signal, OnInit, OnDestroy, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, HostListener, ElementRef, ViewChild, effect } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -8,13 +9,15 @@ import { InactivityService } from '../../../core/services/inactivity.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { NotificationsService } from '../../../core/services/notifications.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { NotificationDTO } from '../../../core/models/notification.models';
+import { LanguageService } from '../../../core/services/language.service';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })
@@ -88,38 +91,62 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.openGroup.update(v => v === label ? null : label);
   }
 
+  // Sur mobile : tout tap sur la sidebar ouvre la sidebar (240px)
+  // Pour les groupes : ouvre aussi le groupe
+  toggleGroupMobile(label: string) {
+    if (!this.pinnedExpanded()) {
+      this.pinnedExpanded.set(true);
+    }
+    this.openGroup.update(v => v === label ? null : label);
+  }
+
+  // Sur mobile : tap sur un item simple → ouvre la sidebar
+  onNavItemTapMobile() {
+    if (this.isMobile && !this.pinnedExpanded()) {
+      this.pinnedExpanded.set(true);
+    }
+  }
+
+  get isMobile(): boolean {
+    return window.innerWidth <= 768;
+  }
+
   navItems = computed(() => {
     const has = (p: string) => this.auth.hasPermission(p);
+    // Force recomputation when language changes
+    const _ = this.lang.currentLanguage();
     return [
-      { label: 'Dashboard', path: '/dashboard', icon: '/assets/icons/dashboard1.png', show: has('DASHBOARD_CONSULTER') },
+      { labelKey: 'nav.dashboard', path: '/dashboard', icon: '/assets/icons/dashboard1.png', show: has('DASHBOARD_CONSULTER') },
       {
-        label: 'Besoins', path: null, icon: '/assets/icons/besoin2.png',
+        labelKey: 'nav.besoins', path: null, icon: '/assets/icons/besoin2.png',
         show: has('BESOIN_CONSULTER'),
         children: [
-          { label: 'Validation besoin', path: '/besoins', icon: '/assets/icons/besoin2.png', show: has('BESOIN_CONSULTER') },
-          { label: 'Besoins en attente', path: '/besoins/validations', icon: '/assets/icons/workflow.png', show: has('BESOIN_VALIDER') },
+          { labelKey: 'nav.allRequests', path: '/besoins', icon: '/assets/icons/besoin2.png', show: has('BESOIN_CONSULTER') },
+          { labelKey: 'nav.pendingValidations', path: '/besoins/validations', icon: '/assets/icons/workflow.png', show: has('BESOIN_VALIDER') },
         ].filter(c => c.show)
       },
-      { label: 'Catégories',    path: '/categories',        icon: '/assets/icons/categories.png',              show: has('CATEGORIE_CONSULTER') },
-      { label: 'Workflow',      path: '/workflow',          icon: '/assets/icons/workflow.png',                show: has('WORKFLOW_CONSULTER') },
-      { label: 'Notifications', path: '/notifications',     icon: '/assets/icons/notification.png',            show: has('NOTIFICATION_LIRE') },
-      { label: 'Reporting',     path: '/reporting',         icon: '/assets/icons/reporting.png',               show: has('RAPPORT_CONSULTER') || has('DASHBOARD_CONSULTER') },
-      { label: 'Logs',          path: '/logs',              icon: '/assets/icons/logs.png',                    show: has('LOG_CONSULTER') },
-      { label: 'Utilisateurs',  path: '/admin/users',       icon: '/assets/icons/utilisateurs.png',            show: has('USER_CONSULTER') },
-      { label: 'Rôles',         path: '/admin/roles',       icon: '/assets/icons/role.png',                    show: has('ROLE_CONSULTER') },
-      { label: 'Permissions',   path: '/admin/permissions', icon: '/assets/icons/permissions.png',             show: has('PERMISSION_CONSULTER') },
-      { label: 'Ma Signature',  path: '/ma-signature',      icon: '/assets/icons/signature-electronique.png', show: has('SIGNATURE_PERSO_GERER') },
+      { labelKey: 'nav.categories',    path: '/categories',        icon: '/assets/icons/categories.png',              show: has('CATEGORIE_CONSULTER') },
+      { labelKey: 'nav.workflow',      path: '/workflow',          icon: '/assets/icons/workflow.png',                show: has('WORKFLOW_CONSULTER') },
+      { labelKey: 'nav.notifications', path: '/notifications',     icon: '/assets/icons/notification.png',            show: has('NOTIFICATION_LIRE') },
+      { labelKey: 'nav.reporting',     path: '/reporting',         icon: '/assets/icons/reporting.png',               show: has('RAPPORT_CONSULTER') || has('DASHBOARD_CONSULTER') },
+      { labelKey: 'nav.logs',          path: '/logs',              icon: '/assets/icons/logs.png',                    show: has('LOG_CONSULTER') },
+      { labelKey: 'nav.users',  path: '/admin/users',       icon: '/assets/icons/utilisateurs.png',            show: has('USER_CONSULTER') },
+      { labelKey: 'nav.roles',         path: '/admin/roles',       icon: '/assets/icons/role.png',                    show: has('ROLE_CONSULTER') },
+      { labelKey: 'nav.permissions',   path: '/admin/permissions', icon: '/assets/icons/permissions.png',             show: has('PERMISSION_CONSULTER') },
+      { labelKey: 'nav.mySignature',  path: '/ma-signature',      icon: '/assets/icons/signature-electronique.png', show: has('SIGNATURE_PERSO_GERER') },
     ].filter(i => i.show);
   });
 
   constructor(
     public auth: AuthService,
     public theme: ThemeService,
+    public lang: LanguageService,
     private settingsService: SettingsService,
     private inactivity: InactivityService,
     public confirmService: ConfirmService,
     private pushService: PushNotificationService,
     private notifService: NotificationsService,
+    private signalR: SignalRService,
     private router: Router
   ) {}
 
@@ -127,15 +154,33 @@ export class LayoutComponent implements OnInit, OnDestroy {
     if (this.auth.hasPermission('NOTIFICATION_LIRE')) {
       this.chargerNotifications();
     }
+
+    // Démarrer SignalR avec le token JWT pour recevoir les notifications en temps réel
+    const token = this.auth.getToken() ?? '';
+    this.signalR.startConnection(token).then(() => {
+      // S'abonner aux nouvelles notifications poussées par le serveur
+      this.subs.push(
+        this.signalR.nouvellesNotifications.subscribe(() => {
+          // Recharger depuis l'API pour avoir les vrais IDs et éviter les IDs temporaires
+          if (this.auth.hasPermission('NOTIFICATION_LIRE')) {
+            this.chargerNotifications();
+          }
+        })
+      );
+    });
+
     // Initialiser le Service Worker et s'abonner aux push si autorisé
-    const s = this.settingsService.settings();
-    if (s.notifApp) {
-      this.pushService.init().then(() => {
-        this.pushService.isSubscribed().then(already => {
-          if (!already) this.pushService.subscribe();
-        });
+    this.pushService.init().then(() => {
+      this.pushService.isSubscribed().then(already => {
+        if (already) {
+          // Déjà abonné : synchroniser l'endpoint avec le backend
+          // (l'endpoint peut différer selon le navigateur : Chrome=FCM, Edge=WNS)
+          this.pushService.syncSubscription();
+        } else {
+          this.pushService.subscribe();
+        }
       });
-    }
+    });
     // Démarrer la surveillance d'inactivité
     if (this.settingsService.settings().deconnexionAuto) {
       this.inactivity.start();
@@ -155,6 +200,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.inactivity.stop();
+    this.signalR.stopConnection();
     this.subs.forEach(s => s.unsubscribe());
   }
 

@@ -28,12 +28,11 @@ export class PushNotificationService {
     if (permission !== 'granted') return false;
 
     try {
-      // Récupérer la clé publique VAPID
       const { publicKey } = await this.http.get<{ publicKey: string }>(`${this.url}/vapid-public-key`).toPromise() as any;
 
       const sub = await this.swReg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(publicKey)
+        applicationServerKey: this.urlBase64ToUint8Array(publicKey) as unknown as ArrayBuffer
       });
 
       const json = sub.toJSON();
@@ -48,6 +47,31 @@ export class PushNotificationService {
     } catch (e) {
       console.warn('[Push] Échec abonnement:', e);
       return false;
+    }
+  }
+
+  /**
+   * Synchronise la subscription existante avec le backend.
+   * Appelé au login pour s'assurer que l'endpoint (qui peut changer selon le navigateur)
+   * est toujours enregistré en base — résout le problème Chrome vs Edge.
+   */
+  async syncSubscription(): Promise<void> {
+    if (!this.swReg) await this.init();
+    if (!this.swReg) return;
+
+    const sub = await this.swReg.pushManager.getSubscription();
+    if (!sub) return; // pas encore abonné, subscribe() s'en chargera
+
+    const json = sub.toJSON();
+    try {
+      await this.http.post(`${this.url}/subscribe`, {
+        endpoint: json.endpoint,
+        p256dh:   (json.keys as any)?.p256dh,
+        auth:     (json.keys as any)?.auth
+      }).toPromise();
+      console.log('[Push] Subscription synchronisée avec le backend');
+    } catch (e) {
+      console.warn('[Push] Échec sync subscription:', e);
     }
   }
 

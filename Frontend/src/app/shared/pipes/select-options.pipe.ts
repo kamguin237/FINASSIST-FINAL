@@ -17,12 +17,11 @@ export class CategorieOptionsPipe implements PipeTransform {
   }
 }
 
-/** Transforme RoleDTO[] → SelectOption[] (exclut Administrateur) */
+/** Transforme RoleDTO[] → SelectOption[] */
 @Pipe({ name: 'roleOptions', standalone: true, pure: true })
 export class RoleOptionsPipe implements PipeTransform {
   transform(roles: { id: number; code: string }[]): SelectOption[] {
     return (roles ?? [])
-      .filter(r => r.code !== 'Administrateur')
       .map(r => ({ value: r.id, label: r.code }));
   }
 }

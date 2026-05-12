@@ -6,4 +6,5 @@ public interface IAuthRepository
 {
     Task<Utilisateur?> GetByEmailAsync(string email);
     Task<Utilisateur?> GetByIdAsync(int id);
+    Task UpdateAsync(Utilisateur user);
 }

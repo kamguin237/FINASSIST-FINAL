@@ -1,0 +1,7 @@
+<div class="tp-wrapper">
+  <button type="button" class="tp-trigger" (click)="toggle($event)">
+    <span class="tp-icon">⏱</span>
+    <span class="tp-display" [class.tp-placeholder]="!value">{{ display }}</span>
+    <span class="tp-chevron" [class.open]="open">›</span>
+  </button>
+</div>

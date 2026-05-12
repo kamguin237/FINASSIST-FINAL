@@ -55,6 +55,7 @@ public class UsersService(
             MotDePasse = passwordService.Hash(plainPassword),
             RoleId = dto.RoleId,
             Actif = true,
+            DoitChangerMotDePasse = true, // obligatoire à la première connexion
             DateCreation = DateTime.UtcNow,
             DateModification = DateTime.UtcNow
         };

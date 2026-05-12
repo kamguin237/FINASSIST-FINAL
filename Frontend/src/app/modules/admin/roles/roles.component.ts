@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RolesService } from '../../../core/services/roles.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -11,7 +12,7 @@ import { RoleDTO, PermissionDTO } from '../../../core/models/role.models';
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss'
 })
@@ -37,7 +38,8 @@ export class RolesComponent implements OnInit {
     private permissionsService: PermissionsService,
     private fb: FormBuilder,
     private toastr: ToastrService,
-    private confirm: ConfirmService
+    private confirm: ConfirmService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {
@@ -138,7 +140,7 @@ export class RolesComponent implements OnInit {
   }
 
   async delete(id: number) {
-    const ok = await this.confirm.confirm({ titre: 'Supprimer le rôle', message: 'Êtes-vous sûr de vouloir supprimer ce rôle ?', labelConfirm: 'Supprimer', danger: true });
+    const ok = await this.confirm.confirm({ titre: this.translate.instant('roles.deleteTitle'), message: this.translate.instant('roles.deleteConfirm'), labelConfirm: this.translate.instant('common.delete'), danger: true });
     if (!ok) return;
     this.rolesService.delete(id).subscribe({
       next: () => { this.toastr.success('Rôle supprimé.'); this.rolesService.getAll().subscribe(r => this.roles = r); },

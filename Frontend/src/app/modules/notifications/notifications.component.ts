@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { UsersService } from '../../core/services/users.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,7 +13,7 @@ import { CustomSelectComponent } from '../../shared/components/custom-select/cus
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, TranslateModule],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
   encapsulation: ViewEncapsulation.None
@@ -24,10 +25,12 @@ export class NotificationsComponent implements OnInit {
   selectedIds: number[] = [];
   filtreLecture: string = '';
 
-  lectureOptions = [
-    { value: 'NON_LU', label: 'Messages non lus' },
-    { value: 'LU',     label: 'Messages lus' },
-  ];
+  get lectureOptions() {
+    return [
+      { value: 'NON_LU', label: this.translate.instant('notifications.unreadMessages') },
+      { value: 'LU',     label: this.translate.instant('notifications.readMessages') },
+    ];
+  }
 
   get notificationsFiltrees(): NotificationDTO[] {
     if (!this.filtreLecture) return this.notifications;
@@ -79,7 +82,8 @@ export class NotificationsComponent implements OnInit {
     private notifService: NotificationsService,
     private usersService: UsersService,
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {

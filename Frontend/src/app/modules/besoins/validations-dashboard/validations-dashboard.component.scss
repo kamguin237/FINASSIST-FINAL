@@ -273,3 +273,82 @@
     &--expired { background: rgba(239,68,68,.12);  }
   }
 }
+
+// ── Responsive Mobile ─────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+
+  // Layout : colonne au lieu de ligne
+  .vd-layout {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  // En-tête : colonne
+  .vd-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .4rem;
+    margin-bottom: 1rem;
+    h2 { font-size: 1rem; }
+  }
+
+  // Cartes : padding réduit
+  .vd-card { padding: .85rem; }
+
+  // Top de la carte : colonne sur très petit écran
+  .vd-card-top {
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .vd-card-right {
+    flex-direction: row;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  // Rappels : 2 par ligne
+  .vd-rappels {
+    gap: .35rem .75rem;
+  }
+
+  .vd-rappel-item { font-size: .72rem; }
+
+  // Légende : en bas, pleine largeur, non sticky
+  .vd-legend {
+    width: 100%;
+    position: static;
+    padding: 1rem;
+  }
+
+  // Légende : liste horizontale scrollable
+  .vd-legend-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .75rem;
+  }
+
+  .vd-legend-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 80px;
+    flex: 1;
+  }
+
+  .vd-legend-line { display: none; } // masquer les lignes verticales
+
+  .vd-legend-text {
+    align-items: center;
+    padding-top: .25rem;
+  }
+
+  .vd-legend-label { font-size: .72rem; }
+  .vd-legend-desc  { font-size: .65rem; }
+
+  .vd-legend-dot {
+    width: 28px;
+    height: 28px;
+    font-size: .72rem;
+  }
+}

@@ -1,7 +1,7 @@
 <div class="page-header">
-  <h2>Utilisateurs</h2>
+  <h2>{{ 'users.title' | translate }}</h2>
   @if (auth.hasPermission('USER_CREER')) {
-    <button class="btn-primary" (click)="openCreate()">+ Nouvel utilisateur</button>
+    <button class="btn-primary" (click)="openCreate()">+ {{ 'users.newUser' | translate }}</button>
   }
 </div>
 
@@ -10,7 +10,7 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Actions</th>
+        <th>{{ 'common.name' | translate }}</th><th>{{ 'users.email' | translate }}</th><th>{{ 'users.role' | translate }}</th><th>{{ 'users.status' | translate }}</th><th>{{ 'common.actions' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -19,20 +19,20 @@
           <td>{{ u.prenom }} {{ u.nom }}</td>
           <td>{{ u.email }}</td>
           <td>{{ u.role }}</td>
-          <td><span [class]="u.actif ? 'badge active' : 'badge inactive'">{{ u.actif ? 'Actif' : 'Inactif' }}</span></td>
+          <td><span [class]="u.actif ? 'badge active' : 'badge inactive'">{{ u.actif ? ('users.active' | translate) : ('users.inactive' | translate) }}</span></td>
           <td class="actions">
             @if (auth.hasPermission('USER_MODIFIER')) {
-              <button class="btn-sm" (click)="openEdit(u)">Modifier</button>
-              <button class="btn-sm perm" (click)="openPermissions(u)" title="Gérer les permissions">🔑 Permissions</button>
+              <button class="btn-sm" (click)="openEdit(u)">{{ 'common.edit' | translate }}</button>
+              <button class="btn-sm perm" (click)="openPermissions(u)" [title]="'users.managePermissions' | translate">🔑 {{ 'users.permissions' | translate }}</button>
             }
             @if (auth.hasPermission('USER_SUPPRIMER') && u.actif) {
-              <button class="btn-sm danger" (click)="deactivate(u.id)">Désactiver</button>
+              <button class="btn-sm danger" (click)="deactivate(u.id)">{{ 'users.deactivate' | translate }}</button>
             }
             @if (auth.hasPermission('USER_MODIFIER') && !u.actif) {
-              <button class="btn-sm activate" (click)="activate(u.id)">Activer</button>
+              <button class="btn-sm activate" (click)="activate(u.id)">{{ 'users.activate' | translate }}</button>
             }
             @if (auth.hasPermission('USER_SUPPRIMER') && !u.hasActions) {
-              <button class="btn-sm delete" (click)="deletePermanent(u.id)" title="Suppression définitive">🗑 Supprimer</button>
+              <button class="btn-sm delete" (click)="deletePermanent(u.id)" [title]="'users.deleteTitle' | translate">🗑 {{ 'users.delete' | translate }}</button>
             }
           </td>
         </tr>
@@ -47,15 +47,15 @@
     <div class="modal modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
-          <h3>Permissions de {{ permUser.prenom }} {{ permUser.nom }}</h3>
-          <p class="modal-sub">Rôle : <strong>{{ permUser.role }}</strong> — Cochez les permissions supplémentaires à attribuer directement.</p>
+          <h3>{{ 'users.permissionsOf' | translate }} {{ permUser.prenom }} {{ permUser.nom }}</h3>
+          <p class="modal-sub">{{ 'users.roleLabel' | translate }} <strong>{{ permUser.role }}</strong> — {{ 'users.permissionsHelp' | translate }}</p>
         </div>
         <button class="close-btn" (click)="fermerPermModal()">✕</button>
       </div>
       <div class="modal-body perm-body">
         <div class="legend">
-          <span class="legend-item"><span class="dot role"></span> Héritée du rôle (lecture seule)</span>
-          <span class="legend-item"><span class="dot direct"></span> Permission directe</span>
+          <span class="legend-item"><span class="dot role"></span> {{ 'users.inheritedFromRole' | translate }}</span>
+          <span class="legend-item"><span class="dot direct"></span> {{ 'users.directPermission' | translate }}</span>
         </div>
 
         @for (group of permissionsByModule; track group.module) {
@@ -63,7 +63,7 @@
             <div class="perm-group-title">
               <span>{{ group.module }}</span>
               <button class="btn-check-all" (click)="toggleModule(group.permissions)">
-                {{ isModuleAllChecked(group.permissions) ? 'Tout décocher' : 'Tout cocher' }}
+                {{ isModuleAllChecked(group.permissions) ? ('users.uncheckAll' | translate) : ('users.checkAll' | translate) }}
               </button>
             </div>
             <div class="perm-grid">
@@ -90,9 +90,9 @@
         }
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="fermerPermModal()">Annuler</button>
+        <button class="btn-secondary" (click)="fermerPermModal()">{{ 'common.cancel' | translate }}</button>
         <button class="btn-primary" (click)="sauvegarderPermissions()" [disabled]="savingPerms">
-          {{ savingPerms ? 'Enregistrement...' : 'Enregistrer les permissions' }}
+          {{ savingPerms ? ('users.saving' | translate) : ('users.savePermissions' | translate) }}
         </button>
       </div>
     </div>
@@ -104,25 +104,26 @@
   <div class="modal-overlay" (click)="fermerModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ editId ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}</h3>
+        <h3>{{ editId ? ('users.editUser' | translate) : ('users.newUser' | translate) }}</h3>
         <button class="close-btn" (click)="fermerModal()">✕</button>
       </div>
       <div class="modal-body">
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <div class="field"><label>Nom *</label><input formControlName="nom" placeholder="Nom" /></div>
-          <div class="field"><label>Prénom *</label><input formControlName="prenom" placeholder="Prénom" /></div>
+          <div class="field"><label>{{ 'users.lastName' | translate }} *</label><input formControlName="nom" [placeholder]="'users.lastName' | translate" (input)="onNomOrPrenomChange()" /></div>
+          <div class="field"><label>{{ 'users.firstName' | translate }} *</label><input formControlName="prenom" [placeholder]="'users.firstName' | translate" (input)="onNomOrPrenomChange()" /></div>
           <div class="field">
-            <label>Email *</label>
-            <input formControlName="email" type="email" placeholder="prenom.nom@finstar-cm.com" />
+            <label>{{ 'users.email' | translate }} *</label>
+            <input formControlName="email" type="email" placeholder="prenom.nom@finstar-cm.com"
+                   (input)="onEmailInput()" />
             @if (form.controls['email'].touched && form.controls['email'].errors?.['finstarDomain']) {
-              <span class="field-error">L'email doit se terminer par &#64;finstar-cm.com</span>
+              <span class="field-error">{{ 'users.emailDomainError' | translate }}</span>
             }
           </div>
           @if (!editId) {
-            <p class="info-mdp">🔑 Un mot de passe aléatoire sera généré et envoyé par email à l'utilisateur.</p>
+            <p class="info-mdp">{{ 'users.passwordInfo' | translate }}</p>
           }
           <div class="field">
-            <label>Rôle *</label>
+            <label>{{ 'users.role' | translate }} *</label>
             <app-custom-select
               [options]="roles | roleOptions"
               [selected]="form.controls['roleId'].value"
@@ -132,9 +133,9 @@
           </div>
           @if (erreur) { <p class="form-error">{{ erreur }}</p> }
           <div class="modal-actions">
-            <button type="button" (click)="fermerModal()" class="btn-secondary">Annuler</button>
+            <button type="button" (click)="fermerModal()" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
             <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
-              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ saving ? ('users.saving' | translate) : ('common.save' | translate) }}
             </button>
           </div>
         </form>

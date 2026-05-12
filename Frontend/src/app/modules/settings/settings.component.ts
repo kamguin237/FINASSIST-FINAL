@@ -2,19 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { SettingsService } from '../../core/services/settings.service';
+import { LanguageService, Language } from '../../core/services/language.service';
 import { MaSignatureService } from '../../core/services/ma-signature.service';
 import { UsersService } from '../../core/services/users.service';
 import { SignatureUtilisateurDTO } from '../../core/models/signature-utilisateur.models';
 import { UtilisateurDTO } from '../../core/models/user.models';
 import { ToastrService } from 'ngx-toastr';
+import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, CustomSelectComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
@@ -22,9 +25,15 @@ export class SettingsComponent implements OnInit {
   profil: UtilisateurDTO | null = null;
   signature: SignatureUtilisateurDTO | null = null;
 
-  langues   = [{ value: 'fr', label: '🇫🇷 Français' }, { value: 'en', label: '🇬🇧 English' }];
-  formats   = [{ value: 'dd/MM/yyyy', label: 'dd/MM/yyyy' }, { value: 'MM/dd/yyyy', label: 'MM/dd/yyyy' }, { value: 'yyyy-MM-dd', label: 'yyyy-MM-dd' }];
-  fuseaux   = [
+  /** Statut de la permission navigateur pour les notifications push */
+  get notifPermission(): 'granted' | 'denied' | 'default' | 'unsupported' {
+    if (typeof Notification === 'undefined') return 'unsupported';
+    return Notification.permission as any;
+  }
+
+  langues: SelectOption[]   = [{ value: 'fr', label: '🇫🇷 Français' }, { value: 'en', label: '🇬🇧 English' }];
+  formats: SelectOption[]   = [{ value: 'dd/MM/yyyy', label: 'dd/MM/yyyy' }, { value: 'MM/dd/yyyy', label: 'MM/dd/yyyy' }, { value: 'yyyy-MM-dd', label: 'yyyy-MM-dd' }];
+  fuseaux: SelectOption[]   = [
     { value: 'Africa/Douala',   label: 'Africa/Douala (UTC+1)' },
     { value: 'Africa/Lagos',    label: 'Africa/Lagos (UTC+1)' },
     { value: 'Africa/Abidjan',  label: 'Africa/Abidjan (UTC+0)' },
@@ -33,8 +42,8 @@ export class SettingsComponent implements OnInit {
     { value: 'Europe/London',   label: 'Europe/London (UTC+0/+1)' },
     { value: 'UTC',             label: 'UTC' },
   ];
-  pages     = [{ value: '/dashboard', label: 'Dashboard' }, { value: '/besoins', label: 'Besoins' }, { value: '/notifications', label: 'Notifications' }];
-  tris      = [{ value: 'dateDesc', label: 'Date (récent → ancien)' }, { value: 'dateAsc', label: 'Date (ancien → récent)' }, { value: 'titre', label: 'Titre A→Z' }];
+  pages: SelectOption[]     = [{ value: '/dashboard', label: 'Dashboard' }, { value: '/besoins', label: 'Besoins' }, { value: '/notifications', label: 'Notifications' }];
+  tris: SelectOption[]      = [{ value: 'dateDesc', label: 'Date (récent → ancien)' }, { value: 'dateAsc', label: 'Date (ancien → récent)' }, { value: 'titre', label: 'Titre A→Z' }];
 
   get s() { return this.settingsService.settings(); }
 
@@ -47,6 +56,7 @@ export class SettingsComponent implements OnInit {
     public auth: AuthService,
     public theme: ThemeService,
     public settingsService: SettingsService,
+    private languageService: LanguageService,
     private maSignatureService: MaSignatureService,
     private usersService: UsersService,
     private toastr: ToastrService
@@ -63,6 +73,12 @@ export class SettingsComponent implements OnInit {
 
   set(key: keyof typeof this.s, value: any) {
     this.settingsService.save({ [key]: value } as any);
+    
+    // Si c'est la langue qui change, mettre à jour le LanguageService
+    if (key === 'langue' && (value === 'fr' || value === 'en')) {
+      this.languageService.setLanguage(value as Language);
+    }
+    
     this.toastr.success('Préférence enregistrée.', '', { timeOut: 1500 });
   }
 

@@ -5,7 +5,11 @@ using FinAssist.Core.Interfaces;
 
 namespace FinAssist.Application.Services;
 
-public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository workflowRepo, INotificationService notificationService) : IBesoinsService
+public class BesoinsService(
+    IBesoinsRepository besoinsRepo, 
+    IWorkflowRepository workflowRepo, 
+    INotificationService notificationService,
+    IBesoinsHubService besoinsHubService) : IBesoinsService
 {
     // Filtrage selon le rôle :
     // - Administrateur / Direction / Responsable → tous les besoins
@@ -203,10 +207,26 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
     throw new UnauthorizedAccessException("Accès refusé.");
 }
 
-    public async Task<BesoinDTO> CreateAsync(CreateBesoinDTO dto, int utilisateurId)
+    public async Task<BesoinDTO> CreateAsync(CreateBesoinDTO dto, int utilisateurId, string roleCode)
     {
+        // Vérifier que la catégorie existe
         _ = await besoinsRepo.GetCategorieByIdAsync(dto.CategorieId)
             ?? throw new KeyNotFoundException($"Catégorie {dto.CategorieId} introuvable.");
+
+        // Vérifier que le circuit de la catégorie ne contient pas le rôle de l'utilisateur
+        // (un utilisateur ne peut pas créer un besoin qu'il devra lui-même valider)
+        var detail = await besoinsRepo.GetCategorieWithCircuitAsync(dto.CategorieId);
+        if (detail?.WorkflowCircuit?.Etapes is not null)
+        {
+            var rolesCircuit = detail.WorkflowCircuit.Etapes
+                .Select(e => e.RoleRequis?.Trim().ToUpperInvariant())
+                .Where(r => r is not null)
+                .ToHashSet();
+
+            if (rolesCircuit.Contains(roleCode.Trim().ToUpperInvariant()))
+                throw new InvalidOperationException(
+                    $"Vous ne pouvez pas créer un besoin dans cette catégorie car votre rôle « {roleCode} » fait partie du circuit de validation.");
+        }
 
         var besoin = new Besoin
         {
@@ -230,6 +250,8 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
             DateAction = DateTime.UtcNow
         });
 
+        await besoinsHubService.NotifierHistoriqueAsync(created.Id, "CREATION", $"Besoin créé : {created.Titre}");
+
         return ToDTO(await besoinsRepo.GetByIdAsync(created.Id) ?? created);
     }
 
@@ -238,8 +260,8 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
         var besoin = await besoinsRepo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException($"Besoin {id} introuvable.");
 
-        if (besoin.Statut != WorkflowEngine.BROUILLON && besoin.Statut != WorkflowEngine.ENREGISTRE)
-            throw new InvalidOperationException("Seuls les besoins en statut BROUILLON ou ENREGISTRE peuvent être modifiés.");
+        if (besoin.Statut != WorkflowEngine.BROUILLON)
+            throw new InvalidOperationException("Seuls les besoins en statut BROUILLON peuvent être modifiés.");
 
         if (besoin.UtilisateurId != utilisateurId)
             throw new UnauthorizedAccessException("Vous ne pouvez modifier que vos propres besoins.");
@@ -258,13 +280,16 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
 
         if (changes.Count > 0)
         {
+            var description = string.Join(", ", changes);
             await besoinsRepo.AddHistoriqueAsync(new Historique
             {
                 BesoinId = id,
                 Action = "MODIFICATION",
-                Description = string.Join(", ", changes),
+                Description = description,
                 DateAction = DateTime.UtcNow
             });
+            
+            await besoinsHubService.NotifierHistoriqueAsync(id, "MODIFICATION", description);
         }
 
         return ToDTO(await besoinsRepo.GetByIdAsync(id) ?? besoin);
@@ -292,6 +317,9 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
             Description = "Besoin enregistré et prêt à être soumis.",
             DateAction = DateTime.UtcNow
         });
+
+        await besoinsHubService.NotifierHistoriqueAsync(id, "ENREGISTREMENT", "Besoin enregistré et prêt à être soumis.");
+        await besoinsHubService.NotifierStatutBesoinAsync(id, WorkflowEngine.ENREGISTRE);
 
         return ToDTO(await besoinsRepo.GetByIdAsync(id) ?? besoin);
     }
@@ -327,6 +355,9 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
             DateAction = DateTime.UtcNow
         });
 
+        await besoinsHubService.NotifierHistoriqueAsync(id, "SOUMISSION", "Besoin soumis, en attente de prise en charge.");
+        await besoinsHubService.NotifierStatutBesoinAsync(id, besoin.Statut);
+
         // Récupérer le rôle de la première étape du circuit pour notifier les bons utilisateurs
         var roleEtape1 = besoin.Categorie?.WorkflowCircuit?.Etapes
             ?.OrderBy(e => e.Ordre)
@@ -342,24 +373,35 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
 
     public async Task SupprimerDocumentAsync(int besoinId, int documentId)
     {
+        var besoin = await besoinsRepo.GetByIdAsync(besoinId)
+            ?? throw new KeyNotFoundException($"Besoin {besoinId} introuvable.");
+
+        if (besoin.Statut != WorkflowEngine.BROUILLON)
+            throw new InvalidOperationException("Impossible de supprimer un document une fois le besoin enregistré.");
+
         var doc = await besoinsRepo.GetDocumentByIdAsync(documentId)
             ?? throw new KeyNotFoundException($"Document {documentId} introuvable.");
         if (doc.BesoinId != besoinId)
             throw new KeyNotFoundException("Document non associé à ce besoin.");
         await besoinsRepo.DeleteDocumentAsync(documentId);
+        
+        var description = $"Document '{doc.Nom}' supprimé.";
         await besoinsRepo.AddHistoriqueAsync(new Historique
         {
             BesoinId = besoinId,
             Action = "SUPPRESSION_DOCUMENT",
-            Description = $"Document '{doc.Nom}' supprimé.",
+            Description = description,
             DateAction = DateTime.UtcNow
         });
+        
+        await besoinsHubService.NotifierHistoriqueAsync(besoinId, "SUPPRESSION_DOCUMENT", description);
     }
 
-    public async Task<IEnumerable<DocumentDTO>> GetDocumentsAsync(int id)
+    public async Task<IEnumerable<DocumentDTO>> GetDocumentsAsync(int id, int utilisateurId, string roleCode)
     {
-        _ = await besoinsRepo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException($"Besoin {id} introuvable.");
+        // Vérifier que l'utilisateur a accès au besoin (créateur, validateur, ou ayant déjà validé)
+        _ = await GetByIdAsync(id, utilisateurId, roleCode);
+        
         var docs = await besoinsRepo.GetDocumentsAsync(id);
         return docs.Select(d => new DocumentDTO
         {
@@ -367,8 +409,11 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
         });
     }
 
-    public async Task<(byte[] contenu, string nom, string type)> GetDocumentContenuAsync(int besoinId, int documentId)
+    public async Task<(byte[] contenu, string nom, string type)> GetDocumentContenuAsync(int besoinId, int documentId, int utilisateurId, string roleCode)
     {
+        // Vérifier que l'utilisateur a accès au besoin (créateur, validateur, ou ayant déjà validé)
+        _ = await GetByIdAsync(besoinId, utilisateurId, roleCode);
+        
         var doc = await besoinsRepo.GetDocumentByIdAsync(documentId)
             ?? throw new KeyNotFoundException($"Document {documentId} introuvable.");
         if (doc.BesoinId != besoinId)
@@ -378,8 +423,11 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
 
     public async Task<DocumentDTO> AjouterPieceJointeAsync(int id, string nom, string type, byte[] contenu)
     {
-        _ = await besoinsRepo.GetByIdAsync(id)
+        var besoin = await besoinsRepo.GetByIdAsync(id)
             ?? throw new KeyNotFoundException($"Besoin {id} introuvable.");
+
+        if (besoin.Statut != WorkflowEngine.BROUILLON)
+            throw new InvalidOperationException("Impossible d'ajouter un document une fois le besoin enregistré.");
 
         var checksum = Convert.ToHexString(
             System.Security.Cryptography.SHA256.HashData(contenu));
@@ -396,13 +444,16 @@ public class BesoinsService(IBesoinsRepository besoinsRepo, IWorkflowRepository 
 
         await besoinsRepo.AddDocumentAsync(doc);
 
+        var description = $"Document ajouté : {nom} ({type})";
         await besoinsRepo.AddHistoriqueAsync(new Historique
         {
             BesoinId = id,
             Action = "PIECE_JOINTE",
-            Description = $"Document ajouté : {nom} ({type})",
+            Description = description,
             DateAction = DateTime.UtcNow
         });
+
+        await besoinsHubService.NotifierHistoriqueAsync(id, "PIECE_JOINTE", description);
 
         return new DocumentDTO
         {

@@ -1,12 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule } from '@ngx-translate/core';
+import { Subscription, forkJoin, of } from 'rxjs';
 import { BesoinsService } from '../../../core/services/besoins.service';
 import { CategoriesService } from '../../../core/services/categories.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SettingsService } from '../../../core/services/settings.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { BesoinDTO, NIVEAUX_IMPORTANCE } from '../../../core/models/besoin.models';
 import { CategorieDTO, CategorieDetailDTO } from '../../../core/models/categorie.models';
 import { CustomSelectComponent } from '../../../shared/components/custom-select/custom-select.component';
@@ -16,11 +19,11 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 @Component({
   selector: 'app-besoins-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, CustomSelectComponent, NiveauOptionsPipe, CategorieOptionsPipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, CustomSelectComponent, NiveauOptionsPipe, CategorieOptionsPipe, TranslateModule],
   templateUrl: './besoins-list.component.html',
   styleUrl: './besoins-list.component.scss'
 })
-export class BesoinsListComponent implements OnInit {
+export class BesoinsListComponent implements OnInit, OnDestroy {
   besoins: BesoinDTO[] = [];
   categories: CategorieDTO[] = [];
   loading = true;
@@ -32,6 +35,9 @@ export class BesoinsListComponent implements OnInit {
   filtreStatut: string = '';
   fichierSelectionne: File | null = null;
   fichierEditSelectionne: File | null = null;
+  editDocuments: { id: number; nom: string; type: string }[] = [];
+
+  private signalRSub?: Subscription;
 
   // Options générées dynamiquement depuis les statuts réels des besoins chargés
   get statutOptions(): { value: string; label: string }[] {
@@ -50,6 +56,19 @@ export class BesoinsListComponent implements OnInit {
     if (statut.startsWith('REJETE_PAR_'))   return `Rejeté par ${this.formatRole(statut.replace('REJETE_PAR_', ''))}`;
     if (statut.startsWith('SIGNE_PAR_'))    return `Signé par ${this.formatRole(statut.replace('SIGNE_PAR_', ''))}`;
     return statut;
+  }
+
+  badgeClass(statut: string): string {
+    if (!statut) return 'badge statut-brouillon';
+    if (statut === 'BROUILLON')             return 'badge statut-brouillon';
+    if (statut === 'ENREGISTRE')            return 'badge statut-enregistre';
+    if (statut === 'TRANSMIS')              return 'badge statut-transmis';
+    if (statut === 'TERMINE')               return 'badge statut-termine';
+    if (statut.startsWith('EN_ATTENTE_'))   return 'badge statut-attente';
+    if (statut.startsWith('APPROUVE_PAR_')) return 'badge statut-approuve';
+    if (statut.startsWith('REJETE_PAR_'))   return 'badge statut-rejete';
+    if (statut.startsWith('SIGNE_PAR_'))    return 'badge statut-signe';
+    return 'badge';
   }
 
   private formatRole(roleCode: string): string {
@@ -97,12 +116,26 @@ export class BesoinsListComponent implements OnInit {
     private fb: FormBuilder,
     private toastr: ToastrService,
     private confirm: ConfirmService,
-    private settings: SettingsService
+    private settings: SettingsService,
+    private signalR: SignalRService
   ) {}
 
   ngOnInit() {
     this.load();
-    this.categoriesService.getAll().subscribe(c => this.categories = c);
+    // Charger uniquement les catégories dont le circuit ne contient pas le rôle de l'utilisateur
+    this.categoriesService.getDisponibles().subscribe(c => this.categories = c);
+
+    // S'abonner aux mises à jour de statut en temps réel via SignalR
+    this.signalRSub = this.signalR.besoinStatutUpdates.subscribe(update => {
+      const besoin = this.besoins.find(b => b.id === update.besoinId);
+      if (besoin) {
+        besoin.statut = update.nouveauStatut;
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.signalRSub?.unsubscribe();
   }
 
   load() {
@@ -147,7 +180,13 @@ export class BesoinsListComponent implements OnInit {
   }
 
   openEdit(b: BesoinDTO) {
+    // Bloquer l'édition si le besoin n'est pas en statut BROUILLON
+    if (b.statut !== 'BROUILLON') {
+      this.toastr.error('Seuls les besoins en statut BROUILLON peuvent être modifiés.');
+      return;
+    }
     this.editId = b.id;
+    this.editDocuments = [];
     this.editForm.patchValue({
       titre: b.titre,
       description: b.description,
@@ -155,6 +194,12 @@ export class BesoinsListComponent implements OnInit {
       categorieId: b.categorieId
     });
     this.showEditModal = true;
+
+    // Charger les pièces jointes existantes
+    this.besoinsService.getDocuments(b.id).subscribe({
+      next: docs => this.editDocuments = docs,
+      error: () => {}
+    });
   }
 
   fermerEditModal() {
@@ -162,6 +207,7 @@ export class BesoinsListComponent implements OnInit {
     this.saving = false;
     this.editId = null;
     this.fichierEditSelectionne = null;
+    this.editDocuments = [];
     this.editForm.reset();
   }
 
@@ -176,16 +222,42 @@ export class BesoinsListComponent implements OnInit {
     this.besoinsService.update(this.editId, this.editForm.value as any).subscribe({
       next: updated => {
         if (this.fichierEditSelectionne) {
-          this.besoinsService.ajouterPieceJointe(updated.id, this.fichierEditSelectionne).subscribe({
+          // Supprimer les documents existants avant d'ajouter le nouveau
+          const suppressions$ = this.editDocuments.length > 0
+            ? forkJoin(this.editDocuments.map(doc =>
+                this.besoinsService.supprimerDocument(updated.id, doc.id)
+              ))
+            : of([]);
+
+          suppressions$.subscribe({
             next: () => {
-              this.toastr.success('Besoin modifié avec succès.');
-              this.besoins = this.besoins.map(b => b.id === updated.id ? updated : b);
-              this.fermerEditModal();
+              this.besoinsService.ajouterPieceJointe(updated.id, this.fichierEditSelectionne!).subscribe({
+                next: () => {
+                  this.toastr.success('Besoin modifié avec succès.');
+                  this.besoins = this.besoins.map(b => b.id === updated.id ? updated : b);
+                  this.fermerEditModal();
+                },
+                error: () => {
+                  this.toastr.warning('Besoin modifié mais l\'upload du fichier a échoué.');
+                  this.besoins = this.besoins.map(b => b.id === updated.id ? updated : b);
+                  this.fermerEditModal();
+                }
+              });
             },
             error: () => {
-              this.toastr.warning('Besoin modifié mais l\'upload du fichier a échoué.');
-              this.besoins = this.besoins.map(b => b.id === updated.id ? updated : b);
-              this.fermerEditModal();
+              // Même si la suppression échoue, on ajoute quand même le nouveau fichier
+              this.besoinsService.ajouterPieceJointe(updated.id, this.fichierEditSelectionne!).subscribe({
+                next: () => {
+                  this.toastr.success('Besoin modifié avec succès.');
+                  this.besoins = this.besoins.map(b => b.id === updated.id ? updated : b);
+                  this.fermerEditModal();
+                },
+                error: () => {
+                  this.toastr.warning('Besoin modifié mais l\'upload du fichier a échoué.');
+                  this.besoins = this.besoins.map(b => b.id === updated.id ? updated : b);
+                  this.fermerEditModal();
+                }
+              });
             }
           });
         } else {
@@ -294,7 +366,7 @@ export class BesoinsListComponent implements OnInit {
   peutSupprimer(b: BesoinDTO): boolean {
     return b.statut === 'BROUILLON' ||
            b.statut === 'ENREGISTRE' ||
-           b.statut.startsWith('REJETE_ROLE') ||
+           b.statut.startsWith('REJETE_PAR_') ||
            b.estTermine;
   }
 }

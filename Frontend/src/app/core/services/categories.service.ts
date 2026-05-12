@@ -10,6 +10,8 @@ export class CategoriesService {
   constructor(private http: HttpClient) {}
 
   getAll()                              { return this.http.get<CategorieDTO[]>(this.url); }
+  /** Catégories dont le circuit ne contient pas le rôle de l'utilisateur connecté */
+  getDisponibles()                      { return this.http.get<CategorieDTO[]>(`${this.url}/disponibles`); }
   getById(id: number)                   { return this.http.get<CategorieDetailDTO>(`${this.url}/${id}`); }
   create(dto: CreateCategorieDTO)       { return this.http.post<CategorieDTO>(this.url, dto); }
   update(id: number, dto: UpdateCategorieDTO) { return this.http.put<CategorieDTO>(`${this.url}/${id}`, dto); }

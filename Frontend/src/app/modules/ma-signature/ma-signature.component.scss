@@ -398,6 +398,12 @@
   border-radius: 8px; display: block;
 }
 
+.qr-img {
+  border-radius: 8px;
+  display: block;
+  margin: 0 auto;
+}
+
 .qr-token-label {
   font-size: .72rem; font-family: monospace; color: d.$muted; text-align: center;
 }
@@ -498,5 +504,102 @@
   .qr-done {
     h3 { color: #1a1d23; }
     p  { color: #5a6072; }
+  }
+}
+
+// ── Responsive Mobile (≤ 768px) ───────────────────────────────────────────────
+@media (max-width: 768px) {
+
+  .page-header {
+    margin-bottom: 1rem;
+    h2 { font-size: 1.1rem; }
+  }
+
+  .sig-existante-card { padding: .85rem; margin-bottom: 1rem; }
+
+  .sig-existante-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+  }
+
+  // Onglets : grille 2×2 pour afficher les 4 options
+  .onglets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: none;
+    gap: .5rem;
+    padding: .75rem;
+    background: rgba(255,255,255,.03);
+
+    button {
+      flex: unset;
+      padding: .65rem .5rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: .8rem;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.3;
+
+      &.active {
+        background: rgba(124,58,237,.15);
+        border-color: #7c3aed;
+        border-bottom-color: #7c3aed;
+        color: #a78bfa;
+      }
+      &:hover:not(.active) {
+        background: rgba(255,255,255,.06);
+      }
+    }
+  }
+
+  .onglet-body { padding: 1rem; }
+
+  // Canvas manuscrite : hauteur réduite
+  .sig-canvas { height: 140px; max-width: 100%; }
+
+  // Typographique : input pleine largeur
+  .typo-input { max-width: 100%; }
+
+  // Liste polices : hauteur réduite
+  .polices-list { max-height: 260px; }
+
+  .police-item { padding: .5rem .75rem; }
+  .police-name { min-width: 90px; font-size: .72rem; }
+  .police-apercu { font-size: 1.2rem; }
+
+  // Footer : bouton pleine largeur
+  .sig-footer {
+    padding: .75rem 1rem;
+    justify-content: stretch;
+    .btn-primary { width: 100%; justify-content: center; }
+  }
+
+  // QR layout : colonne unique
+  .qr-layout { grid-template-columns: 1fr; }
+  .qr-panel { min-width: unset; width: 100%; }
+}
+
+// Light mode — onglets grille mobile
+:host-context(body.light-mode) {
+  @media (max-width: 768px) {
+    .onglets {
+      background: rgba(0,0,0,.02);
+
+      button {
+        border-color: #e8eaed;
+        color: #5a6072;
+
+        &.active {
+          background: rgba(13,148,136,.08);
+          border-color: #0d9488;
+          border-bottom-color: #0d9488;
+          color: #0d9488;
+        }
+        &:hover:not(.active) { background: #f9fafb; color: #1a1d23; }
+      }
+    }
   }
 }

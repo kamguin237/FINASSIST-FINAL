@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { UsersService } from '../../core/services/users.service';
 import { UtilisateurDTO } from '../../core/models/user.models';
@@ -15,7 +16,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-profil',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './profil.component.html',
   styleUrl: './profil.component.scss'
 })
@@ -78,9 +79,9 @@ export class ProfilComponent implements OnInit {
 
   get strengthLabel(): string {
     const s = this.strengthScore;
-    if (s <= 1) return 'FAIBLE';
-    if (s <= 3) return 'MOYENNE';
-    return 'FORTE';
+    if (s <= 1) return 'profile.strengthWeak';
+    if (s <= 3) return 'profile.strengthMedium';
+    return 'profile.strengthStrong';
   }
 
   get strengthClass(): string {

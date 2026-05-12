@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MaSignatureService } from '../../core/services/ma-signature.service';
 import { QrSignatureService } from '../../core/services/qr-signature.service';
 import { ConfirmService } from '../../core/services/confirm.service';
@@ -10,7 +11,7 @@ import { SignatureUtilisateurDTO, SaveSignatureUtilisateurDTO } from '../../core
 @Component({
   selector: 'app-ma-signature',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './ma-signature.component.html',
   styleUrl: './ma-signature.component.scss'
 })
@@ -68,7 +69,8 @@ export class MaSignatureComponent implements OnInit, OnDestroy, AfterViewChecked
     private service: MaSignatureService,
     private qrService: QrSignatureService,
     private toastr: ToastrService,
-    private confirm: ConfirmService
+    private confirm: ConfirmService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {
@@ -79,9 +81,16 @@ export class MaSignatureComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   // Initialise le canvas dès qu'il est disponible dans le DOM
+  private pendingQrRender = false;
+
   ngAfterViewChecked() {
     if (this.onglet === 'manuscrite' && this.canvasRef && !this.canvasInitialized) {
       this.initCanvas();
+    }
+    // Rendre le QR dès que le canvas #qrCanvas est disponible dans le DOM
+    if (this.pendingQrRender && this.qrCanvasRef) {
+      this.pendingQrRender = false;
+      this.renderQr();
     }
   }
 
@@ -183,10 +192,10 @@ export class MaSignatureComponent implements OnInit, OnDestroy, AfterViewChecked
       const image = this.canvasRef.nativeElement.toDataURL('image/png');
       dto = { type: 'manuscrite', imageBase64: image };
     } else if (this.onglet === 'typographique') {
-      if (!this.texteSignature.trim()) { this.toastr.warning('Saisissez votre nom.'); return; }
+      if (!this.texteSignature.trim()) { this.toastr.warning(this.translate.instant('signature.enterName')); return; }
       dto = { type: 'typographique', imageBase64: this.apercuTypo, police: this.policeChoisie };
     } else {
-      if (!this.uploadPreview) { this.toastr.warning('Sélectionnez un fichier.'); return; }
+      if (!this.uploadPreview) { this.toastr.warning(this.translate.instant('signature.selectFile')); return; }
       dto = { type: 'upload', imageBase64: this.uploadPreview };
     }
 
@@ -205,7 +214,7 @@ export class MaSignatureComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   async supprimer() {
-    const ok = await this.confirm.confirm({ titre: 'Supprimer la signature', message: 'Êtes-vous sûr de vouloir supprimer votre signature enregistrée ?', labelConfirm: 'Supprimer', danger: true });
+    const ok = await this.confirm.confirm({ titre: this.translate.instant('signature.deleteTitle'), message: this.translate.instant('signature.deleteConfirm'), labelConfirm: this.translate.instant('common.delete'), danger: true });
     if (!ok) return;
     this.service.delete().subscribe({
       next: () => { this.signatureExistante = null; this.toastr.success('Signature supprimée.'); },
@@ -236,7 +245,9 @@ export class MaSignatureComponent implements OnInit, OnDestroy, AfterViewChecked
         this.qrSession = s;
         this.qrLoading = false;
         this.qrStatus = 'waiting';
-        setTimeout(() => this.renderQr(), 100);
+        // Le canvas #qrCanvas n'est pas encore dans le DOM ici
+        // ngAfterViewChecked va détecter quand il sera disponible et appeler renderQr
+        this.pendingQrRender = true;
         this.startPolling();
       },
       error: () => { this.qrLoading = false; this.toastr.error('Erreur lors de la génération.'); }
@@ -246,8 +257,10 @@ export class MaSignatureComponent implements OnInit, OnDestroy, AfterViewChecked
   async renderQr() {
     if (!this.qrSession || !this.qrCanvasRef) return;
     try {
-      const QRCode = await import('qrcode');
-      await QRCode.toCanvas(this.qrCanvasRef.nativeElement, this.qrSession.urlMobile, {
+      const qrcodeModule = await import('qrcode');
+      // Le dynamic import peut exposer les méthodes sur .default ou directement
+      const toCanvas = (qrcodeModule as any).default?.toCanvas ?? (qrcodeModule as any).toCanvas;
+      await toCanvas(this.qrCanvasRef.nativeElement, this.qrSession.urlMobile, {
         width: 200, margin: 2,
         color: { dark: '#000000', light: '#ffffff' }
       });

@@ -35,7 +35,10 @@
           <label>Mot de passe</label>
           <div class="input-wrap">
             <span class="input-icon">🔒</span>
-            <input type="password" formControlName="motDePasse" placeholder="••••••••" />
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="motDePasse" placeholder="••••••••" />
+            <button type="button" class="toggle-pwd" (click)="showPassword = !showPassword" tabindex="-1">
+              <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
           </div>
         </div>
 

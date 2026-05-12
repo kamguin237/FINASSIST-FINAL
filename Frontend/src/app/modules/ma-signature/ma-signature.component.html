@@ -1,18 +1,18 @@
 <div class="page-header">
-  <h2>Ma Signature</h2>
-  <span class="page-sub">Créez et enregistrez votre signature personnelle</span>
+  <h2>{{ 'signature.title' | translate }}</h2>
+  <span class="page-sub">{{ 'signature.subtitle' | translate }}</span>
 </div>
 
 <!-- Signature existante -->
 @if (signatureExistante) {
   <div class="sig-existante-card">
     <div class="sig-existante-header">
-      <span class="sig-badge">✅ Signature enregistrée</span>
-      <span class="sig-meta">{{ signatureExistante.type }} — modifiée le {{ signatureExistante.dateModification | date:'dd/MM/yyyy HH:mm' }}</span>
-      <button class="btn-danger-sm" (click)="supprimer()">🗑 Supprimer</button>
+      <span class="sig-badge">✅ {{ 'signature.saved' | translate }}</span>
+      <span class="sig-meta">{{ signatureExistante.type }} — {{ 'signature.modifiedOn' | translate }} {{ signatureExistante.dateModification | date:'dd/MM/yyyy HH:mm' }}</span>
+      <button class="btn-danger-sm" (click)="supprimer()">🗑 {{ 'common.delete' | translate }}</button>
     </div>
     <div class="sig-preview-wrap">
-      <img [src]="signatureExistante.imageBase64" alt="Ma signature" class="sig-preview-img" />
+      <img [src]="signatureExistante.imageBase64" [alt]="'signature.title' | translate" class="sig-preview-img" />
     </div>
   </div>
 }
@@ -20,16 +20,16 @@
 <!-- Onglets -->
 <div class="sig-card">
   <div class="onglets">
-    <button [class.active]="onglet === 'manuscrite'"    (click)="setOnglet('manuscrite')">✍ Manuscrite</button>
-    <button [class.active]="onglet === 'typographique'" (click)="setOnglet('typographique')">🔤 Typographique</button>
-    <button [class.active]="onglet === 'upload'"        (click)="setOnglet('upload')">📁 Importer</button>
-    <button [class.active]="onglet === 'qrcode'"        (click)="setOnglet('qrcode')">⬛ QR Code</button>
+    <button [class.active]="onglet === 'manuscrite'"    (click)="setOnglet('manuscrite')">✍ {{ 'signature.handwritten' | translate }}</button>
+    <button [class.active]="onglet === 'typographique'" (click)="setOnglet('typographique')">🔤 {{ 'signature.typographic' | translate }}</button>
+    <button [class.active]="onglet === 'upload'"        (click)="setOnglet('upload')">📁 {{ 'signature.upload' | translate }}</button>
+    <button [class.active]="onglet === 'qrcode'"        (click)="setOnglet('qrcode')">⬛ {{ 'signature.qrcode' | translate }}</button>
   </div>
 
   <!-- Manuscrite -->
   @if (onglet === 'manuscrite') {
     <div class="onglet-body">
-      <p class="instruction">Dessinez votre signature dans la zone ci-dessous</p>
+      <p class="instruction">{{ 'signature.drawInstruction' | translate }}</p>
       <div class="canvas-wrap">
         <canvas #canvas width="600" height="180" class="sig-canvas"
           (mousedown)="onMouseDown($event)"
@@ -42,15 +42,15 @@
         </canvas>
         <div class="canvas-baseline"></div>
       </div>
-      <button class="btn-secondary" (click)="effacer()">Effacer</button>
+      <button class="btn-secondary" (click)="effacer()">{{ 'signature.clear' | translate }}</button>
     </div>
   }
 
   <!-- Typographique -->
   @if (onglet === 'typographique') {
     <div class="onglet-body">
-      <p class="instruction">Tapez votre nom et choisissez une police</p>
-      <input class="typo-input" [(ngModel)]="texteSignature" placeholder="Votre nom complet" maxlength="50" />
+      <p class="instruction">{{ 'signature.typeInstruction' | translate }}</p>
+      <input class="typo-input" [(ngModel)]="texteSignature" [placeholder]="'signature.fullName' | translate" maxlength="50" />
 
       <div class="polices-list">
         @for (p of polices; track p.value) {
@@ -58,7 +58,7 @@
                   (click)="policeChoisie = p.value">
             <span class="police-name">{{ p.label }}</span>
             <span class="police-apercu" [style.fontFamily]="p.value">
-              {{ texteSignature || 'Votre signature' }}
+              {{ texteSignature || ('signature.yourSignature' | translate) }}
             </span>
           </button>
         }
@@ -69,13 +69,13 @@
   <!-- Upload -->
   @if (onglet === 'upload') {
     <div class="onglet-body">
-      <p class="instruction">Importez une image de votre signature (PNG, JPG)</p>
+      <p class="instruction">{{ 'signature.uploadInstruction' | translate }}</p>
       <label class="upload-zone">
         <input type="file" accept="image/png,image/jpeg" (change)="onFileChange($event)" />
         @if (uploadPreview) {
-          <img [src]="uploadPreview" alt="Aperçu" class="upload-preview" />
+          <img [src]="uploadPreview" [alt]="'signature.preview' | translate" class="upload-preview" />
         } @else {
-          <span>📎 Cliquer pour sélectionner une image</span>
+          <span>📎 {{ 'signature.selectImage' | translate }}</span>
         }
       </label>
     </div>
@@ -85,51 +85,51 @@
   @if (onglet === 'qrcode') {
     <div class="onglet-body qr-body">
       @if (qrLoading) {
-        <div class="qr-loading">Génération du QR Code...</div>
+        <div class="qr-loading">{{ 'signature.generating' | translate }}</div>
       } @else if (qrStatus === 'done') {
         <div class="qr-done">
           <div class="qr-done-icon">✅</div>
-          <h3>Signature reçue !</h3>
-          <p>Votre signature a été enregistrée depuis votre téléphone.</p>
-          <button class="btn-primary" (click)="genererQr()">Générer un nouveau QR Code</button>
+          <h3>{{ 'signature.signatureReceived' | translate }}</h3>
+          <p>{{ 'signature.receivedMessage' | translate }}</p>
+          <button class="btn-primary" (click)="genererQr()">{{ 'signature.generateNew' | translate }}</button>
         </div>
       } @else if (qrStatus === 'expired') {
         <div class="qr-done">
           <div class="qr-done-icon">⏱</div>
-          <h3>Session expirée</h3>
-          <p>Le QR Code a expiré. Générez-en un nouveau.</p>
-          <button class="btn-primary" (click)="genererQr()">Régénérer</button>
+          <h3>{{ 'signature.sessionExpired' | translate }}</h3>
+          <p>{{ 'signature.expiredMessage' | translate }}</p>
+          <button class="btn-primary" (click)="genererQr()">{{ 'signature.regenerate' | translate }}</button>
         </div>
       } @else if (!qrSession) {
         <div class="qr-empty">
-          <p>Scannez un QR Code avec votre téléphone pour créer votre signature.</p>
-          <button class="btn-primary" (click)="genererQr()">⬛ Générer le QR Code</button>
+          <p>{{ 'signature.qrInstruction' | translate }}</p>
+          <button class="btn-primary" (click)="genererQr()">⬛ {{ 'signature.generateQR' | translate }}</button>
         </div>
       } @else {
         <div class="qr-layout">
           <!-- Instructions -->
           <div class="qr-infos">
-            <div class="qr-infos-title">COMMENT ÇA MARCHE</div>
-            <div class="qr-step"><span class="step-num">1</span><span>Scannez le QR Code avec votre téléphone</span></div>
-            <div class="qr-step"><span class="step-num">2</span><span>Dessinez votre signature sur l'écran tactile</span></div>
-            <div class="qr-step"><span class="step-num">3</span><span>Appuyez sur "Envoyer" — la signature apparaît ici automatiquement</span></div>
+            <div class="qr-infos-title">{{ 'signature.howItWorks' | translate }}</div>
+            <div class="qr-step"><span class="step-num">1</span><span>{{ 'signature.step1' | translate }}</span></div>
+            <div class="qr-step"><span class="step-num">2</span><span>{{ 'signature.step2' | translate }}</span></div>
+            <div class="qr-step"><span class="step-num">3</span><span>{{ 'signature.step3' | translate }}</span></div>
 
             <div class="qr-waiting">
               <span class="waiting-dot"></span>
-              En attente de votre signature...
+              {{ 'signature.waitingSignature' | translate }}
             </div>
 
             <div class="qr-expiry">
-              Expire à {{ qrSession.expiration | date:'HH:mm' }}
+              {{ 'signature.expiresAt' | translate }} {{ qrSession.expiration | date:'HH:mm' }}
             </div>
           </div>
 
           <!-- QR Canvas + actions -->
           <div class="qr-panel">
             <canvas #qrCanvas class="qr-canvas"></canvas>
-            <button class="qr-action-btn" (click)="telechargerQr()">⬇ Télécharger PNG</button>
-            <button class="qr-action-btn" (click)="copierLien()">📋 Copier le lien</button>
-            <button class="qr-action-btn" (click)="genererQr()">🔄 Régénérer</button>
+            <button class="qr-action-btn" (click)="telechargerQr()">⬇ {{ 'signature.downloadPNG' | translate }}</button>
+            <button class="qr-action-btn" (click)="copierLien()">📋 {{ 'signature.copyLink' | translate }}</button>
+            <button class="qr-action-btn" (click)="genererQr()">🔄 {{ 'signature.regenerate' | translate }}</button>
           </div>
         </div>
       }
@@ -138,7 +138,7 @@
 
   <div class="sig-footer">
     <button class="btn-primary" (click)="sauvegarder()" [disabled]="saving">
-      {{ saving ? 'Enregistrement...' : '💾 Enregistrer ma signature' }}
+      {{ saving ? ('signature.saving' | translate) : ('signature.save' | translate) }}
     </button>
   </div>
 </div>

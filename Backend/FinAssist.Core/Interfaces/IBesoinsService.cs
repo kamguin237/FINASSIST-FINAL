@@ -6,13 +6,13 @@ public interface IBesoinsService
 {
     Task<IEnumerable<BesoinDTO>> GetAllAsync(int utilisateurId, string roleCode);
     Task<BesoinDTO> GetByIdAsync(int id, int utilisateurId, string roleCode);
-    Task<BesoinDTO> CreateAsync(CreateBesoinDTO dto, int utilisateurId);
+    Task<BesoinDTO> CreateAsync(CreateBesoinDTO dto, int utilisateurId, string roleCode);
     Task<BesoinDTO> UpdateAsync(int id, UpdateBesoinDTO dto, int utilisateurId);
     Task<BesoinDTO> EnregistrerAsync(int id, int utilisateurId);
     Task<BesoinDTO> SoumettreAsync(int id, int utilisateurId);
     Task<DocumentDTO> AjouterPieceJointeAsync(int id, string nom, string type, byte[] contenu);
-    Task<IEnumerable<DocumentDTO>> GetDocumentsAsync(int id);
-    Task<(byte[] contenu, string nom, string type)> GetDocumentContenuAsync(int besoinId, int documentId);
+    Task<IEnumerable<DocumentDTO>> GetDocumentsAsync(int id, int utilisateurId, string roleCode);
+    Task<(byte[] contenu, string nom, string type)> GetDocumentContenuAsync(int besoinId, int documentId, int utilisateurId, string roleCode);
     Task SupprimerDocumentAsync(int besoinId, int documentId);
     Task<IEnumerable<HistoriqueDTO>> GetHistoriqueAsync(int id);
     Task<IEnumerable<CategorieDTO>> GetAllCategoriesAsync();

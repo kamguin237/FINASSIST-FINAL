@@ -50,16 +50,17 @@ public class AuditMiddleware(RequestDelegate next)
             if (!string.IsNullOrWhiteSpace(clientOs))
                 os = clientOs;
 
-            // ── Géolocalisation (timeout 2s) ──────────────────────────────
+            // ── Géolocalisation (timeout 500ms, non-bloquant) ────────────
             var (pays, ville) = ("Inconnu", "Inconnu");
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                (pays, ville) = await geoIpService.GetLocalisationAsync(ip);
+                using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+                (pays, ville) = await geoIpService.GetLocalisationAsync(ip).WaitAsync(cts.Token);
             }
-            catch { /* silencieux */ }
+            catch { /* silencieux — géolocalisation optionnelle */ }
 
-            await logService.LoggerAsync(
+            // Log en arrière-plan pour ne pas bloquer la réponse HTTP
+            _ = logService.LoggerAsync(
                 action:              $"{methode} {path}",
                 entiteType:          DeduireEntite(path),
                 entiteId:            DeduireId(path),
@@ -68,7 +69,7 @@ public class AuditMiddleware(RequestDelegate next)
                 systemeExploitation: os,
                 navigateur:          navigateur,
                 pays:                pays,
-                ville:               ville);
+                ville:               ville).ConfigureAwait(false);
         }
     }
 

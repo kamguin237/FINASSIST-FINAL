@@ -1,7 +1,7 @@
 <div class="page-header">
-  <h2>Circuits de validation</h2>
+  <h2>{{ 'workflow.title' | translate }}</h2>
   @if (auth.hasPermission('WORKFLOW_CREER')) {
-    <button class="btn-primary" (click)="openCreate()">+ Nouveau circuit</button>
+    <button class="btn-primary" (click)="openCreate()">+ {{ 'workflow.newWorkflow' | translate }}</button>
   }
 </div>
 
@@ -9,20 +9,20 @@
   <div class="modal-overlay" (click)="showForm = false">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ editId ? 'Modifier' : 'Créer' }} un circuit</h3>
+        <h3>{{ editId ? ('workflow.editWorkflow' | translate) : ('workflow.createWorkflow' | translate) }}</h3>
         <button class="close-btn" (click)="showForm = false">✕</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()" class="modal-body">
         <div class="field">
-          <label>Nom *</label>
+          <label>{{ 'workflow.workflowName' | translate }} *</label>
           <input formControlName="nom" type="text" />
         </div>
         <div class="field">
-          <label>Description</label>
+          <label>{{ 'workflow.workflowDescription' | translate }}</label>
           <input formControlName="description" type="text" />
         </div>
 
-        <h4>Étapes</h4>
+        <h4>{{ 'workflow.steps' | translate }}</h4>
         <div formArrayName="etapes">
           @for (etape of etapes.controls; track $index) {
             <div [formGroupName]="$index" class="etape-row">
@@ -30,24 +30,27 @@
               <app-custom-select
                 [options]="roleOptions"
                 [selected]="etape.get('roleRequis')?.value"
-                placeholder="Rôle requis"
+                [placeholder]="'workflow.requiredRole' | translate"
                 (selectedChange)="etape.get('roleRequis')?.setValue($any($event))"
                 class="role-select">
               </app-custom-select>
-              <label><input type="checkbox" formControlName="approbationRequise" /> Approbation</label>
-              <label><input type="checkbox" formControlName="signatureRequise" /> Signature</label>
-              <input formControlName="delaiMaxJours" type="time" placeholder="HH:mm" class="delai-input" />
-              <label><input type="checkbox" formControlName="estDerniereEtape" /> Dernière</label>
+              <label><input type="checkbox" formControlName="approbationRequise" /> {{ 'workflow.approval' | translate }}</label>
+              <label><input type="checkbox" formControlName="signatureRequise" /> {{ 'workflow.signature' | translate }}</label>
+              <app-time-picker
+                [value]="etape.get('delaiMaxJours')?.value || ''"
+                (valueChange)="etape.get('delaiMaxJours')?.setValue($event)">
+              </app-time-picker>
+              <label><input type="checkbox" formControlName="estDerniereEtape" /> {{ 'workflow.lastStep' | translate }}</label>
               <button type="button" (click)="removeEtape($index)" class="btn-sm danger">✕</button>
             </div>
           }
         </div>
-        <button type="button" (click)="addEtape()" class="btn-secondary">+ Étape</button>
+        <button type="button" (click)="addEtape()" class="btn-secondary">+ {{ 'workflow.step' | translate }}</button>
 
         <div class="modal-footer">
-          <button type="button" (click)="showForm = false" class="btn-secondary">Annuler</button>
+          <button type="button" (click)="showForm = false" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
           <button type="submit" [disabled]="form.invalid || !derniereEtapeDefinie || !tousDelaisValides" class="btn-primary">
-            Enregistrer
+            {{ 'common.save' | translate }}
           </button>
         </div>
       </form>
@@ -60,12 +63,12 @@
     <div class="circuit-card">
       <div class="circuit-header" (click)="select(c)">
         <strong>{{ c.nom }}</strong>
-        <span class="etapes-count">{{ c.etapes.length }} étape(s)</span>
+        <span class="etapes-count">{{ c.etapes.length }} {{ 'workflow.stepsCount' | translate }}</span>
         @if (auth.hasPermission('WORKFLOW_MODIFIER')) {
-          <button class="btn-sm" (click)="openEdit(c); $event.stopPropagation()">Modifier</button>
+          <button class="btn-sm" (click)="openEdit(c); $event.stopPropagation()">{{ 'common.edit' | translate }}</button>
         }
         @if (auth.hasPermission('WORKFLOW_SUPPRIMER')) {
-          <button class="btn-sm danger" (click)="delete(c.id); $event.stopPropagation()">Supprimer</button>
+          <button class="btn-sm danger" (click)="delete(c.id); $event.stopPropagation()">{{ 'common.delete' | translate }}</button>
         }
       </div>
       @if (selected?.id === c.id) {
@@ -74,10 +77,10 @@
             <div class="etape">
               <span class="ordre">{{ e.ordre }}</span>
               <span>{{ e.roleRequis }}</span>
-              @if (e.approbationRequise) { <span class="tag">Approbation</span> }
-              @if (e.signatureRequise) { <span class="tag">Signature</span> }
+              @if (e.approbationRequise) { <span class="tag">{{ 'workflow.approval' | translate }}</span> }
+              @if (e.signatureRequise) { <span class="tag">{{ 'workflow.signature' | translate }}</span> }
               <span class="tag muted">⏱ {{ minutesToHHmm(e.delaiMaxJours) }}</span>
-              @if (e.estDerniereEtape) { <span class="tag last">Dernière</span> }
+              @if (e.estDerniereEtape) { <span class="tag last">{{ 'workflow.lastStep' | translate }}</span> }
             </div>
           }
         </div>

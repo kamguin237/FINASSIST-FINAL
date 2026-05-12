@@ -23,6 +23,7 @@ public class AuthService(IAuthRepository authRepo, IPasswordService passwordServ
         {
             AccessToken = accessToken,
             Expiration = DateTime.UtcNow.AddMinutes(60),
+            DoitChangerMotDePasse = user.DoitChangerMotDePasse,
             Utilisateur = new UtilisateurInfoDTO
             {
                 Id = user.Id,
@@ -35,4 +36,21 @@ public class AuthService(IAuthRepository authRepo, IPasswordService passwordServ
     }
 
     public Task LogoutAsync(int userId) => Task.CompletedTask;
+
+    public async Task ChangerMotDePasseAsync(int userId, ChangePasswordDTO dto)
+    {
+        var user = await authRepo.GetByIdAsync(userId)
+            ?? throw new UnauthorizedAccessException("Utilisateur introuvable.");
+
+        if (!passwordService.Verify(dto.AncienMotDePasse, user.MotDePasse))
+            throw new UnauthorizedAccessException("Mot de passe actuel incorrect.");
+
+        if (dto.NouveauMotDePasse.Length < 8)
+            throw new ArgumentException("Le nouveau mot de passe doit contenir au moins 8 caractères.");
+
+        user.MotDePasse = passwordService.Hash(dto.NouveauMotDePasse);
+        user.DoitChangerMotDePasse = false;
+        user.DateModification = DateTime.UtcNow;
+        await authRepo.UpdateAsync(user);
+    }
 }

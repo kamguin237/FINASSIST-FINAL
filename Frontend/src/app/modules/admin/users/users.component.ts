@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule } from '@ngx-translate/core';
 import { UsersService } from '../../../core/services/users.service';
 import { RolesService } from '../../../core/services/roles.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
@@ -21,7 +22,7 @@ function finstarEmailValidator(control: AbstractControl): ValidationErrors | nul
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, RoleOptionsPipe],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, RoleOptionsPipe, TranslateModule],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
@@ -42,6 +43,46 @@ export class UsersComponent implements OnInit {
     email:  ['', [Validators.required, Validators.email, finstarEmailValidator]],
     roleId: [null as number | null, Validators.required]
   });
+
+  // Flag : l'admin a modifié manuellement l'email → stopper la génération auto
+  private emailManuallyEdited = false;
+
+  private slugify(str: string): string {
+    return str.trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // supprimer accents
+      .replace(/\s+/g, '-')            // espaces → tirets
+      .replace(/[^a-z0-9-]/g, '-')     // caractères spéciaux → tirets
+      .replace(/-+/g, '-')             // tirets multiples → un seul
+      .replace(/^-|-$/g, '');          // tirets en début/fin
+  }
+
+  private genererEmail(): string {
+    const prenom = this.form.get('prenom')?.value ?? '';
+    const nom    = this.form.get('nom')?.value ?? '';
+    if (!prenom.trim() && !nom.trim()) return '';
+    return `${this.slugify(prenom)}.${this.slugify(nom)}@finstar-cm.com`;
+  }
+
+  onEmailInput() {
+    const val = this.form.get('email')?.value ?? '';
+    // Si l'admin efface complètement → reprendre la génération auto
+    if (val === '') {
+      this.emailManuallyEdited = false;
+      this.form.get('email')?.setValue(this.genererEmail(), { emitEvent: false });
+    } else {
+      // L'admin a tapé quelque chose de différent de la valeur générée
+      const generated = this.genererEmail();
+      if (val !== generated) this.emailManuallyEdited = true;
+    }
+  }
+
+  onNomOrPrenomChange() {
+    if (!this.emailManuallyEdited) {
+      this.form.get('email')?.setValue(this.genererEmail(), { emitEvent: false });
+    }
+  }
 
   // Modale permissions
   showPermModal = false;
@@ -139,6 +180,7 @@ export class UsersComponent implements OnInit {
   // ── Modale création/modification ───────────────────────────────────────────
   openCreate() {
     this.editId = null; this.erreur = ''; this.form.reset();
+    this.emailManuallyEdited = false;
     this.showModal = true;
   }
 

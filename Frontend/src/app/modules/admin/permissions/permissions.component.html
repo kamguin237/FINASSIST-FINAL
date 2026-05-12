@@ -1,9 +1,9 @@
-<h2>Permissions</h2>
+<h2>{{ 'permissions.title' | translate }}</h2>
 
 <table class="table">
   <thead>
-    <tr><th>Code</th><th>Module</th><th>Fonctionnalité</th><th>Description</th>
-      @if (auth.hasPermission('PERMISSION_MODIFIER')) { <th>Actions</th> }
+    <tr><th>{{ 'permissions.code' | translate }}</th><th>{{ 'permissions.module' | translate }}</th><th>{{ 'permissions.feature' | translate }}</th><th>{{ 'permissions.description' | translate }}</th>
+      @if (auth.hasPermission('PERMISSION_MODIFIER')) { <th>{{ 'common.actions' | translate }}</th> }
     </tr>
   </thead>
   <tbody>
@@ -14,7 +14,7 @@
         <td>{{ p.fonctionnalite }}</td>
         <td>{{ p.description }}</td>
         @if (auth.hasPermission('PERMISSION_MODIFIER')) {
-          <td><button class="btn-sm" (click)="openEdit(p)">Modifier</button></td>
+          <td><button class="btn-sm" (click)="openEdit(p)">{{ 'common.edit' | translate }}</button></td>
         }
       </tr>
     }
@@ -24,14 +24,14 @@
 @if (editPerm) {
   <div class="edit-overlay">
     <form [formGroup]="form" (ngSubmit)="submit()" class="form-card">
-      <h3>Modifier la permission</h3>
-      <div class="field"><label>Code</label><input formControlName="code" /></div>
-      <div class="field"><label>Description</label><input formControlName="description" /></div>
-      <div class="field"><label>Fonctionnalité</label><input formControlName="fonctionnalite" /></div>
-      <div class="field"><label>Module</label><input formControlName="module" /></div>
+      <h3>{{ 'permissions.edit' | translate }}</h3>
+      <div class="field"><label>{{ 'permissions.code' | translate }}</label><input formControlName="code" /></div>
+      <div class="field"><label>{{ 'permissions.description' | translate }}</label><input formControlName="description" /></div>
+      <div class="field"><label>{{ 'permissions.feature' | translate }}</label><input formControlName="fonctionnalite" /></div>
+      <div class="field"><label>{{ 'permissions.module' | translate }}</label><input formControlName="module" /></div>
       <div class="actions">
-        <button type="button" (click)="editPerm = null" class="btn-secondary">Annuler</button>
-        <button type="submit" class="btn-primary">Enregistrer</button>
+        <button type="button" (click)="editPerm = null" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
+        <button type="submit" class="btn-primary">{{ 'common.save' | translate }}</button>
       </div>
     </form>
   </div>

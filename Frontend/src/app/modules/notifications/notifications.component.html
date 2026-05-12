@@ -1,17 +1,17 @@
 <div class="page-header">
-  <h2>Notifications</h2>
+  <h2>{{ 'notifications.title' | translate }}</h2>
   <div class="header-actions">
     <div class="filtre-notif">
       <app-custom-select
         [options]="lectureOptions"
         [selected]="filtreLecture"
-        placeholder="-- Tous les messages --"
+        [placeholder]="'notifications.allMessages' | translate"
         (selectedChange)="onFiltreLectureChange($any($event))">
       </app-custom-select>
-      <button class="btn-primary" (click)="reinitialiserFiltre()">Réinitialiser</button>
+      <button class="btn-primary" (click)="reinitialiserFiltre()">{{ 'notifications.resetFilter' | translate }}</button>
     </div>
     @if (auth.hasPermission('NOTIFICATION_ENVOYER')) {
-      <button class="btn-primary" (click)="showForm = !showForm">+ Envoyer</button>
+      <button class="btn-primary" (click)="showForm = !showForm">+ {{ 'notifications.send' | translate }}</button>
     }
   </div>
 </div>
@@ -20,29 +20,35 @@
   <div class="modal-overlay" (click)="fermerForm()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Envoyer une notification</h3>
+        <h3>{{ 'notifications.sendNotification' | translate }}</h3>
         <button class="close-btn" (click)="fermerForm()">✕</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="envoyer()" class="modal-body">
         <div class="field">
-          <label>Message *</label>
+          <label>{{ 'notifications.message' | translate }} *</label>
           <textarea formControlName="message" rows="3"></textarea>
         </div>
         <div class="field">
-          <label>Type</label>
+          <label>{{ 'notifications.type' | translate }}</label>
           <app-custom-select
-            [options]="[{value:'ACCUSE_RECEPTION',label:'Accusé de réception'},{value:'VALIDATION',label:'Validation'},{value:'REJET',label:'Rejet'},{value:'SIGNATURE_REQUISE',label:'Signature requise'},{value:'RAPPEL',label:'Rappel'}]"
+            [options]="[
+              {value:'ACCUSE_RECEPTION',label:('notifications.acknowledgment' | translate)},
+              {value:'VALIDATION',label:('notifications.validation' | translate)},
+              {value:'REJET',label:('notifications.rejection' | translate)},
+              {value:'SIGNATURE_REQUISE',label:('notifications.signatureRequired' | translate)},
+              {value:'RAPPEL',label:('notifications.reminder' | translate)}
+            ]"
             [selected]="form.controls['type'].value"
             (selectedChange)="form.controls['type'].setValue($any($event))">
           </app-custom-select>
         </div>
         @if (utilisateurs.length > 0) {
           <div class="field">
-            <label>Destinataires *</label>
+            <label>{{ 'notifications.recipients' | translate }} *</label>
             <div class="destinataires-list">
               <label class="dest-item">
                 <input type="checkbox" (change)="toggleTous($event)" [checked]="tousSelectionnes" />
-                <span>Tous les utilisateurs</span>
+                <span>{{ 'notifications.allUsers' | translate }}</span>
               </label>
               @for (u of utilisateurs; track u.id) {
                 <label class="dest-item">
@@ -57,8 +63,8 @@
           </div>
         }
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="fermerForm()">Annuler</button>
-          <button type="submit" [disabled]="form.invalid || selectedIds.length === 0" class="btn-primary">Envoyer</button>
+          <button type="button" class="btn-secondary" (click)="fermerForm()">{{ 'common.cancel' | translate }}</button>
+          <button type="submit" [disabled]="form.invalid || selectedIds.length === 0" class="btn-primary">{{ 'notifications.send' | translate }}</button>
         </div>
       </form>
     </div>
@@ -74,7 +80,7 @@
         <small>{{ n.dateEnvoi | date:'dd/MM/yyyy HH:mm' }}</small>
       </div>
       @if (!n.lu) {
-        <button class="btn-sm" (click)="marquerLu(n.id)">Marquer lu</button>
+        <button class="btn-sm" (click)="marquerLu(n.id)">{{ 'notifications.markAsRead' | translate }}</button>
       }
     </div>
   }

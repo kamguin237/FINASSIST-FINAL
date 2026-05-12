@@ -38,7 +38,7 @@ public class BesoinsController(IBesoinsService besoinsService) : ControllerBase
     {
         try
         {
-            var created = await besoinsService.CreateAsync(dto, CurrentUserId);
+            var created = await besoinsService.CreateAsync(dto, CurrentUserId, CurrentUserRole);
 
             if (fichier is { Length: > 0 })
             {
@@ -88,8 +88,9 @@ public class BesoinsController(IBesoinsService besoinsService) : ControllerBase
     [RequirePermission("BESOIN_CONSULTER")]
     public async Task<IActionResult> GetDocuments(int id)
     {
-        try { return Ok(await besoinsService.GetDocumentsAsync(id)); }
+        try { return Ok(await besoinsService.GetDocumentsAsync(id, CurrentUserId, CurrentUserRole)); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
     [HttpDelete("{id:int}/pieces-jointes/{documentId:int}")]
@@ -110,12 +111,13 @@ public class BesoinsController(IBesoinsService besoinsService) : ControllerBase
     {
         try
         {
-            var (contenu, nom, type) = await besoinsService.GetDocumentContenuAsync(id, documentId);
+            var (contenu, nom, type) = await besoinsService.GetDocumentContenuAsync(id, documentId, CurrentUserId, CurrentUserRole);
             var mimeType = string.IsNullOrEmpty(type) ? "application/pdf" : type;
             Response.Headers.Append("Content-Disposition", $"inline; filename=\"{Uri.EscapeDataString(nom)}\"");
             return File(contenu, mimeType);
         }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (UnauthorizedAccessException) { return Forbid(); }
         catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
     }
 

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateModule } from '@ngx-translate/core';
 import { CategoriesService } from '../../core/services/categories.service';
 import { WorkflowService } from '../../core/services/workflow.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -14,7 +15,7 @@ import { ConfirmService } from '../../core/services/confirm.service';
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, CircuitOptionsPipe],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, CircuitOptionsPipe, TranslateModule],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss'
 })

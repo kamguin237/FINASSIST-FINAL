@@ -8,7 +8,8 @@ public class WorkflowService(
     IWorkflowRepository workflowRepo,
     IBesoinsRepository besoinsRepo,
     ISignatureRepository signatureRepo,
-    INotificationService notificationService) : IWorkflowService
+    INotificationService notificationService,
+    IBesoinsHubService besoinsHubService) : IWorkflowService
 {
     // ── Valider un besoin ────────────────────────────────────────────────────
 
@@ -84,13 +85,17 @@ public class WorkflowService(
         besoin.DateModification = DateTime.UtcNow;
         await besoinsRepo.UpdateAsync(besoin);
 
+        var description = dto.Motif ?? $"Décision étape {etapeCourante.Ordre} ({etapeCourante.RoleRequis}) : {decision}";
         await besoinsRepo.AddHistoriqueAsync(new Historique
         {
             BesoinId = besoinId,
             Action = $"{decision}_ETAPE{etapeCourante.Ordre}",
-            Description = dto.Motif ?? $"Décision étape {etapeCourante.Ordre} ({etapeCourante.RoleRequis}) : {decision}",
+            Description = description,
             DateAction = DateTime.UtcNow
         });
+
+        await besoinsHubService.NotifierHistoriqueAsync(besoinId, $"{decision}_ETAPE{etapeCourante.Ordre}", description);
+        await besoinsHubService.NotifierStatutBesoinAsync(besoinId, nouveauStatut);
 
         // Notification dynamique selon la décision et le nouveau statut
         if (validation.Decision == DecisionValidation.REJETE)
@@ -179,13 +184,17 @@ public class WorkflowService(
         besoin.DateModification = DateTime.UtcNow;
         await besoinsRepo.UpdateAsync(besoin);
 
+        var description = $"Transmis à l'étape {prochaine.Ordre} ({prochaine.RoleRequis}).";
         await besoinsRepo.AddHistoriqueAsync(new Historique
         {
             BesoinId = besoinId,
             Action = "TRANSMISSION",
-            Description = $"Transmis à l'étape {prochaine.Ordre} ({prochaine.RoleRequis}).",
+            Description = description,
             DateAction = DateTime.UtcNow
         });
+
+        await besoinsHubService.NotifierHistoriqueAsync(besoinId, "TRANSMISSION", description);
+        await besoinsHubService.NotifierStatutBesoinAsync(besoinId, besoin.Statut);
 
         // Notifier les utilisateurs du rôle de la prochaine étape
         await notificationService.NotifierTransmissionAsync(besoinId, besoin.Titre, prochaine.RoleRequis ?? string.Empty, nomTransmetteur);

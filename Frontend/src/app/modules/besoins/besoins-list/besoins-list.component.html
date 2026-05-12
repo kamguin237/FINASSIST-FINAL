@@ -1,30 +1,30 @@
 <div class="page-header">
-  <h2>Besoins</h2>
+  <h2>{{ 'besoins.title' | translate }}</h2>
   <div class="header-actions">
     <div class="filtre-statut">
       <app-custom-select
         [options]="statutOptions"
         [selected]="filtreStatut"
-        placeholder="-- Choisir un statut --"
+        [placeholder]="'besoins.chooseStatus' | translate"
         (selectedChange)="onFiltreStatutChange($any($event))">
       </app-custom-select>
-      <button class="btn-primary" (click)="reinitialiserFiltre()">Réinitialiser</button>
+      <button class="btn-primary" (click)="reinitialiserFiltre()">{{ 'besoins.resetFilter' | translate }}</button>
     </div>
     @if (auth.hasPermission('BESOIN_CREER')) {
-      <button class="btn-primary" (click)="openCreate()">+ Nouveau besoin</button>
+      <button class="btn-primary" (click)="openCreate()">+ {{ 'besoins.newRequest' | translate }}</button>
     }
   </div>
 </div>
 
 @if (loading) {
-  <p>Chargement...</p>
+  <p>{{ 'common.loading' | translate }}</p>
 } @else {
   <div class="table-card">
     <table class="table">
     <thead>
       <tr>
-        <th>Titre</th><th>Catégorie</th><th>Statut</th>
-        <th>Importance</th><th>Créé par</th><th>Date</th><th>Actions</th>
+        <th>{{ 'besoins.titleField' | translate }}</th><th>{{ 'besoins.category' | translate }}</th><th>{{ 'besoins.status' | translate }}</th>
+        <th>{{ 'besoins.importance' | translate }}</th><th>{{ 'besoins.createdBy' | translate }}</th><th>{{ 'besoins.date' | translate }}</th><th>{{ 'besoins.actions' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -32,20 +32,20 @@
         <tr>
           <td><a [routerLink]="['/besoins', b.id]">{{ b.titre }}</a></td>
           <td>
-            <button class="btn-categorie" (click)="ouvrirCircuit(b)" title="Voir le circuit de validation">
+            <button class="btn-categorie" (click)="ouvrirCircuit(b)" [title]="'besoins.viewWorkflow' | translate">
               {{ b.categorieNom }}
             </button>
           </td>
-          <td><span class="badge">{{ b.statut }}</span></td>
+          <td><span [class]="badgeClass(b.statut)">{{ labelStatut(b.statut) }}</span></td>
           <td>{{ b.niveauImportance }}</td>
           <td>{{ b.utilisateurNom }}</td>
-          <td>{{ b.dateCreation | date:'dd/MM/yyyy' }}</td>
+          <td><span class="date-badge">{{ b.dateCreation | date:'dd/MM/yyyy' }}</span></td>
           <td class="actions">
-            @if (auth.hasPermission('BESOIN_MODIFIER') && auth.currentUser()?.id === b.utilisateurId) {
-              <button class="btn-sm" (click)="openEdit(b)">Modifier</button>
+            @if (auth.hasPermission('BESOIN_MODIFIER') && auth.currentUser()?.id === b.utilisateurId && b.statut === 'BROUILLON') {
+              <button class="btn-sm" (click)="openEdit(b)">{{ 'besoins.modify' | translate }}</button>
             }
             @if (auth.hasPermission('BESOIN_SUPPRIMER') && peutSupprimer(b)) {
-              <button class="btn-sm danger" (click)="delete(b.id)">Supprimer</button>
+              <button class="btn-sm danger" (click)="delete(b.id)">{{ 'common.delete' | translate }}</button>
             }
           </td>
         </tr>
@@ -60,21 +60,21 @@
   <div class="modal-overlay" (click)="fermerModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Nouveau besoin</h3>
+        <h3>{{ 'besoins.newRequest' | translate }}</h3>
         <button class="close-btn" (click)="fermerModal()">✕</button>
       </div>
       <div class="modal-body">
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="field">
-            <label>Titre *</label>
-            <input formControlName="titre" type="text" placeholder="Titre du besoin" />
+            <label>{{ 'besoins.titleField' | translate }} *</label>
+            <input formControlName="titre" type="text" [placeholder]="'besoins.titleField' | translate" />
           </div>
           <div class="field">
-            <label>Description *</label>
-            <textarea formControlName="description" rows="3" placeholder="Décrivez le besoin..."></textarea>
+            <label>{{ 'besoins.description' | translate }} *</label>
+            <textarea formControlName="description" rows="3" [placeholder]="'besoins.description' | translate"></textarea>
           </div>
           <div class="field">
-            <label>Niveau d'importance *</label>
+            <label>{{ 'besoins.importance' | translate }} *</label>
             <app-custom-select
               [options]="niveaux | niveauOptions"
               [selected]="form.controls['niveauImportance'].value"
@@ -83,7 +83,7 @@
             </app-custom-select>
           </div>
           <div class="field">
-            <label>Catégorie *</label>
+            <label>{{ 'besoins.category' | translate }} *</label>
             <app-custom-select
               [options]="categories | categorieOptions"
               [selected]="form.controls['categorieId'].value"
@@ -92,7 +92,7 @@
             </app-custom-select>
           </div>
           <div class="field">
-            <label>Pièce jointe <span class="optional">(optionnel)</span></label>
+            <label>{{ 'besoins.attachments' | translate }} <span class="optional">{{ 'besoins.optional' | translate }}</span></label>
             @if (fichierSelectionne) {
               <div class="fichier-selectionne">
                 <span class="fichier-nom">📄 {{ fichierSelectionne.name }}</span>
@@ -101,14 +101,14 @@
             } @else {
               <label class="upload-zone-inline">
                 <input type="file" (change)="onFichierChange($event)" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
-                <span>📎 Cliquer pour joindre un fichier</span>
+                <span>📎 {{ 'besoins.clickToAttach' | translate }}</span>
               </label>
             }
           </div>
           <div class="modal-actions">
-            <button type="button" (click)="fermerModal()" class="btn-secondary">Annuler</button>
+            <button type="button" (click)="fermerModal()" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
             <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
-              {{ saving ? 'Création...' : 'Créer' }}
+              {{ saving ? ('besoins.creating' | translate) : ('common.create' | translate) }}
             </button>
           </div>
         </form>
@@ -122,12 +122,12 @@
   <div class="modal-overlay" (click)="fermerCircuit()">
     <div class="modal circuit-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Circuit de validation — {{ circuitBesoin?.categorieNom }}</h3>
+        <h3>{{ 'besoins.workflowTitle' | translate }} {{ circuitBesoin?.categorieNom }}</h3>
         <button class="close-btn" (click)="fermerCircuit()">✕</button>
       </div>
       <div class="modal-body">
         @if (circuitLoading) {
-          <p class="loading-text">Chargement...</p>
+          <p class="loading-text">{{ 'common.loading' | translate }}</p>
         } @else if (circuitDetail?.circuit) {
           <div class="circuit-info">
             <span class="circuit-nom">{{ circuitDetail!.circuit!.nom }}</span>
@@ -136,7 +136,7 @@
             }
           </div>
           <div class="statut-actuel">
-            <span class="statut-label">Statut actuel :</span>
+            <span class="statut-label">{{ 'besoins.currentStatus' | translate }}</span>
             <span class="badge">{{ circuitBesoin?.statut }}</span>
           </div>
           <div class="etapes-list">
@@ -146,10 +146,10 @@
                 <div class="etape-body">
                   <div class="etape-role">{{ e.roleRequis }}</div>
                   <div class="etape-flags">
-                    @if (e.approbationRequise) { <span class="flag">✅ Approbation</span> }
-                    @if (e.signatureRequise)   { <span class="flag">✍ Signature</span> }
+                    @if (e.approbationRequise) { <span class="flag">✅ {{ 'besoins.approval' | translate }}</span> }
+                    @if (e.signatureRequise)   { <span class="flag">✍ {{ 'besoins.signature' | translate }}</span> }
                     @if (e.delaiMaxJours > 0)  { <span class="flag">⏱ {{ minutesToHHmm(e.delaiMaxJours) }}</span> }
-                    @if (e.estDerniereEtape)   { <span class="flag last">🏁 Dernière étape</span> }
+                    @if (e.estDerniereEtape)   { <span class="flag last">🏁 {{ 'besoins.lastStep' | translate }}</span> }
                   </div>
                 </div>
                 <div class="etape-statut-icon">
@@ -162,11 +162,11 @@
             }
           </div>
         } @else {
-          <p class="no-circuit">Aucun circuit configuré pour cette catégorie.</p>
+          <p class="no-circuit">{{ 'besoins.noWorkflow' | translate }}</p>
         }
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="fermerCircuit()">Fermer</button>
+        <button class="btn-secondary" (click)="fermerCircuit()">{{ 'common.close' | translate }}</button>
       </div>
     </div>
   </div>
@@ -175,21 +175,21 @@
   <div class="modal-overlay" (click)="fermerEditModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Modifier le besoin</h3>
+        <h3>{{ 'besoins.editRequest' | translate }}</h3>
         <button class="close-btn" (click)="fermerEditModal()">✕</button>
       </div>
       <div class="modal-body">
         <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
           <div class="field">
-            <label>Titre *</label>
-            <input formControlName="titre" type="text" placeholder="Titre du besoin" />
+            <label>{{ 'besoins.titleField' | translate }} *</label>
+            <input formControlName="titre" type="text" [placeholder]="'besoins.titleField' | translate" />
           </div>
           <div class="field">
-            <label>Description *</label>
-            <textarea formControlName="description" rows="3" placeholder="Décrivez le besoin..."></textarea>
+            <label>{{ 'besoins.description' | translate }} *</label>
+            <textarea formControlName="description" rows="3" [placeholder]="'besoins.description' | translate"></textarea>
           </div>
           <div class="field">
-            <label>Niveau d'importance *</label>
+            <label>{{ 'besoins.importance' | translate }} *</label>
             <app-custom-select
               [options]="niveaux | niveauOptions"
               [selected]="editForm.controls['niveauImportance'].value"
@@ -198,7 +198,7 @@
             </app-custom-select>
           </div>
           <div class="field">
-            <label>Catégorie *</label>
+            <label>{{ 'besoins.category' | translate }} *</label>
             <app-custom-select
               [options]="categories | categorieOptions"
               [selected]="editForm.controls['categorieId'].value"
@@ -207,20 +207,35 @@
             </app-custom-select>
           </div>
           <div class="field">
-            <label>Pièce jointe <span class="optional">(optionnel)</span></label>
+            <label>{{ 'besoins.attachments' | translate }} <span class="optional">{{ 'besoins.optional' | translate }}</span></label>
+
+            <!-- Pièces jointes existantes -->
+            @if (editDocuments.length > 0) {
+              <div class="edit-docs-list">
+                @for (doc of editDocuments; track doc.id) {
+                  <div class="edit-doc-item">
+                    <span class="doc-icon">📄</span>
+                    <span class="edit-doc-nom">{{ doc.nom }}</span>
+                    <span class="edit-doc-type">{{ doc.type }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Ajouter une nouvelle pièce jointe -->
             <label class="upload-zone-inline">
               <input type="file" (change)="onFichierEditChange($event)" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
               @if (fichierEditSelectionne) {
                 <span class="fichier-nom">📄 {{ fichierEditSelectionne.name }}</span>
               } @else {
-                <span>📎 Cliquer pour joindre un fichier</span>
+                <span>📎 {{ 'besoins.clickToAttach' | translate }}</span>
               }
             </label>
           </div>
           <div class="modal-actions">
-            <button type="button" (click)="fermerEditModal()" class="btn-secondary">Annuler</button>
+            <button type="button" (click)="fermerEditModal()" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
             <button type="submit" [disabled]="editForm.invalid || saving" class="btn-primary">
-              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ saving ? ('besoins.saving' | translate) : ('common.save' | translate) }}
             </button>
           </div>
         </form>

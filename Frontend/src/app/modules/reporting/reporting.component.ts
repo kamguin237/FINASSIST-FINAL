@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReportingService } from '../../core/services/reporting.service';
 import { RolesService } from '../../core/services/roles.service';
 import { AuthService } from '../../core/services/auth.service';
 import { StatistiquesDTO } from '../../core/models/reporting.models';
 import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
+import { CustomDatepickerComponent } from '../../shared/components/custom-datepicker/custom-datepicker.component';
 
 interface BesoinRapport {
   id: number;
@@ -21,7 +23,7 @@ interface BesoinRapport {
 @Component({
   selector: 'app-reporting',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent, CustomDatepickerComponent, TranslateModule],
   templateUrl: './reporting.component.html',
   styleUrl: './reporting.component.scss'
 })

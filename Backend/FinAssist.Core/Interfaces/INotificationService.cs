@@ -17,4 +17,7 @@ public interface INotificationService
     Task NotifierRejetAsync(int besoinId, string titreBesoin, int createurId, string roleEtape);
     Task NotifierSignatureAsync(int besoinId, string titreBesoin, int agentId, string roleSignataire);
     Task EnvoyerRappelAsync(int utilisateurId, int besoinId, string titreBesoin, int niveau, string message);
+
+    // Alerte expiration à 100% : SignalR uniquement (email géré séparément, pas de WebPush)
+    Task EnvoyerAlertExpirationAsync(int utilisateurId, int besoinId, string titreBesoin, string message);
 }

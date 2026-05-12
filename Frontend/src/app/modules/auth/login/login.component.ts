@@ -19,6 +19,7 @@ export class LoginComponent {
   });
   error = '';
   loading = false;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -33,8 +34,11 @@ export class LoginComponent {
     this.error = '';
     this.auth.login(this.form.value as any).subscribe({
       next: () => {
-        // Charger les préférences puis rediriger vers la page d'accueil configurée
         this.settings.loadFromBackend();
+        if (this.auth.mustChangePassword()) {
+          this.router.navigate(['/change-password']);
+          return;
+        }
         const pageAccueil = this.settings.settings().pageAccueil || '/dashboard';
         this.router.navigate([pageAccueil]);
       },

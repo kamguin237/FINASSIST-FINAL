@@ -1,7 +1,7 @@
-<h2>Reporting</h2>
+<h2>{{ 'reporting.title' | translate }}</h2>
 
 @if (loading) {
-  <p class="loading-text">Chargement...</p>
+  <p class="loading-text">{{ 'reporting.loading' | translate }}</p>
 } @else {
 
   @if (stats) {
@@ -9,43 +9,49 @@
       <div class="stat-card">
         <img src="/assets/icons/besoin.png" alt="besoin" />
         <span class="value">{{ stats.totalBesoins }}</span>
-        <span class="label">Total besoins</span>
+        <span class="label">{{ 'reporting.totalRequests' | translate }}</span>
       </div>
       <div class="stat-card">
         <img src="/assets/icons/utilisateurs.png" alt="utilisateur" />
         <span class="value">{{ stats.totalUtilisateurs }}</span>
-        <span class="label">Utilisateurs</span>
+        <span class="label">{{ 'reporting.users' | translate }}</span>
       </div>
       <div class="stat-card">
         <img src="/assets/icons/signature.png" alt="signé" />
         <span class="value">{{ stats.signaturesApposees }}</span>
-        <span class="label">Signatures</span>
+        <span class="label">{{ 'reporting.signatures' | translate }}</span>
       </div>
       <div class="stat-card">
         <img src="/assets/icons/notification.png" alt="notif" />
         <span class="value">{{ stats.notificationsEnvoyees }}</span>
-        <span class="label">Notifications</span>
+        <span class="label">{{ 'reporting.notifications' | translate }}</span>
       </div>
     </div>
   }
 
   <div class="search-section">
-    <h3>Recherche & Export</h3>
+    <h3>{{ 'reporting.searchExport' | translate }}</h3>
     <form [formGroup]="filtreForm" class="filtre-form">
+      <app-custom-datepicker
+        [label]="'reporting.startDate' | translate"
+        [value]="filtreForm.controls['dateDebut'].value || ''"
+        (valueChange)="filtreForm.controls['dateDebut'].setValue($event)"
+        placeholder="JJ/MM/AAAA">
+      </app-custom-datepicker>
+      
+      <app-custom-datepicker
+        [label]="'reporting.endDate' | translate"
+        [value]="filtreForm.controls['dateFin'].value || ''"
+        (valueChange)="filtreForm.controls['dateFin'].setValue($event)"
+        placeholder="JJ/MM/AAAA">
+      </app-custom-datepicker>
+      
       <div class="field">
-        <label>Date début</label>
-        <input formControlName="dateDebut" type="date" />
-      </div>
-      <div class="field">
-        <label>Date fin</label>
-        <input formControlName="dateFin" type="date" />
-      </div>
-      <div class="field">
-        <label>Statut</label>
+        <label>{{ 'common.status' | translate }}</label>
         <app-custom-select
           [options]="statutOptions"
           [selected]="filtreForm.controls['statut'].value"
-          placeholder="-- Choisissez un statut --"
+          [placeholder]="'reporting.chooseStatus' | translate"
           (selectedChange)="filtreForm.controls['statut'].setValue($any($event))">
         </app-custom-select>
       </div>
@@ -53,11 +59,11 @@
         <label>&nbsp;</label>
         <div class="action-btns">
           <button type="button" class="btn-search" (click)="rechercher()" [disabled]="searching">
-            {{ searching ? 'Recherche...' : 'Rechercher' }}
+            {{ searching ? ('reporting.searching' | translate) : ('reporting.search' | translate) }}
           </button>
           @if (resultats !== null) {
             <button type="button" class="btn-reset" (click)="reinitialiser()">
-              Réinitialiser
+              {{ 'reporting.reset' | translate }}
             </button>
           }
         </div>
@@ -67,10 +73,10 @@
     @if (auth.hasPermission('RAPPORT_EXPORTER')) {
       <div class="export-btns">
         <button class="btn-primary" (click)="exporter('PDF')" [disabled]="!peutExporter" [class.disabled]="!peutExporter">
-          Exporter PDF
+          {{ 'reporting.exportPDF' | translate }}
         </button>
         <button class="btn-secondary" (click)="exporter('EXCEL')" [disabled]="!peutExporter" [class.disabled]="!peutExporter">
-          Exporter Excel
+          {{ 'reporting.exportExcel' | translate }}
         </button>
       </div>
     }
@@ -78,30 +84,30 @@
 
   <!-- Message d'erreur validation dates -->
   @if (erreurDates) {
-    <p class="error-dates">Veuillez sélectionner une date de début et une date de fin avant de lancer la recherche.</p>
+    <p class="error-dates">{{ 'reporting.selectDates' | translate }}</p>
   }
 
   <!-- Résultats -->
   @if (searching) {
     <div class="loading-results">
       <div class="spinner"></div>
-      <span>Recherche en cours...</span>
+      <span>{{ 'reporting.searchInProgress' | translate }}</span>
     </div>
   } @else if (resultats !== null) {
     @if (resultats.length === 0) {
-      <div class="empty-state">Aucun résultat trouvé pour cette période.</div>
+      <div class="empty-state">{{ 'reporting.noResults' | translate }}</div>
     } @else {
       <div class="results-header">
-        <span>{{ resultats.length }} résultat(s)</span>
+        <span>{{ resultats.length }} {{ 'reporting.results' | translate }}</span>
       </div>
       <table class="table">
         <thead>
           <tr>
-            <th>Titre</th>
-            <th>Catégorie</th>
-            <th>Statut</th>
-            <th>Date de création</th>
-            <th>Agent créateur</th>
+            <th>{{ 'reporting.title_column' | translate }}</th>
+            <th>{{ 'reporting.category' | translate }}</th>
+            <th>{{ 'reporting.status' | translate }}</th>
+            <th>{{ 'reporting.creationDate' | translate }}</th>
+            <th>{{ 'reporting.creator' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -110,7 +116,7 @@
               <td>{{ b.titre }}</td>
               <td>{{ b.categorie }}</td>
               <td><span class="badge">{{ b.statut }}</span></td>
-              <td>{{ b.dateCreation | date:'dd/MM/yyyy' }}</td>
+              <td><span class="date-badge">{{ b.dateCreation | date:'dd/MM/yyyy' }}</span></td>
               <td>{{ b.createur }}</td>
             </tr>
           }

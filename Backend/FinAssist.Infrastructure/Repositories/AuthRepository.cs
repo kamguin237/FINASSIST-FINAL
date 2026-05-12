@@ -12,4 +12,10 @@ public class AuthRepository(AppDbContext db) : IAuthRepository
 
     public Task<Utilisateur?> GetByIdAsync(int id)
         => db.Utilisateurs.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
+
+    public async Task UpdateAsync(Utilisateur user)
+    {
+        db.Utilisateurs.Update(user);
+        await db.SaveChangesAsync();
+    }
 }

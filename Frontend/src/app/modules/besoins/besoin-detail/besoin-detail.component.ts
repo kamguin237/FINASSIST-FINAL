@@ -5,6 +5,8 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
+import { TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { CustomSelectComponent } from '../../../shared/components/custom-select/custom-select.component';
 import { BesoinsService } from '../../../core/services/besoins.service';
 import { WorkflowService } from '../../../core/services/workflow.service';
@@ -12,6 +14,7 @@ import { SignaturesService, SignatureApercu } from '../../../core/services/signa
 import { MaSignatureService } from '../../../core/services/ma-signature.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { BesoinDTO, HistoriqueDTO, DocumentDTO } from '../../../core/models/besoin.models';
 import { SignatureUtilisateurDTO } from '../../../core/models/signature-utilisateur.models';
 
@@ -34,7 +37,7 @@ interface SignatureResult {
 @Component({
   selector: 'app-besoin-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, PdfViewerModule, CustomSelectComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, PdfViewerModule, CustomSelectComponent, TranslateModule],
   templateUrl: './besoin-detail.component.html',
   styleUrl: './besoin-detail.component.scss'
 })
@@ -153,6 +156,7 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
   validerDone = false;
 
   signaturePerso: SignatureUtilisateurDTO | null = null;
+  private signalRSubscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -166,12 +170,46 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
     private toastr: ToastrService,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    private confirm: ConfirmService
+    private confirm: ConfirmService,
+    private signalR: SignalRService
   ) {}
 
   ngOnInit() {
     const id = +this.route.snapshot.params['id'];
     console.log('[FINASSIST][Init] Chargement besoin detail, id =', id);
+    
+    // Initialiser SignalR
+    this.signalR.startConnection().then(() => {
+      this.signalR.joinBesoinGroup(id);
+    });
+
+    // S'abonner aux mises à jour de l'historique via SignalR
+    this.signalRSubscription = this.signalR.historiqueUpdates.subscribe(update => {
+      if (update.besoinId === id) {
+        console.log('[SignalR] Mise à jour historique reçue:', update);
+        // Recharger l'historique complet pour avoir les vrais IDs et éviter les doublons
+        this.besoinsService.getHistorique(id).subscribe({
+          next: h => {
+            this.historique = h;
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            // Fallback : insérer l'entrée en tête si le rechargement échoue
+            this.historique = [
+              { id: 0, action: update.action, description: update.description, dateAction: update.dateAction },
+              ...this.historique
+            ];
+            this.cdr.detectChanges();
+          }
+        });
+        // Aussi rafraîchir le statut du besoin (ex: après validation)
+        this.besoinsService.getById(id).subscribe({
+          next: b => { this.besoin = b; this.cdr.detectChanges(); },
+          error: () => {}
+        });
+      }
+    });
+
     this.besoinsService.getById(id).subscribe({
       next: b => {
         console.log('[FINASSIST][Init] getById OK =>', b);
@@ -209,6 +247,11 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
     if (this.imageUrl) URL.revokeObjectURL(this.imageUrl);
     if (this.pdfObjectUrl) URL.revokeObjectURL(this.pdfObjectUrl);
     if (this.apercuPdfObjectUrl) URL.revokeObjectURL(this.apercuPdfObjectUrl);
+    
+    // Nettoyer SignalR
+    const id = +this.route.snapshot.params['id'];
+    this.signalR.leaveBesoinGroup(id);
+    this.signalRSubscription?.unsubscribe();
   }
 
   // Charge le document via HttpClient Angular (token injecté par l'intercepteur)
@@ -332,6 +375,44 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
 
   get estSigne(): boolean { return !!this.besoin?.statut?.startsWith('SIGNE_PAR_'); }
 
+  badgeClass(statut: string | undefined | null): string {
+    if (!statut) return 'badge statut-brouillon';
+    if (statut === 'BROUILLON')             return 'badge statut-brouillon';
+    if (statut === 'ENREGISTRE')            return 'badge statut-enregistre';
+    if (statut === 'TRANSMIS')              return 'badge statut-transmis';
+    if (statut === 'TERMINE')               return 'badge statut-termine';
+    if (statut.startsWith('EN_ATTENTE_'))   return 'badge statut-attente';
+    if (statut.startsWith('APPROUVE_PAR_')) return 'badge statut-approuve';
+    if (statut.startsWith('REJETE_PAR_'))   return 'badge statut-rejete';
+    if (statut.startsWith('SIGNE_PAR_'))    return 'badge statut-signe';
+    return 'badge';
+  }
+
+  labelStatut(statut: string | undefined | null): string {
+    if (!statut) return '';
+    if (statut === 'BROUILLON')  return 'Brouillon';
+    if (statut === 'ENREGISTRE') return 'Enregistré';
+    if (statut === 'SOUMISE')    return 'Soumis';
+    if (statut === 'TRANSMIS')   return 'Transmis';
+    if (statut === 'TERMINE')    return 'Terminé';
+    if (statut.startsWith('EN_ATTENTE_'))   return `En attente — ${this.formatRole(statut.replace('EN_ATTENTE_', ''))}`;
+    if (statut.startsWith('APPROUVE_PAR_')) return `Approuvé par ${this.formatRole(statut.replace('APPROUVE_PAR_', ''))}`;
+    if (statut.startsWith('REJETE_PAR_'))   return `Rejeté par ${this.formatRole(statut.replace('REJETE_PAR_', ''))}`;
+    if (statut.startsWith('SIGNE_PAR_'))    return `Signé par ${this.formatRole(statut.replace('SIGNE_PAR_', ''))}`;
+    return statut;
+  }
+
+  private formatRole(roleCode: string): string {
+    const map: Record<string, string> = {
+      'RESPONSABLE':       'le Responsable',
+      'DIRECTION':         'la Direction',
+      'DIRECTIONGENERALE': 'la Direction Générale',
+      'ADMINISTRATEUR':    "l'Administrateur",
+      'AGENT':             "l'Agent",
+    };
+    return map[roleCode] ?? roleCode.charAt(0) + roleCode.slice(1).toLowerCase();
+  }
+
   // ── Pièces jointes ────────────────────────────────────────────────────────
   onFichierChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -375,16 +456,68 @@ export class BesoinDetailComponent implements OnInit, OnDestroy {
 
   // ── Actions workflow ──────────────────────────────────────────────────────
   enregistrer() {
-    this.besoinsService.enregistrer(this.besoin!.id).subscribe({
-      next: b => { this.besoin = b; this.toastr.success('Besoin enregistré.'); },
-      error: e => this.toastr.error(e.error?.message ?? 'Erreur.')
+    // Rafraîchir le statut avant d'agir pour éviter les actions sur un état obsolète
+    this.besoinsService.getById(this.besoin!.id).subscribe({
+      next: besoinFrais => {
+        this.besoin = besoinFrais;
+        if (besoinFrais.statut !== 'BROUILLON') {
+          this.toastr.warning(
+            `Le besoin est déjà en statut "${besoinFrais.statut}". La page a été mise à jour.`,
+            'Statut mis à jour'
+          );
+          this.cdr.detectChanges();
+          return;
+        }
+        this.besoinsService.enregistrer(besoinFrais.id).subscribe({
+          next: b => { this.besoin = b; this.toastr.success('Besoin enregistré.'); this.cdr.detectChanges(); },
+          error: e => {
+            if (e.status === 409) {
+              // Conflit : le statut a changé entre-temps, on resynchronise
+              this.besoinsService.getById(this.besoin!.id).subscribe(b => {
+                this.besoin = b;
+                this.cdr.detectChanges();
+              });
+              this.toastr.warning('Le statut du besoin a changé. La page a été mise à jour.', 'Statut mis à jour');
+            } else {
+              this.toastr.error(e.error?.message ?? 'Erreur.');
+            }
+          }
+        });
+      },
+      error: () => this.toastr.error('Impossible de vérifier le statut du besoin.')
     });
   }
 
   soumettre() {
-    this.besoinsService.soumettre(this.besoin!.id).subscribe({
-      next: b => { this.besoin = b; this.toastr.success('Besoin soumis.'); },
-      error: e => this.toastr.error(e.error?.message ?? 'Erreur.')
+    // Rafraîchir le statut avant d'agir pour éviter les actions sur un état obsolète
+    this.besoinsService.getById(this.besoin!.id).subscribe({
+      next: besoinFrais => {
+        this.besoin = besoinFrais;
+        if (besoinFrais.statut !== 'ENREGISTRE') {
+          this.toastr.warning(
+            `Le besoin est déjà en statut "${besoinFrais.statut}". La page a été mise à jour.`,
+            'Statut mis à jour'
+          );
+          this.cdr.detectChanges();
+          return;
+        }
+        this.besoinsService.soumettre(besoinFrais.id).subscribe({
+          next: b => { this.besoin = b; this.toastr.success('Besoin soumis avec succès.'); this.cdr.detectChanges(); },
+          error: e => {
+            if (e.status === 409) {
+              // Conflit : le statut a changé entre-temps, on resynchronise
+              this.besoinsService.getById(this.besoin!.id).subscribe(b => {
+                this.besoin = b;
+                this.cdr.detectChanges();
+              });
+              this.toastr.warning('Le statut du besoin a changé. La page a été mise à jour.', 'Statut mis à jour');
+            } else {
+              this.toastr.error(e.error?.message ?? 'Erreur.');
+            }
+          }
+        });
+      },
+      error: () => this.toastr.error('Impossible de vérifier le statut du besoin.')
     });
   }
 

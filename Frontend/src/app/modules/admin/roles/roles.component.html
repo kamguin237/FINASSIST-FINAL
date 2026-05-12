@@ -1,7 +1,7 @@
 <div class="page-header">
-  <h2>Rôles</h2>
+  <h2>{{ 'roles.title' | translate }}</h2>
   @if (auth.hasPermission('ROLE_CREER')) {
-    <button class="btn-primary" (click)="openCreate()">+ Nouveau rôle</button>
+    <button class="btn-primary" (click)="openCreate()">+ {{ 'roles.newRole' | translate }}</button>
   }
 </div>
 
@@ -10,7 +10,7 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Code</th><th>Description</th><th>Actions</th>
+        <th>{{ 'roles.code' | translate }}</th><th>{{ 'roles.description' | translate }}</th><th>{{ 'common.actions' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -20,11 +20,11 @@
           <td>{{ r.description }}</td>
           <td class="actions">
             @if (auth.hasPermission('ROLE_MODIFIER')) {
-              <button class="btn-sm perm" (click)="openPermissions(r)" title="Gérer les permissions">🔑 Permissions</button>
-              <button class="btn-sm" (click)="openEdit(r)">Modifier</button>
+              <button class="btn-sm perm" (click)="openPermissions(r)" [title]="'roles.managePermissions' | translate">🔑 {{ 'roles.permissions' | translate }}</button>
+              <button class="btn-sm" (click)="openEdit(r)">{{ 'common.edit' | translate }}</button>
             }
             @if (auth.hasPermission('ROLE_SUPPRIMER')) {
-              <button class="btn-sm danger" (click)="delete(r.id)">Supprimer</button>
+              <button class="btn-sm danger" (click)="delete(r.id)">{{ 'common.delete' | translate }}</button>
             }
           </td>
         </tr>
@@ -39,8 +39,8 @@
     <div class="modal modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
-          <h3>Permissions du rôle {{ permRole.code }}</h3>
-          <p class="modal-sub">Cochez les permissions à attribuer à ce rôle.</p>
+          <h3>{{ 'roles.permissionsOf' | translate }} {{ permRole.code }}</h3>
+          <p class="modal-sub">{{ 'roles.permissionsHelp' | translate }}</p>
         </div>
         <button class="close-btn" (click)="fermerPermModal()">✕</button>
       </div>
@@ -50,7 +50,7 @@
             <div class="perm-group-title">
               <span>{{ group.module }}</span>
               <button class="btn-check-all" (click)="toggleModule(group.permissions)">
-                {{ isModuleAllChecked(group.permissions) ? 'Tout décocher' : 'Tout cocher' }}
+                {{ isModuleAllChecked(group.permissions) ? ('roles.uncheckAll' | translate) : ('roles.checkAll' | translate) }}
               </button>
             </div>
             <div class="perm-grid">
@@ -69,9 +69,9 @@
         }
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="fermerPermModal()">Annuler</button>
+        <button class="btn-secondary" (click)="fermerPermModal()">{{ 'common.cancel' | translate }}</button>
         <button class="btn-primary" (click)="sauvegarderPermissions()" [disabled]="savingPerms">
-          {{ savingPerms ? 'Enregistrement...' : 'Enregistrer les permissions' }}
+          {{ savingPerms ? ('users.saving' | translate) : ('roles.savePermissions' | translate) }}
         </button>
       </div>
     </div>
@@ -83,27 +83,27 @@
   <div class="modal-overlay" (click)="fermerModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ editId ? 'Modifier le rôle' : 'Nouveau rôle' }}</h3>
+        <h3>{{ editId ? ('roles.editRole' | translate) : ('roles.newRole' | translate) }}</h3>
         <button class="close-btn" (click)="fermerModal()">✕</button>
       </div>
       <div class="modal-body">
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="field">
-            <label>Code *</label>
-            <input formControlName="code" placeholder="ex: Responsable" />
+            <label>{{ 'roles.code' | translate }} *</label>
+            <input formControlName="code" [placeholder]="'roles.codeExample' | translate" />
             @if (form.get('code')?.invalid && form.get('code')?.touched) {
-              <span class="field-error">Le code est obligatoire.</span>
+              <span class="field-error">{{ 'roles.codeRequired' | translate }}</span>
             }
           </div>
           <div class="field">
-            <label>Description</label>
-            <input formControlName="description" placeholder="Description du rôle" />
+            <label>{{ 'roles.description' | translate }}</label>
+            <input formControlName="description" [placeholder]="'roles.descriptionPlaceholder' | translate" />
           </div>
           @if (erreur) { <p class="form-error">{{ erreur }}</p> }
           <div class="modal-actions">
-            <button type="button" (click)="fermerModal()" class="btn-secondary">Annuler</button>
+            <button type="button" (click)="fermerModal()" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
             <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
-              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ saving ? ('users.saving' | translate) : ('common.save' | translate) }}
             </button>
           </div>
         </form>

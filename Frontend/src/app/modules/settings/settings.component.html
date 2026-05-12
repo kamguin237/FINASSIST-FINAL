@@ -1,15 +1,15 @@
 <div class="settings-page">
 
   <div class="settings-header">
-    <h2>⚙️ Paramètres</h2>
-    <button class="btn-reset" (click)="resetAll()">Réinitialiser tout</button>
+    <h2>⚙️ {{ 'settings.title' | translate }}</h2>
+    <button class="btn-reset" (click)="resetAll()">{{ 'settings.resetAll' | translate }}</button>
   </div>
 
   <div class="settings-grid">
 
     <!-- ── Compte ── -->
     <section class="settings-card">
-      <div class="card-title"><span class="card-icon">👤</span> Compte</div>
+      <div class="card-title"><span class="card-icon">👤</span> {{ 'settings.account' | translate }}</div>
       @if (profil) {
         <div class="account-row">
           <div class="account-avatar">{{ initiales }}</div>
@@ -20,101 +20,131 @@
           </div>
         </div>
       }
-      <a routerLink="/profil" class="settings-link">✏️ Modifier le profil →</a>
+      <a routerLink="/profil" class="settings-link">✏️ {{ 'settings.editProfile' | translate }} →</a>
     </section>
 
     <!-- ── Sécurité ── -->
     <section class="settings-card">
-      <div class="card-title"><span class="card-icon">🔒</span> Sécurité</div>
+      <div class="card-title"><span class="card-icon">🔒</span> {{ 'settings.security' | translate }}</div>
       <div class="info-row">
-        <span class="info-label">Statut du compte</span>
-        @if (profil?.actif) { <span class="badge-ok">✓ Actif</span> }
-        @else { <span class="badge-ko">✕ Inactif</span> }
+        <span class="info-label">{{ 'settings.accountStatus' | translate }}</span>
+        @if (profil?.actif) { <span class="badge-ok">✓ {{ 'common.active' | translate }}</span> }
+        @else { <span class="badge-ko">✕ {{ 'common.inactive' | translate }}</span> }
       </div>
       <div class="info-row">
-        <span class="info-label">Membre depuis</span>
-        <span class="info-val">{{ profil?.dateCreation | date:'dd/MM/yyyy' }}</span>
+        <span class="info-label">{{ 'settings.memberSince' | translate }}</span>
+        <span class="info-val"><span class="date-badge">{{ profil?.dateCreation | date:'dd/MM/yyyy' }}</span></span>
       </div>
-      <a routerLink="/profil" class="settings-link">🔑 Changer le mot de passe →</a>
+      <a routerLink="/profil" class="settings-link">🔑 {{ 'settings.changePassword' | translate }} →</a>
     </section>
 
     <!-- ── Apparence ── -->
     <section class="settings-card">
-      <div class="card-title"><span class="card-icon">🎨</span> Apparence</div>
+      <div class="card-title"><span class="card-icon">🎨</span> {{ 'settings.appearance' | translate }}</div>
 
       <div class="pref-row">
         <div class="pref-label">
-          <span>Thème</span>
-          <small>{{ theme.isDark() ? 'Mode sombre' : 'Mode clair' }}</small>
+          <span>{{ 'settings.theme' | translate }}</span>
+          <small>{{ theme.isDark() ? ('settings.darkMode' | translate) : ('settings.lightMode' | translate) }}</small>
         </div>
         <button class="theme-toggle" (click)="theme.toggle()">
-          {{ theme.isDark() ? '🌙 Sombre' : '☀️ Clair' }}
+          <span class="material-icons">{{ theme.isDark() ? 'dark_mode' : 'light_mode' }}</span>
+          {{ theme.isDark() ? ('settings.darkMode' | translate) : ('settings.lightMode' | translate) }}
         </button>
       </div>
 
       <div class="pref-row">
-        <div class="pref-label"><span>Langue</span></div>
-        <select class="pref-select" [ngModel]="s.langue" (ngModelChange)="set('langue', $event)">
-          @for (l of langues; track l.value) {
-            <option [value]="l.value">{{ l.label }}</option>
-          }
-        </select>
+        <div class="pref-label"><span>{{ 'settings.language' | translate }}</span></div>
+        <app-custom-select
+          [options]="langues"
+          [selected]="s.langue"
+          (selectedChange)="set('langue', $event)">
+        </app-custom-select>
       </div>
 
       <div class="pref-row">
-        <div class="pref-label"><span>Format de date</span></div>
-        <select class="pref-select" [ngModel]="s.formatDate" (ngModelChange)="set('formatDate', $event)">
-          @for (f of formats; track f.value) {
-            <option [value]="f.value">{{ f.label }}</option>
-          }
-        </select>
+        <div class="pref-label"><span>{{ 'settings.dateFormat' | translate }}</span></div>
+        <app-custom-select
+          [options]="formats"
+          [selected]="s.formatDate"
+          (selectedChange)="set('formatDate', $event)">
+        </app-custom-select>
       </div>
 
       <div class="pref-row">
         <div class="pref-label">
-          <span>Fuseau horaire</span>
+          <span>{{ 'settings.timezone' | translate }}</span>
           <small>{{ s.fuseauHoraire }}</small>
         </div>
-        <select class="pref-select" [ngModel]="s.fuseauHoraire" (ngModelChange)="set('fuseauHoraire', $event)">
-          @for (f of fuseaux; track f.value) {
-            <option [value]="f.value">{{ f.label }}</option>
-          }
-        </select>
+        <app-custom-select
+          [options]="fuseaux"
+          [selected]="s.fuseauHoraire"
+          (selectedChange)="set('fuseauHoraire', $event)">
+        </app-custom-select>
       </div>
     </section>
 
     <!-- ── Notifications ── -->
     <section class="settings-card">
-      <div class="card-title"><span class="card-icon">🔔</span> Notifications</div>
+      <div class="card-title"><span class="card-icon">🔔</span> {{ 'settings.notifications' | translate }}</div>
+
+      <!-- Statut permission navigateur -->
+      @if (notifPermission === 'denied') {
+        <div class="notif-permission-banner notif-permission-banner--denied">
+          <span class="notif-permission-icon">🚫</span>
+          <div class="notif-permission-text">
+            <strong>Notifications bloquées par le navigateur</strong>
+            <small>Les notifications push ne peuvent pas être reçues. Pour les activer, cliquez sur le cadenas 🔒 dans la barre d'adresse → <strong>Notifications</strong> → <strong>Autoriser</strong>, puis rechargez la page.</small>
+          </div>
+        </div>
+      }
+      @if (notifPermission === 'default') {
+        <div class="notif-permission-banner notif-permission-banner--default">
+          <span class="notif-permission-icon">⚠️</span>
+          <div class="notif-permission-text">
+            <strong>Permission non accordée</strong>
+            <small>Activez "Notifications dans l'application" pour qu'une demande d'autorisation s'affiche.</small>
+          </div>
+        </div>
+      }
+      @if (notifPermission === 'granted') {
+        <div class="notif-permission-banner notif-permission-banner--granted">
+          <span class="notif-permission-icon">✅</span>
+          <div class="notif-permission-text">
+            <strong>Notifications autorisées</strong>
+            <small>Le navigateur est autorisé à recevoir les notifications push.</small>
+          </div>
+        </div>
+      }
 
       <div class="toggle-row">
         <div class="toggle-label">
-          <span>Notifications dans l'application</span>
+          <span>{{ 'settings.notifApp' | translate }}</span>
         </div>
         <button class="toggle-btn" [class.on]="s.notifApp" (click)="toggle('notifApp')">
           <span class="toggle-knob"></span>
         </button>
       </div>
       <div class="toggle-row">
-        <div class="toggle-label"><span>Notifications par email</span></div>
+        <div class="toggle-label"><span>{{ 'settings.notifEmail' | translate }}</span></div>
         <button class="toggle-btn" [class.on]="s.notifEmail" (click)="toggle('notifEmail')">
           <span class="toggle-knob"></span>
         </button>
       </div>
       <div class="toggle-row">
-        <div class="toggle-label"><span>Alerte nouveau besoin</span></div>
+        <div class="toggle-label"><span>{{ 'settings.alertNewRequest' | translate }}</span></div>
         <button class="toggle-btn" [class.on]="s.alertNouveauBesoin" (click)="toggle('alertNouveauBesoin')">
           <span class="toggle-knob"></span>
         </button>
       </div>
       <div class="toggle-row">
-        <div class="toggle-label"><span>Alerte validation / rejet</span></div>
+        <div class="toggle-label"><span>{{ 'settings.alertValidation' | translate }}</span></div>
         <button class="toggle-btn" [class.on]="s.alertValidation" (click)="toggle('alertValidation')">
           <span class="toggle-knob"></span>
         </button>
       </div>
       <div class="toggle-row">
-        <div class="toggle-label"><span>Alerte actions en attente</span></div>
+        <div class="toggle-label"><span>{{ 'settings.alertPending' | translate }}</span></div>
         <button class="toggle-btn" [class.on]="s.alertEnAttente" (click)="toggle('alertEnAttente')">
           <span class="toggle-knob"></span>
         </button>
@@ -124,36 +154,36 @@
     <!-- ── Signature ── -->
     @if (auth.hasPermission('SIGNATURE_PERSO_GERER')) {
       <section class="settings-card">
-        <div class="card-title"><span class="card-icon">✍</span> Signature personnelle</div>
+        <div class="card-title"><span class="card-icon">✍</span> {{ 'settings.signature' | translate }}</div>
         @if (signature) {
           <div class="sig-preview">
-            <img [src]="signature.imageBase64" alt="Ma signature" />
+            <img [src]="signature.imageBase64" [alt]="'signature.title' | translate" />
           </div>
           <div class="info-row">
-            <span class="info-label">Type</span>
+            <span class="info-label">{{ 'common.type' | translate }}</span>
             <span class="info-val">{{ signature.type }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Modifiée le</span>
-            <span class="info-val">{{ signature.dateModification | date:'dd/MM/yyyy' }}</span>
+            <span class="info-label">{{ 'settings.modified' | translate }}</span>
+            <span class="info-val"><span class="date-badge">{{ signature.dateModification | date:'dd/MM/yyyy' }}</span></span>
           </div>
         } @else {
-          <p class="empty-hint">Aucune signature enregistrée.</p>
+          <p class="empty-hint">{{ 'settings.noSignature' | translate }}</p>
         }
-        <a routerLink="/ma-signature" class="settings-link">✏️ Gérer ma signature →</a>
+        <a routerLink="/ma-signature" class="settings-link">✏️ {{ 'settings.manageSignature' | translate }} →</a>
       </section>
     }
 
     <!-- ── Session et inactivité (Administrateur uniquement) ── -->
     @if (auth.currentUser()?.role === 'Administrateur') {
     <section class="settings-card">
-      <div class="card-title"><span class="card-icon">⏱</span> Session et inactivité</div>
-      <p class="card-desc">Déconnectez automatiquement les utilisateurs après une période d'inactivité.</p>
+      <div class="card-title"><span class="card-icon">⏱</span> {{ 'settings.session' | translate }}</div>
+      <p class="card-desc">{{ 'settings.autoLogoutDesc' | translate }}</p>
 
       <div class="session-row">
         <div class="session-label">
-          <span class="session-label-title">Déconnexion automatique</span>
-          <small>Déconnecte l'utilisateur après un délai sans activité</small>
+          <span class="session-label-title">{{ 'settings.autoLogout' | translate }}</span>
+          <small>{{ 'settings.autoLogoutDesc' | translate }}</small>
         </div>
         <button class="toggle-btn" [class.on]="s.deconnexionAuto" (click)="toggle('deconnexionAuto')">
           <span class="toggle-knob"></span>
@@ -162,7 +192,7 @@
 
       @if (s.deconnexionAuto) {
         <div class="session-field">
-          <label>Durée d'inactivité (minutes)</label>
+          <label>{{ 'settings.inactivityDuration' | translate }}</label>
           <div class="session-input-row">
             <input type="number" class="session-input"
               [ngModel]="s.inactiviteMinutes"
@@ -174,7 +204,7 @@
         </div>
 
         <div class="session-field">
-          <label>Avertissement avant déconnexion (secondes)</label>
+          <label>{{ 'settings.warningBeforeLogout' | translate }}</label>
           <div class="session-input-row">
             <input type="number" class="session-input"
               [ngModel]="s.avertissementSecondes"
@@ -187,64 +217,64 @@
       }
 
       <div class="session-save">
-        <button class="btn-session-save" (click)="sauvegarderSession()">💾 Enregistrer</button>
+        <button class="btn-session-save" (click)="sauvegarderSession()">💾 {{ 'common.save' | translate }}</button>
       </div>
     </section>
     }
 
     <!-- ── Préférences de travail ── -->
     <section class="settings-card">
-      <div class="card-title"><span class="card-icon">⚙️</span> Préférences de travail</div>
+      <div class="card-title"><span class="card-icon">⚙️</span> {{ 'settings.workPreferences' | translate }}</div>
 
       <div class="pref-row">
-        <div class="pref-label"><span>Page d'accueil par défaut</span></div>
-        <select class="pref-select" [ngModel]="s.pageAccueil" (ngModelChange)="set('pageAccueil', $event)">
-          @for (p of pages; track p.value) {
-            <option [value]="p.value">{{ p.label }}</option>
-          }
-        </select>
+        <div class="pref-label"><span>{{ 'settings.defaultHomePage' | translate }}</span></div>
+        <app-custom-select
+          [options]="pages"
+          [selected]="s.pageAccueil"
+          (selectedChange)="set('pageAccueil', $event)">
+        </app-custom-select>
       </div>
 
       <div class="pref-row">
-        <div class="pref-label"><span>Tri par défaut</span></div>
-        <select class="pref-select" [ngModel]="s.triDefaut" (ngModelChange)="set('triDefaut', $event)">
-          @for (t of tris; track t.value) {
-            <option [value]="t.value">{{ t.label }}</option>
-          }
-        </select>
+        <div class="pref-label"><span>{{ 'settings.defaultSort' | translate }}</span></div>
+        <app-custom-select
+          [options]="tris"
+          [selected]="s.triDefaut"
+          (selectedChange)="set('triDefaut', $event)">
+        </app-custom-select>
       </div>
     </section>
 
     <!-- ── Administration ── -->
     @if (auth.hasPermission('USER_CONSULTER') || auth.hasPermission('ROLE_CONSULTER') || auth.hasPermission('WORKFLOW_CONSULTER')) {
       <section class="settings-card settings-card--full">
-        <div class="card-title"><span class="card-icon">🛡️</span> Administration</div>
+        <div class="card-title"><span class="card-icon">🛡️</span> {{ 'settings.administration' | translate }}</div>
         <div class="admin-grid">
           @if (auth.hasPermission('USER_CONSULTER')) {
             <a routerLink="/admin/users" class="admin-card">
               <span class="admin-icon">👥</span>
-              <span class="admin-label">Utilisateurs</span>
+              <span class="admin-label">{{ 'users.title' | translate }}</span>
               <span class="admin-arrow">→</span>
             </a>
           }
           @if (auth.hasPermission('ROLE_CONSULTER')) {
             <a routerLink="/admin/roles" class="admin-card">
               <span class="admin-icon">🛡️</span>
-              <span class="admin-label">Rôles</span>
+              <span class="admin-label">{{ 'roles.title' | translate }}</span>
               <span class="admin-arrow">→</span>
             </a>
           }
           @if (auth.hasPermission('PERMISSION_CONSULTER')) {
             <a routerLink="/admin/permissions" class="admin-card">
               <span class="admin-icon">🔑</span>
-              <span class="admin-label">Permissions</span>
+              <span class="admin-label">{{ 'permissions.title' | translate }}</span>
               <span class="admin-arrow">→</span>
             </a>
           }
           @if (auth.hasPermission('WORKFLOW_CONSULTER')) {
             <a routerLink="/workflow" class="admin-card">
               <span class="admin-icon">🔄</span>
-              <span class="admin-label">Workflow</span>
+              <span class="admin-label">{{ 'workflow.title' | translate }}</span>
               <span class="admin-arrow">→</span>
             </a>
           }

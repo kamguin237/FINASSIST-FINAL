@@ -3,6 +3,7 @@ using FinAssist.Core.DTOs.Besoins;
 using FinAssist.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FinAssist.API.Controllers;
 
@@ -12,9 +13,47 @@ namespace FinAssist.API.Controllers;
 public class CategoriesController(IBesoinsService besoinsService) : ControllerBase
 {
     [HttpGet]
-    [RequirePermission("CATEGORIE_CONSULTER")]
+    [RequirePermission("BESOIN_CONSULTER")]
     public async Task<IActionResult> GetAll()
         => Ok(await besoinsService.GetAllCategoriesAsync());
+
+    /// <summary>
+    /// Retourne uniquement les catégories dont le circuit de validation
+    /// ne contient PAS le rôle de l'utilisateur connecté.
+    /// Utilisé dans le formulaire de création de besoin.
+    /// </summary>
+    [HttpGet("disponibles")]
+    [RequirePermission("BESOIN_CREER")]
+    public async Task<IActionResult> GetDisponibles()
+    {
+        var roleCode = User.FindFirstValue(ClaimTypes.Role)
+                    ?? User.FindFirstValue("role")
+                    ?? string.Empty;
+
+        var toutes = await besoinsService.GetAllCategoriesAsync();
+
+        // Pour filtrer avec les étapes, on a besoin des détails du circuit
+        var disponibles = new List<CategorieDTO>();
+        foreach (var cat in toutes)
+        {
+            if (cat.WorkflowCircuitId == null)
+            {
+                // Pas de circuit → catégorie disponible
+                disponibles.Add(cat);
+                continue;
+            }
+
+            var detail = await besoinsService.GetCategorieByIdAsync(cat.Id);
+            var rolesCircuit = detail.Circuit?.Etapes
+                .Select(e => e.RoleRequis.Trim().ToUpperInvariant())
+                .ToHashSet() ?? [];
+
+            if (!rolesCircuit.Contains(roleCode.Trim().ToUpperInvariant()))
+                disponibles.Add(cat);
+        }
+
+        return Ok(disponibles);
+    }
 
     [HttpGet("{id:int}")]
     [RequirePermission("BESOIN_CONSULTER")]

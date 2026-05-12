@@ -12,49 +12,49 @@
           <span class="brand-name">FinAssist</span>
         </div>
       }
-      <button class="toggle-btn" (click)="toggle()" [title]="expanded() ? 'Réduire' : 'Étendre'">
+      <button class="toggle-btn" (click)="toggle()" [title]="expanded() ? ('layout.collapse' | translate) : ('layout.expand' | translate)">
         <span class="toggle-arrow" [class.rotated]="expanded()">‹</span>
       </button>
     </div>
 
     <nav class="sidebar-nav">
-      @for (item of navItems(); track item.label) {
+      @for (item of navItems(); track item.labelKey) {
         @if (item.children && item.children.length > 0) {
           <!-- Menu parent avec sous-menus -->
-          <div class="nav-group" [class.open]="openGroup() === item.label">
+          <div class="nav-group" [class.open]="openGroup() === item.labelKey">
             <button class="nav-item nav-parent" [class.expanded]="expanded()"
-                    (click)="toggleGroup(item.label)"
-                    [attr.data-tooltip]="!expanded() ? item.label : null">
-              <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
+                    (click)="isMobile ? toggleGroupMobile(item.labelKey) : toggleGroup(item.labelKey)"
+                    [attr.data-tooltip]="!expanded() ? (item.labelKey | translate) : null">
+              <img [src]="item.icon" [alt]="item.labelKey | translate" class="nav-icon" />
               @if (expanded()) {
-                <span class="nav-label">{{ item.label }}</span>
-                <span class="nav-chevron" [class.rotated]="openGroup() === item.label">›</span>
+                <span class="nav-label">{{ item.labelKey | translate }}</span>
+                <span class="nav-chevron" [class.rotated]="openGroup() === item.labelKey">›</span>
               }
             </button>
-            @if (expanded() && openGroup() === item.label) {
+            @if (expanded() && openGroup() === item.labelKey) {
               <div class="nav-children">
                 @for (child of item.children; track child.path) {
                   <a [routerLink]="child.path"
                      routerLinkActive="active"
                      [routerLinkActiveOptions]="{exact: true}"
                      class="nav-item nav-child">
-                    <img [src]="child.icon" [alt]="child.label" class="nav-icon" />
-                    <span class="nav-label">{{ child.label }}</span>
+                    <img [src]="child.icon" [alt]="child.labelKey | translate" class="nav-icon" />
+                    <span class="nav-label">{{ child.labelKey | translate }}</span>
                   </a>
                 }
               </div>
-            }
-          </div>
+            }          </div>
         } @else {
           <!-- Item simple -->
           <a [routerLink]="item.path"
              routerLinkActive="active"
              class="nav-item"
              [class.expanded]="expanded()"
-             [attr.data-tooltip]="!expanded() ? item.label : null">
-            <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
+             [attr.data-tooltip]="!expanded() ? (item.labelKey | translate) : null"
+             (click)="onNavItemTapMobile()">
+            <img [src]="item.icon" [alt]="item.labelKey | translate" class="nav-icon" />
             @if (expanded()) {
-              <span class="nav-label">{{ item.label }}</span>
+              <span class="nav-label">{{ item.labelKey | translate }}</span>
             }
           </a>
         }
@@ -65,7 +65,7 @@
       <div class="separator"></div>
       <div class="user-wrap" #userBlockRef>
         <button class="user-block" [class.expanded]="expanded()"
-                (click)="toggleUserMenu($event)" title="Mon compte">
+                (click)="toggleUserMenu($event)" [title]="'layout.myAccount' | translate">
           <div class="avatar">{{ initiales }}</div>
           @if (expanded()) {
             <div class="user-info">
@@ -87,16 +87,16 @@
             <!-- Options -->
             <button class="um-item" (click)="navigateTo('/profil')">
               <span class="um-icon">👤</span>
-              <span>Profil</span>
+              <span>{{ 'nav.profile' | translate }}</span>
             </button>
             <button class="um-item" (click)="navigateTo('/settings')">
               <span class="um-icon">⚙️</span>
-              <span>Paramètres</span>
+              <span>{{ 'nav.settings' | translate }}</span>
             </button>
             <div class="um-divider"></div>
             <button class="um-item um-item--danger" (click)="confirmLogout(); showUserMenu.set(false)">
               <span class="um-icon">⏻</span>
-              <span>Déconnexion</span>
+              <span>{{ 'nav.logout' | translate }}</span>
             </button>
           </div>
         }
@@ -108,14 +108,14 @@
   <!-- ── Zone principale ── -->
   <div class="main">
     <header class="topbar">
-      <span class="page-title">Bonjour, {{ user()?.prenom }} {{ user()?.nom }}</span>
+      <span class="page-title">{{ 'layout.hello' | translate }}, {{ user()?.prenom }} {{ user()?.nom }}</span>
 
       <div class="topbar-actions">
 
         <!-- 🔔 Clochette notifications -->
         <div class="notif-wrap" (click)="toggleNotifDropdown($event)">
-          <button class="icon-btn" title="Notifications">
-            🔔
+          <button class="icon-btn" [title]="'nav.notifications' | translate">
+            <span class="material-icons">notifications_none</span>
             @if (unreadCount > 0) {
               <span class="notif-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
             }
@@ -124,16 +124,16 @@
           @if (showNotifDropdown()) {
             <div class="notif-dropdown" (click)="$event.stopPropagation()">
               <div class="notif-dropdown-header">
-                <span>Notifications</span>
-                <a routerLink="/notifications" class="notif-voir-tout" (click)="showNotifDropdown.set(false)">Tout voir</a>
+                <span>{{ 'nav.notifications' | translate }}</span>
+                <a routerLink="/notifications" class="notif-voir-tout" (click)="showNotifDropdown.set(false)">{{ 'layout.seeAll' | translate }}</a>
               </div>
               @if (recentNotifs.length === 0) {
-                <div class="notif-empty">Aucune notification non lue</div>
+                <div class="notif-empty">{{ 'layout.noNotifications' | translate }}</div>
               } @else {
                 @for (n of recentNotifs; track n.id) {
                   <div class="notif-item" (click)="marquerLuEtNaviguer(n)">
                     <span class="notif-msg">{{ n.message }}</span>
-                    <span class="notif-date">{{ n.dateEnvoi | date:'dd/MM HH:mm' }}</span>
+                    <span class="notif-date"><span class="time-badge">{{ n.dateEnvoi | date:'dd/MM HH:mm' }}</span></span>
                   </div>
                 }
               }
@@ -142,12 +142,12 @@
         </div>
 
         <!-- 🌙 / ☀️ Toggle thème -->
-        <button class="icon-btn" (click)="theme.toggle()" [title]="theme.isDark() ? 'Passer en mode clair' : 'Passer en mode sombre'">
-          {{ theme.isDark() ? '🌙' : '☀️' }}
+        <button class="icon-btn" (click)="theme.toggle()" [title]="theme.isDark() ? ('layout.lightMode' | translate) : ('layout.darkMode' | translate)">
+          <span class="material-icons">{{ theme.isDark() ? 'dark_mode' : 'light_mode' }}</span>
         </button>
 
         <!-- Déconnexion -->
-        <button class="logout-btn" (click)="confirmLogout()">⏻ Déconnexion</button>
+        <button class="logout-btn" (click)="confirmLogout()">⏻ {{ 'nav.logout' | translate }}</button>
 
       </div>
     </header>
@@ -186,13 +186,13 @@
   <div class="inactivity-overlay">
     <div class="inactivity-modal">
       <div class="inactivity-icon">⏱</div>
-      <h3>Session inactive</h3>
-      <p>Vous allez être déconnecté dans</p>
+      <h3>{{ 'modal.inactiveSession' | translate }}</h3>
+      <p>{{ 'modal.inactiveMessage' | translate }}</p>
       <div class="inactivity-countdown">{{ countdown() }}</div>
-      <p class="inactivity-sub">secondes</p>
+      <p class="inactivity-sub">{{ 'modal.seconds' | translate }}</p>
       <div class="inactivity-actions">
-        <button class="btn-stay" (click)="resterConnecte()">Rester connecté</button>
-        <button class="btn-logout-now" (click)="doLogout()">Se déconnecter</button>
+        <button class="btn-stay" (click)="resterConnecte()">{{ 'modal.stayConnected' | translate }}</button>
+        <button class="btn-logout-now" (click)="doLogout()">{{ 'nav.logout' | translate }}</button>
       </div>
     </div>
   </div>
@@ -203,11 +203,11 @@
   <div class="logout-overlay" (click)="cancelLogout()">
     <div class="logout-modal" (click)="$event.stopPropagation()">
       <div class="logout-modal-icon">⏻</div>
-      <h3>Confirmer la déconnexion</h3>
-      <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+      <h3>{{ 'modal.confirmLogout' | translate }}</h3>
+      <p>{{ 'modal.confirmLogoutMessage' | translate }}</p>
       <div class="logout-modal-actions">
-        <button class="btn-cancel" (click)="cancelLogout()">Annuler</button>
-        <button class="btn-confirm" (click)="doLogout()">Se déconnecter</button>
+        <button class="btn-cancel" (click)="cancelLogout()">{{ 'common.cancel' | translate }}</button>
+        <button class="btn-confirm" (click)="doLogout()">{{ 'nav.logout' | translate }}</button>
       </div>
     </div>
   </div>

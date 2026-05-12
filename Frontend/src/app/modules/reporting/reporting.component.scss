@@ -37,13 +37,49 @@ h2 { font-size: 1.3rem; font-weight: 700; color: d.$text; margin-bottom: 1.5rem;
 
 .field {
   display: flex; flex-direction: column; gap: .3rem;
-  label { font-size: .78rem; color: d.$muted; }
+  flex: 1;
+  min-width: 200px;
+  
+  label { 
+    font-size: .78rem; 
+    color: d.$muted;
+  }
+  
   input, select {
-    padding: .55rem .75rem; background: rgba(255,255,255,.06);
-    border: 1px solid d.$border; border-radius: 8px; color: d.$text; font-size: .88rem;
+    padding: .55rem .75rem; 
+    background: rgba(255,255,255,.06);
+    border: 1px solid d.$border; 
+    border-radius: 8px; 
+    color: d.$text; 
+    font-size: .88rem;
     height: 38px;
-    &:focus { outline: none; border-color: d.$accent; }
+    transition: all 0.2s ease;
+    
+    &:focus { 
+      outline: none; 
+      border-color: d.$accent;
+      background: rgba(255,255,255,.1);
+    }
+    
     option { background: d.$card-bg; }
+  }
+  
+  // Styles spécifiques pour les date pickers
+  input[type="date"] {
+    cursor: pointer;
+    
+    &:hover {
+      border-color: rgba(124, 58, 237, 0.5);
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+  
+  // Wrapper pour date picker avec icône
+  &.date-picker-wrapper {
+    label {
+      font-weight: 600;
+      color: #a78bfa;
+    }
   }
 }
 

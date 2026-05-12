@@ -27,16 +27,28 @@ services:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinAssistDB;User Id=sa;Password=FinAssist@2024!;TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinAssistDB;User Id=sa;Password=FinAssist@2024!;TrustServerCertificate=True;MultipleActiveResultSets=True;"
       Jwt__Secret: "FinAssistDevSecretKey_MinimumOf32Characters!"
       Jwt__Issuer: "FinAssist.API"
       Jwt__Audience: "FinAssist.Client"
       Jwt__ExpirationMinutes: "60"
       Signature__Secret: "FinAssistSignatureSecret_MinimumOf32Chars!"
-      AllowedOrigins: "http://localhost:4200,http://frontend:80"
+      App__BaseUrl: "https://reuseable-lucian-noninstructionally.ngrok-free.dev"
+      AllowedOrigins: "http://localhost:4200,http://frontend:80,https://reuseable-lucian-noninstructionally.ngrok-free.dev"
+      Vapid__PublicKey: "BIGOipHWZkUWsJzabUIkmdz0XR5tFVGfUgum_D73Q-6Er7ltCzuUAoYp0RDTggVjoENxukR56VYvEDY4gaxNuTU"
+      Vapid__PrivateKey: "2cGpZ2s_p9WWZXUIG5YAMIiiEdy3c3s89zzr8waOxZg"
+      Vapid__Subject: "mailto:admin@finassist.com"
+      Email__Host: "smtp.gmail.com"
+      Email__Port: "587"
+      Email__Username: "kamguin237@gmail.com"
+      Email__Password: "tfik dtob ryxe ozkk"
+      Email__From: "finAssist <kamguin237@gmail.com>"
     depends_on:
       sqlserver:
         condition: service_healthy
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   frontend:
     build:
@@ -47,6 +59,9 @@ services:
       - "4200:80"
     depends_on:
       - backend
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 volumes:
   sqlserver_data:

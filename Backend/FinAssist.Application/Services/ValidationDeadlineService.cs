@@ -10,6 +10,7 @@ public class ValidationDeadlineService(
     INotificationService notifService,
     IEmailService emailService,
     ILogService logService,
+    IBesoinsHubService hubService,
     ILogger<ValidationDeadlineService> logger)
 {
     public async Task ProcessDeadlinesAsync()
@@ -77,18 +78,23 @@ public class ValidationDeadlineService(
             logger.LogInformation("[Deadline] Rappel 2 envoyé pour besoin {Id}", besoin.Id);
         }
 
-        // ── 100% → Email ──────────────────────────────────────────────────────
+        // ── 100% → Email + SignalR uniquement (pas de WebPush) ───────────────
         if (pct >= 100 && !besoin.EmailRappelEnvoye)
         {
+            var msg = $"⏰ Délai expiré : le besoin « {besoin.Titre} » n'a pas été validé dans les temps. Un rejet automatique est imminent.";
             foreach (var id in validateurIds)
             {
+                // Email
                 var validateur = await besoinsRepo.GetUtilisateurByIdAsync(id);
                 if (validateur is not null)
                     await emailService.EnvoyerRappelDelaiAsync(validateur, besoin);
+
+                // SignalR uniquement (pas de WebPush)
+                await notifService.EnvoyerAlertExpirationAsync(id, besoin.Id, besoin.Titre, msg);
             }
             besoin.EmailRappelEnvoye = true;
             await besoinsRepo.UpdateAsync(besoin);
-            logger.LogInformation("[Deadline] Email rappel envoyé pour besoin {Id}", besoin.Id);
+            logger.LogInformation("[Deadline] Email + SignalR expiration envoyés pour besoin {Id}", besoin.Id);
         }
 
         // ── 100% + 60 min → Rejet automatique ────────────────────────────────
@@ -131,9 +137,11 @@ public class ValidationDeadlineService(
             DateDecision = DateTime.UtcNow
         });
 
-        // Notification au créateur
-        var msgCreateur = $"Votre besoin « {besoin.Titre} » a été automatiquement rejeté faute de validation dans les délais.";
+        // Notification au créateur (WebPush + SignalR via NotifierRejetAsync)
         await notifService.NotifierRejetAsync(besoin.Id, besoin.Titre, besoin.UtilisateurId, etape.RoleRequis);
+
+        // Notifier tous les clients de la mise à jour du statut
+        await hubService.NotifierStatutBesoinAsync(besoin.Id, nouveauStatut);
 
         // Log
         await logService.LoggerAsync(

@@ -12,6 +12,7 @@ public class Utilisateur
     public DateTime DateCreation { get; set; } = DateTime.UtcNow;
     public DateTime DateModification { get; set; } = DateTime.UtcNow;
     public bool Actif { get; set; } = true;
+    public bool DoitChangerMotDePasse { get; set; } = false;
     public ICollection<UtilisateurPermission> UtilisateurPermissions { get; set; } = [];
     public ICollection<LogUtilisateur> Logs { get; set; } = [];
 }

@@ -8,7 +8,8 @@ import { environment } from '../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly TOKEN_KEY = 'finassist_token';
-  private readonly USER_KEY = 'finassist_user';
+  private readonly USER_KEY  = 'finassist_user';
+  private readonly MDP_KEY   = 'finassist_must_change_pwd';
 
   currentUser = signal<UtilisateurInfo | null>(this.loadUser());
   permissions = signal<string[]>(this.loadPermissions());
@@ -20,16 +21,26 @@ export class AuthService {
       tap(res => {
         localStorage.setItem(this.TOKEN_KEY, res.accessToken);
         localStorage.setItem(this.USER_KEY, JSON.stringify(res.utilisateur));
+        localStorage.setItem(this.MDP_KEY, String(res.doitChangerMotDePasse));
         this.currentUser.set(res.utilisateur);
         this.permissions.set(this.parsePermissions(res.accessToken));
       })
     );
   }
 
+  mustChangePassword(): boolean {
+    return localStorage.getItem(this.MDP_KEY) === 'true';
+  }
+
+  clearMustChangePassword() {
+    localStorage.removeItem(this.MDP_KEY);
+  }
+
   logout() {
     this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe();
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.MDP_KEY);
     this.currentUser.set(null);
     this.permissions.set([]);
     this.router.navigate(['/login']);

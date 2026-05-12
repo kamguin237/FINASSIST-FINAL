@@ -1,10 +1,10 @@
 @if (loading) {
-  <div class="loading">Chargement...</div>
+  <div class="loading">{{ 'dashboard.loading' | translate }}</div>
 } @else if (dashboard) {
 
   <div class="dash-header">
-    <h2>Tableau de bord</h2>
-    <span class="dash-sub">Vue d'ensemble de l'activité</span>
+    <h2>{{ 'dashboard.title' | translate }}</h2>
+    <span class="dash-sub">{{ 'dashboard.subtitle' | translate }}</span>
   </div>
 
   <!-- Cartes statistiques -->
@@ -13,42 +13,42 @@
        <img src="/assets/icons/en-attente.png" alt="attente" />
       <div class="card-body">
         <span class="value">{{ dashboard.besoinsEnAttente }}</span>
-        <span class="label">En attente</span>
+        <span class="label">{{ 'dashboard.pending' | translate }}</span>
       </div>
     </div>
     <div class="stat-card">
        <img src="/assets/icons/approuver.png" alt="approuve" />
       <div class="card-body">
         <span class="value approuve">{{ dashboard.besoinsApprouves }}</span>
-        <span class="label">Approuvés</span>
+        <span class="label">{{ 'dashboard.approved' | translate }}</span>
       </div>
     </div>
     <div class="stat-card">
        <img src="/assets/icons/rejeter.png" alt="rejete" />
       <div class="card-body">
         <span class="value rejected">{{ dashboard.besoinsRejetes }}</span>
-        <span class="label">Rejetés</span>
+        <span class="label">{{ 'dashboard.rejected' | translate }}</span>
       </div>
     </div>
     <div class="stat-card">
       <img src="/assets/icons/besoin2.png" alt="soumis" />
       <div class="card-body">
         <span class="value notif">{{ dashboard.besoinsSoumisParMoi }}</span>
-        <span class="label">Soumis</span>
+        <span class="label">{{ 'dashboard.submitted' | translate }}</span>
       </div>
     </div>
     <div class="stat-card">
       <img src="/assets/icons/besoin2.png" alt="enregistres" />
       <div class="card-body">
         <span class="value">{{ dashboard.besoinsEnregistres }}</span>
-        <span class="label">Enregistrés</span>
+        <span class="label">{{ 'dashboard.saved' | translate }}</span>
       </div>
     </div>
     <div class="stat-card">
       <img src="/assets/icons/besoin2.png" alt="brouillons" />
       <div class="card-body">
         <span class="value">{{ dashboard.besoinsBrouillons }}</span>
-        <span class="label">Brouillons</span>
+        <span class="label">{{ 'dashboard.drafts' | translate }}</span>
       </div>
     </div>
   </div>
@@ -57,20 +57,20 @@
   <div class="chart-card">
     <div class="chart-header">
       <div class="chart-title-block">
-        <span class="chart-title">Évolution des besoins</span>
-        <p class="dash-sub">Suivi du cycle de traitement</p>
+        <span class="chart-title">{{ 'dashboard.evolution' | translate }}</span>
+        <p class="dash-sub">{{ 'dashboard.evolutionSubtitle' | translate }}</p>
       </div>
       <div class="period-btns">
-        <button [class.active]="periode === 'jours'"    (click)="changerPeriode('jours')">Jours</button>
-        <button [class.active]="periode === 'semaines'" (click)="changerPeriode('semaines')">Semaines</button>
-        <button [class.active]="periode === 'mois'"     (click)="changerPeriode('mois')">Mois</button>
+        <button [class.active]="periode === 'jours'"    (click)="changerPeriode('jours')">{{ 'dashboard.days' | translate }}</button>
+        <button [class.active]="periode === 'semaines'" (click)="changerPeriode('semaines')">{{ 'dashboard.weeks' | translate }}</button>
+        <button [class.active]="periode === 'mois'"     (click)="changerPeriode('mois')">{{ 'dashboard.months' | translate }}</button>
       </div>
     </div>
     <div class="chart-kpis">
-      <span class="kpi soumis">● {{ totalRecus }} recus</span>
-      <span class="kpi approuves">● {{ totalApprouves }} approuvés</span>
-      <span class="kpi rejetes">● {{ totalRejetes }} rejetés</span>
-      <span class="kpi attente">● {{ maxAttente }} max en attente +48h</span>
+      <span class="kpi soumis">● {{ totalRecus }} {{ 'dashboard.received' | translate }}</span>
+      <span class="kpi approuves">● {{ totalApprouves }} {{ 'dashboard.approved' | translate | lowercase }}</span>
+      <span class="kpi rejetes">● {{ totalRejetes }} {{ 'dashboard.rejected' | translate | lowercase }}</span>
+      <span class="kpi attente">● {{ maxAttente }} {{ 'dashboard.maxPending' | translate }}</span>
     </div>
     <div class="chart-wrapper">
       <canvas #chartCanvas></canvas>
@@ -79,14 +79,14 @@
 
   <!-- Tableau derniers besoins -->
   <div class="table-card">
-    <h3>Derniers besoins</h3>
+    <h3>{{ 'dashboard.recentRequests' | translate }}</h3>
     <table class="table">
       <thead>
         <tr>
-          <th>Titre</th>
-          <th>Statut</th>
-          <th>Créé le</th>
-          <th>Modifié le</th>
+          <th>{{ 'dashboard.title_column' | translate }}</th>
+          <th>{{ 'dashboard.status_column' | translate }}</th>
+          <th>{{ 'dashboard.createdOn' | translate }}</th>
+          <th>{{ 'dashboard.modifiedOn' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -94,8 +94,8 @@
           <tr>
             <td><a [routerLink]="['/besoins', b.id]">{{ b.titre }}</a></td>
             <td><span [class]="'badge ' + badgeClass(b.statut)">{{ statutLabel(b.statut) }}</span></td>
-            <td>{{ b.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ b.dateModification | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td><span class="datetime-badge">{{ b.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span></td>
+            <td><span class="datetime-badge">{{ b.dateModification | date:'dd/MM/yyyy HH:mm' }}</span></td>
           </tr>
         }
       </tbody>

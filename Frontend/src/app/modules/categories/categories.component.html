@@ -1,14 +1,14 @@
 <div class="page-header">
-  <h2>Catégories</h2>
+  <h2>{{ 'categories.title' | translate }}</h2>
   @if (auth.hasPermission('CATEGORIE_CREER')) {
-    <button class="btn-primary" (click)="openCreate()">+ Nouvelle catégorie</button>
+    <button class="btn-primary" (click)="openCreate()">+ {{ 'categories.newCategory' | translate }}</button>
   }
 </div>
 
 <div class="table-card">
   <table class="table">
     <thead>
-      <tr><th>Nom</th><th>Description</th><th>Circuit</th><th>Actions</th></tr>
+      <tr><th>{{ 'categories.name' | translate }}</th><th>{{ 'categories.description' | translate }}</th><th>{{ 'categories.workflow' | translate }}</th><th>{{ 'common.actions' | translate }}</th></tr>
     </thead>
     <tbody>
       @for (c of categories; track c.id) {
@@ -18,10 +18,10 @@
           <td>{{ c.workflowCircuitNom }}</td>
           <td class="actions">
             @if (auth.hasPermission('CATEGORIE_MODIFIER')) {
-              <button class="btn-sm" (click)="openEdit(c)">Modifier</button>
+              <button class="btn-sm" (click)="openEdit(c)">{{ 'common.edit' | translate }}</button>
             }
             @if (auth.hasPermission('CATEGORIE_SUPPRIMER')) {
-              <button class="btn-sm danger" (click)="delete(c.id)">Supprimer</button>
+              <button class="btn-sm danger" (click)="delete(c.id)">{{ 'common.delete' | translate }}</button>
             }
           </td>
         </tr>
@@ -35,15 +35,15 @@
   <div class="modal-overlay" (click)="showForm = false">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ editId ? 'Modifier' : 'Nouvelle' }} catégorie</h3>
+        <h3>{{ editId ? ('categories.editCategory' | translate) : ('categories.newCategory' | translate) }}</h3>
         <button class="close-btn" (click)="showForm = false">✕</button>
       </div>
       <div class="modal-body">
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <div class="field"><label>Nom *</label><input formControlName="nom" /></div>
-          <div class="field"><label>Description</label><input formControlName="description" /></div>
+          <div class="field"><label>{{ 'categories.name' | translate }} *</label><input formControlName="nom" /></div>
+          <div class="field"><label>{{ 'categories.description' | translate }}</label><input formControlName="description" /></div>
           <div class="field">
-            <label>Circuit de validation *</label>
+            <label>{{ 'categories.workflow' | translate }} *</label>
             <app-custom-select
               [options]="circuits | circuitOptions"
               [selected]="form.controls['workflowCircuitId'].value"
@@ -52,8 +52,8 @@
             </app-custom-select>
           </div>
           <div class="modal-actions">
-            <button type="button" (click)="showForm = false" class="btn-secondary">Annuler</button>
-            <button type="submit" [disabled]="form.invalid" class="btn-primary">Enregistrer</button>
+            <button type="button" (click)="showForm = false" class="btn-secondary">{{ 'common.cancel' | translate }}</button>
+            <button type="submit" [disabled]="form.invalid" class="btn-primary">{{ 'common.save' | translate }}</button>
           </div>
         </form>
       </div>

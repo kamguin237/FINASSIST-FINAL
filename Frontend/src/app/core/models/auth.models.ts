@@ -15,4 +15,5 @@ export interface LoginResponse {
   accessToken: string;
   expiration: string;
   utilisateur: UtilisateurInfo;
+  doitChangerMotDePasse: boolean;
 }
